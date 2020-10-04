@@ -1,4 +1,7 @@
 #include "SimpleGravityForce.h"
+#include <iostream>
+
+using namespace std;
 
 void SimpleGravityForce::addEnergyToTotal( const VectorXs& x, const VectorXs& v, const VectorXs& m, scalar& E )
 {
@@ -7,6 +10,7 @@ void SimpleGravityForce::addEnergyToTotal( const VectorXs& x, const VectorXs& v,
     assert( x.size()%2 == 0 );
     
     // Your code goes here!
+    cout << "Called:" << __FUNCTION__ << endl;
 }
 
 void SimpleGravityForce::addGradEToTotal( const VectorXs& x, const VectorXs& v, const VectorXs& m, VectorXs& gradE )
@@ -17,4 +21,5 @@ void SimpleGravityForce::addGradEToTotal( const VectorXs& x, const VectorXs& v, 
     assert( x.size()%2 == 0 );
     
     // Your code goes here!
+    cout << "Called:" << __FUNCTION__ << endl;
 }
