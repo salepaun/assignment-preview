@@ -23,14 +23,14 @@ static inline void dq(
 static inline void dv(
         const Vector2s& _Q, 
         Vector2s& _V,
-        Matrix2s& _M,
+        const Matrix2s& _M,
         const Vector2s& _F,
         scalar _Dt)
 {
     scalar DetM = _M.determinant();
     assert( DetM != 0 );
-    _M.inverse();
-    _V += _Dt * _M * _F;
+    Matrix2s N = _M.inverse();
+    _V += _Dt * N * _F;
 }
 
 
@@ -56,12 +56,10 @@ bool ExplicitEuler::stepScene( TwoDScene& scene, scalar dt )
 
 
 #ifndef NDEBUG
-    /*
     cout << "\nCalled:" << __FUNCTION__ \
         << ", dt=" << dt \
         << ", Size=" << Size \
         << ", Num=" << Num << endl;
-    */
 #endif
 
 
@@ -71,7 +69,7 @@ bool ExplicitEuler::stepScene( TwoDScene& scene, scalar dt )
     } else {
         fd = fopen("./kinetic_energy_output.txt", "w");
         if(fd)
-            fprintf(fd, "# Time\tKinetic Energy\tVx\tVy\n");
+            fprintf(fd, "# Time\t Kinetic Energy\t Vx\t Vy\n");
         else
             perror("Failed to open kinetic energy dump");
     };
@@ -87,7 +85,7 @@ bool ExplicitEuler::stepScene( TwoDScene& scene, scalar dt )
     for(int i=0, j=0; i<Size; i+=2) {
         j = i+1;
         // Determine if the ith particle is fixed
-        if(scene.isFixed(i)) {
+        if(scene.isFixed(i>>1)) {
             V[i] = 0; V[j] = 0;
             F[i] = 0; F[j] = 0;
         } else {
@@ -113,18 +111,16 @@ bool ExplicitEuler::stepScene( TwoDScene& scene, scalar dt )
     };
 
 #ifndef NDEBUG
-    /*
     cout \
         << "Particles:" << scene.getNumParticles() \
         << ", Size:" << X.size() \
         << ", Ek=" << Ek << endl;
     cout <<
-        "\tX     :" << X << endl;
+        "\tX     :" << X.transpose() << endl;
     cout <<
-        "\tV     :" << V << endl;
+        "\tV     :" << V.transpose() << endl;
     cout <<
-        "\tForces:" << F << endl;
-        */
+        "\tForces:" << F.transpose() << endl;
 #endif
     
     

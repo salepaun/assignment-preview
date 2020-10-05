@@ -5,12 +5,14 @@ using namespace std;
 using namespace Eigen;
 
 int main() {
-  Matrix2f M; M << 1,2,3,4;
-  VectorXf A(10); A.setZero();
+  Matrix2f M; M << 2,0,0,2;
+  VectorXf A(4); A.setZero();
   Vector2f B(1,2);
+  Matrix2f N = M.inverse();
 
   cout << "M:\n" << M << "\ndetM=" << M.determinant() << endl;
-  cout << "inversed M:\n" << M.inverse() << endl;
+  cout << "inversed M:\n" << N << endl;
+  cout << "M*M^-1:\n" << N * M << endl;
 
   cout << "A:" << A << ", B:" << B << endl;
   A[0] = B[0]; A[1] = B[1];

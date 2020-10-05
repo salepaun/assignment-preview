@@ -13,12 +13,10 @@ void SimpleGravityForce::addEnergyToTotal( const VectorXs& x, const VectorXs& v,
     int Size=x.size(), Num=Size>>1;
 
 #ifndef NDEBUG
-    /*
     cout << "Called:" << __FUNCTION__ \
         << ", Size=" << Size \
         << ", Num=" << Num \
         << ", E=" << E << endl;
-        */
 #endif
 }
 
@@ -33,12 +31,10 @@ void SimpleGravityForce::addGradEToTotal( const VectorXs& x, const VectorXs& v, 
     int Size=x.size(), Num=Size>>1;
 
 #ifndef NDEBUG
-    /*
     cout << "Called:" << __FUNCTION__ \
         << ", Size=" << Size \
         << ", Num=" << Num \
         << ", gradE.size=" << gradE.size() << endl;
-        */
 #endif
 
     scalar LocGradE = 0;
