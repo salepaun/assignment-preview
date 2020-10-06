@@ -115,32 +115,32 @@
   <edge i="6" j="7" radius="0.5"/>
 
   <!-- Leaf -->
-  <edge i="16" j="17" radius="0.1"/>
-  <edge i="17" j="18" radius="0.1"/>
-  <edge i="18" j="19" radius="0.1"/>
-  <edge i="19" j="20" radius="0.1"/>
-  <edge i="20" j="21" radius="0.1"/>
-  <edge i="21" j="22" radius="0.1"/>
-  <edge i="22" j="23" radius="0.1"/>
-  <edge i="23" j="24" radius="0.1"/>
-  <edge i="24" j="17" radius="0.1"/>
-  <edge i="16" j="25" radius="0.1"/>
-  <edge i="25" j="26" radius="0.1"/>
-  <edge i="26" j="21" radius="0.1"/>
-  <edge i="19" j="25" radius="0.1"/>
-  <edge i="20" j="26" radius="0.1"/>
-  <edge i="22" j="26" radius="0.1"/>
-  <edge i="23" j="25" radius="0.1"/>
+  <edge i="16" j="17" radius="0.2"/>
+  <edge i="17" j="18" radius="0.2"/>
+  <edge i="18" j="19" radius="0.2"/>
+  <edge i="19" j="20" radius="0.2"/>
+  <edge i="20" j="21" radius="0.2"/>
+  <edge i="21" j="22" radius="0.2"/>
+  <edge i="22" j="23" radius="0.2"/>
+  <edge i="23" j="24" radius="0.2"/>
+  <edge i="24" j="17" radius="0.2"/>
+  <edge i="16" j="25" radius="0.2"/>
+  <edge i="25" j="26" radius="0.2"/>
+  <edge i="26" j="21" radius="0.2"/>
+  <edge i="19" j="25" radius="0.2"/>
+  <edge i="20" j="26" radius="0.2"/>
+  <edge i="22" j="26" radius="0.2"/>
+  <edge i="23" j="25" radius="0.2"/>
  
   <!-- Hammer -->
-  <edge i="27" j="28" radius="0.1"/>
-  <edge i="28" j="29" radius="0.1"/>
-  <edge i="29" j="30" radius="0.1"/>
-  <edge i="30" j="31" radius="0.1"/>
-  <edge i="31" j="32" radius="0.1"/>
-  <edge i="32" j="33" radius="0.1"/>
-  <edge i="33" j="34" radius="0.1"/>
-  <edge i="34" j="27" radius="0.1"/>
+  <edge i="27" j="28" radius="0.2"/>
+  <edge i="28" j="29" radius="0.2"/>
+  <edge i="29" j="30" radius="0.2"/>
+  <edge i="30" j="31" radius="0.2"/>
+  <edge i="31" j="32" radius="0.2"/>
+  <edge i="32" j="33" radius="0.2"/>
+  <edge i="33" j="34" radius="0.2"/>
+  <edge i="34" j="27" radius="0.2"/>
 
   <!-- Earth
   <edge i="0" j="1" radius="0.3"/>
