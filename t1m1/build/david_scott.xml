@@ -4,6 +4,28 @@
   <duration time="5.0"/>
   <integrator type="explicit-euler" dt="0.01"/>
 
+  <!-- The Moon -->
+  <particle m="1.0" px="0" py="0" vx="0.0" vy="0.0" fixed="1"/>
+  <particle m="1.0" px="5" py="3" vx="0.0" vy="0.0" fixed="1"/>
+  <particle m="1.0" px="8" py="4" vx="0.0" vy="0.0" fixed="1"/>
+  <particle m="1.0" px="13" py="5" vx="0.0" vy="0.0" fixed="1"/>
+  <particle m="1.0" px="17" py="5" vx="0.0" vy="0.0" fixed="1"/>
+  <particle m="1.0" px="22" py="4" vx="0.0" vy="0.0" fixed="1"/>
+  <particle m="1.0" px="25" py="3" vx="0.0" vy="0.0" fixed="1"/>
+  <particle m="1.0" px="30" py="0" vx="0.0" vy="0.0" fixed="1"/>
+
+  <!-- Moon Extras -->
+  <particle m="1.0" px="8" py="3" vx="0.0" vy="0.0" radius="0.5" fixed="1"/>
+  <particle m="1.0" px="12" py="2" vx="0.0" vy="0.0" radius="0.9" fixed="1"/>
+  <particle m="1.0" px="12" py="1.9" vx="0.0" vy="0.0" radius="0.6" fixed="1"/>
+  <particle m="1.0" px="22" py="1.9" vx="0.0" vy="0.0" radius="1.2" fixed="1"/>
+  <particle m="1.0" px="22" py="1.7" vx="0.0" vy="0.0" radius="0.9" fixed="1"/>
+  <particle m="1.0" px="24" py="1.1" vx="0.0" vy="0.0" radius="0.2" fixed="1"/>
+  <particle m="1.0" px="25" py="0.1" vx="0.0" vy="0.0" radius="0.5" fixed="1"/>
+  <particle m="1.0" px="25" py="0.0" vx="0.0" vy="0.0" radius="0.3" fixed="1"/>
+
+  <!-- Earth Extras -->
+
   <!-- Leaf (feather) -->
   <particle m="1.0" px="9" py="22" vx="0.0" vy="0.0" fixed="0"/>
   <particle m="1.0" px="10" py="22" vx="0.0" vy="0.0" fixed="0"/>
@@ -26,8 +48,13 @@
   <particle m="100000.0" px="21" py="21" vx="0.0" vy="0.0" fixed="0"/>
   <particle m="100000.0" px="18" py="21" vx="0.0" vy="0.0" fixed="0"/>
   <particle m="100000.0" px="17" py="22" vx="0.0" vy="0.0" fixed="0"/>
+  <!--  
+  <particle m="1.0" px="" py="" vx="0.0" vy="0.0" fixed="1"/>
+  <particle m="1.0" px="" py="" vx="0.0" vy="0.0" fixed="0"/>
+  -->
 
   <!-- The Earth -->
+  <!--
   <particle m="1.0" px="24" py="26" vx="0.0" vy="0.0" fixed="1"/>
   <particle m="1.0" px="25" py="27" vx="0.0" vy="0.0" fixed="1"/>
   <particle m="1.0" px="27" py="27" vx="0.0" vy="0.0" fixed="1"/>
@@ -36,82 +63,95 @@
   <particle m="1.0" px="27" py="23" vx="0.0" vy="0.0" fixed="1"/>
   <particle m="1.0" px="25" py="23" vx="0.0" vy="0.0" fixed="1"/>
   <particle m="1.0" px="24" py="24" vx="0.0" vy="0.0" fixed="1"/>
-
-  <!-- The Moon -->
-  <particle m="1.0" px="0" py="0" vx="0.0" vy="0.0" fixed="1"/>
-  <particle m="1.0" px="5" py="3" vx="0.0" vy="0.0" fixed="1"/>
-  <particle m="1.0" px="8" py="4" vx="0.0" vy="0.0" fixed="1"/>
-  <particle m="1.0" px="13" py="5" vx="0.0" vy="0.0" fixed="1"/>
-  <particle m="1.0" px="17" py="5" vx="0.0" vy="0.0" fixed="1"/>
-  <particle m="1.0" px="22" py="4" vx="0.0" vy="0.0" fixed="1"/>
-  <particle m="1.0" px="25" py="3" vx="0.0" vy="0.0" fixed="1"/>
-  <particle m="1.0" px="30" py="0" vx="0.0" vy="0.0" fixed="1"/>
-
-  <!-- Moon Extras -->
-  <particle m="1.0" px="8" py="3" vx="0.0" vy="0.0" radius="0.5" fixed="1"/>
-  <particle m="1.0" px="12" py="2" vx="0.0" vy="0.0" radius="0.9" fixed="1"/>
-  <particle m="1.0" px="12" py="1.9" vx="0.0" vy="0.0" radius="0.6" fixed="1"/>
-  <particle m="1.0" px="22" py="1.9" vx="0.0" vy="0.0" radius="1.2" fixed="1"/>
-  <particle m="1.0" px="22" py="1.7" vx="0.0" vy="0.0" radius="0.9" fixed="1"/>
-
-  <!-- Earth Extras -->
-  <!--  
-  <particle m="1.0" px="" py="" vx="0.0" vy="0.0" fixed="1"/>
-  <particle m="1.0" px="" py="" vx="0.0" vy="0.0" fixed="0"/>
   -->
+  <particle m="1.0" px="26" py="25" vx="0.0" vy="0.0" radius="4.0" fixed="1"/>
+  <particle m="1.0" px="24.4" py="26.5" vx="0.0" vy="0.0" radius="1.1" fixed="1"/>
+  <particle m="1.0" px="25.8" py="26.6" vx="0.0" vy="0.0" radius="1.1" fixed="1"/>
+  <particle m="1.0" px="25.2" py="25.4" vx="0.0" vy="0.0" radius="0.8" fixed="1"/>
+  <particle m="1.0" px="27" py="24" vx="0.0" vy="0.0" radius="1.1" fixed="1"/>
+  <particle m="1.0" px="28" py="23.4" vx="0.0" vy="0.0" radius="1" fixed="1"/>
+  <particle m="1.0" px="27.8" py="22.4" vx="0.0" vy="0.0" radius="0.7" fixed="1"/>
+  <particle m="1.0" px="25.6" py="28.5" vx="0.0" vy="0.0" radius="0.6" fixed="1"/>
+  <particle m="1.0" px="26.4" py="28.5" vx="0.0" vy="0.0" radius="0.6" fixed="1"/>
 
-  <particlecolor i="35" r="0.2" g="0.2" b="0.2"/>
-  <particlecolor i="36" r="0.3" g="0.3" b="0.3"/>
-  <particlecolor i="37" r="0.5" g="0.5" b="0.5"/>
-  <particlecolor i="38" r="0.1" g="0.1" b="0.1"/>
-  <particlecolor i="39" r="0.3" g="0.3" b="0.3"/>
+  <particlecolor i="35" r="0.3" g="0.4" b="0.9"/>
+  <particlecolor i="36" r="0.2" g="0.7" b="0.1"/>
+  <particlecolor i="37" r="0.2" g="0.7" b="0.1"/>
+  <particlecolor i="38" r="0.2" g="0.7" b="0.1"/>
+  <particlecolor i="39" r="0.2" g="0.7" b="0.1"/>
+  <particlecolor i="40" r="0.2" g="0.7" b="0.1"/>
+  <particlecolor i="41" r="0.2" g="0.7" b="0.1"/>
+  <particlecolor i="42" r="0.9" g="0.9" b="0.9"/>
+  <particlecolor i="43" r="0.9" g="0.9" b="0.9"/>
+
+
+  <!-- Colors for Moon rim -->
+  <particlecolor i="0" r="0.3" g="0.3" b="0.3"/>
+  <particlecolor i="1" r="0.3" g="0.3" b="0.3"/>
+  <particlecolor i="2" r="0.3" g="0.3" b="0.3"/>
+  <particlecolor i="3" r="0.3" g="0.3" b="0.3"/>
+  <particlecolor i="4" r="0.3" g="0.3" b="0.3"/>
+  <particlecolor i="5" r="0.3" g="0.3" b="0.3"/>
+  <particlecolor i="6" r="0.3" g="0.3" b="0.3"/>
+  <particlecolor i="7" r="0.3" g="0.3" b="0.3"/>
+
+  <!-- Colors for Moon craters -->
+  <particlecolor i="8" r="0.2" g="0.2" b="0.2"/>
+  <particlecolor i="9" r="0.3" g="0.3" b="0.3"/>
+  <particlecolor i="10" r="0.5" g="0.5" b="0.5"/>
+  <particlecolor i="11" r="0.1" g="0.1" b="0.1"/>
+  <particlecolor i="12" r="0.3" g="0.3" b="0.3"/>
+  <particlecolor i="13" r="0.1" g="0.1" b="0.1"/>
+  <particlecolor i="14" r="0.3" g="0.3" b="0.3"/>
+  <particlecolor i="15" r="0.5" g="0.5" b="0.5"/>
+ 
+  <!-- Moon -->
+  <edge i="0" j="1" radius="0.5"/>
+  <edge i="1" j="2" radius="0.5"/>
+  <edge i="2" j="3" radius="0.5"/>
+  <edge i="3" j="4" radius="0.5"/>
+  <edge i="4" j="5" radius="0.5"/>
+  <edge i="5" j="6" radius="0.5"/>
+  <edge i="6" j="7" radius="0.5"/>
 
   <!-- Leaf -->
-  <edge i="0" j="1" radius="0.1"/>
-  <edge i="1" j="2" radius="0.1"/>
-  <edge i="2" j="3" radius="0.1"/>
-  <edge i="3" j="4" radius="0.1"/>
-  <edge i="4" j="5" radius="0.1"/>
-  <edge i="5" j="6" radius="0.1"/>
-  <edge i="6" j="7" radius="0.1"/>
-  <edge i="7" j="8" radius="0.1"/>
-  <edge i="8" j="1" radius="0.1"/>
-  <edge i="1" j="9" radius="0.1"/>
-  <edge i="9" j="10" radius="0.1"/>
-  <edge i="10" j="5" radius="0.1"/>
-  <edge i="3" j="9" radius="0.1"/>
-  <edge i="4" j="10" radius="0.1"/>
-  <edge i="6" j="10" radius="0.1"/>
-  <edge i="7" j="9" radius="0.1"/>
- 
-  <!-- Hammer -->
-  <edge i="11" j="12" radius="0.1"/>
-  <edge i="12" j="13" radius="0.1"/>
-  <edge i="13" j="14" radius="0.1"/>
-  <edge i="14" j="15" radius="0.1"/>
-  <edge i="15" j="16" radius="0.1"/>
   <edge i="16" j="17" radius="0.1"/>
   <edge i="17" j="18" radius="0.1"/>
-  <edge i="18" j="11" radius="0.1"/>
-    
-  <!-- Earth -->
-  <edge i="19" j="20" radius="0.3"/>
-  <edge i="20" j="21" radius="0.3"/>
-  <edge i="21" j="22" radius="0.3"/>
-  <edge i="22" j="23" radius="0.3"/>
-  <edge i="23" j="24" radius="0.3"/>
-  <edge i="24" j="25" radius="0.3"/>
-  <edge i="25" j="26" radius="0.3"/>
-  <edge i="26" j="19" radius="0.3"/>
+  <edge i="18" j="19" radius="0.1"/>
+  <edge i="19" j="20" radius="0.1"/>
+  <edge i="20" j="21" radius="0.1"/>
+  <edge i="21" j="22" radius="0.1"/>
+  <edge i="22" j="23" radius="0.1"/>
+  <edge i="23" j="24" radius="0.1"/>
+  <edge i="24" j="17" radius="0.1"/>
+  <edge i="16" j="25" radius="0.1"/>
+  <edge i="25" j="26" radius="0.1"/>
+  <edge i="26" j="21" radius="0.1"/>
+  <edge i="19" j="25" radius="0.1"/>
+  <edge i="20" j="26" radius="0.1"/>
+  <edge i="22" j="26" radius="0.1"/>
+  <edge i="23" j="25" radius="0.1"/>
+ 
+  <!-- Hammer -->
+  <edge i="27" j="28" radius="0.1"/>
+  <edge i="28" j="29" radius="0.1"/>
+  <edge i="29" j="30" radius="0.1"/>
+  <edge i="30" j="31" radius="0.1"/>
+  <edge i="31" j="32" radius="0.1"/>
+  <edge i="32" j="33" radius="0.1"/>
+  <edge i="33" j="34" radius="0.1"/>
+  <edge i="34" j="27" radius="0.1"/>
 
-  <!-- Moon -->
-  <edge i="27" j="28" radius="0.5"/>
-  <edge i="28" j="29" radius="0.5"/>
-  <edge i="29" j="30" radius="0.5"/>
-  <edge i="30" j="31" radius="0.5"/>
-  <edge i="31" j="32" radius="0.5"/>
-  <edge i="32" j="33" radius="0.5"/>
-  <edge i="33" j="34" radius="0.5"/>
+  <!-- Earth
+  <edge i="0" j="1" radius="0.3"/>
+  <edge i="1" j="2" radius="0.3"/>
+  <edge i="2" j="3" radius="0.3"/>
+  <edge i="3" j="4" radius="0.3"/>
+  <edge i="4" j="5" radius="0.3"/>
+  <edge i="5" j="6" radius="0.3"/>
+  <edge i="6" j="7" radius="0.3"/>
+  <edge i="7" j="0" radius="0.3"/>
+ -->
 
   <!--
   <edge i="" j="" radius="0.1"/>
@@ -120,13 +160,16 @@
   <edge i="" j="" radius="0.1"/>
  -->
 
-  <edgecolor i="0" r="0.8" g="0.8" b="0.8"/>
-  <edgecolor i="1" r="0.8" g="0.8" b="0.8"/>
-  <edgecolor i="2" r="0.8" g="0.8" b="0.8"/>
-  <edgecolor i="3" r="0.8" g="0.8" b="0.8"/>
-  <edgecolor i="4" r="0.8" g="0.8" b="0.8"/>
-  <edgecolor i="5" r="0.8" g="0.8" b="0.8"/>
-  <edgecolor i="6" r="0.8" g="0.8" b="0.8"/>
+  <!-- Moon's rim color -->
+  <edgecolor i="0" r="0.3" g="0.3" b="0.3"/>
+  <edgecolor i="1" r="0.3" g="0.3" b="0.3"/>
+  <edgecolor i="2" r="0.3" g="0.3" b="0.3"/>
+  <edgecolor i="3" r="0.3" g="0.3" b="0.3"/>
+  <edgecolor i="4" r="0.3" g="0.3" b="0.3"/>
+  <edgecolor i="5" r="0.3" g="0.3" b="0.3"/>
+  <edgecolor i="6" r="0.3" g="0.3" b="0.3"/>
+
+  <!-- Leaf (feather) edges colors -->
   <edgecolor i="7" r="0.8" g="0.8" b="0.8"/>
   <edgecolor i="8" r="0.8" g="0.8" b="0.8"/>
   <edgecolor i="9" r="0.8" g="0.8" b="0.8"/>
@@ -136,16 +179,25 @@
   <edgecolor i="13" r="0.8" g="0.8" b="0.8"/>
   <edgecolor i="14" r="0.8" g="0.8" b="0.8"/>
   <edgecolor i="15" r="0.8" g="0.8" b="0.8"/>
+  <edgecolor i="16" r="0.8" g="0.8" b="0.8"/>
+  <edgecolor i="17" r="0.8" g="0.8" b="0.8"/>
+  <edgecolor i="18" r="0.8" g="0.8" b="0.8"/>
+  <edgecolor i="19" r="0.8" g="0.8" b="0.8"/>
+  <edgecolor i="20" r="0.8" g="0.8" b="0.8"/>
+  <edgecolor i="21" r="0.8" g="0.8" b="0.8"/>
+  <edgecolor i="22" r="0.8" g="0.8" b="0.8"/>
 
-  <edgecolor i="16" r="0.8" g="0.8" b="0.0"/>
-  <edgecolor i="17" r="0.8" g="0.8" b="0.0"/>
-  <edgecolor i="18" r="0.8" g="0.8" b="0.0"/>
-  <edgecolor i="19" r="0.2" g="0.2" b="0.2"/>
-  <edgecolor i="20" r="0.2" g="0.2" b="0.2"/>
-  <edgecolor i="21" r="0.2" g="0.2" b="0.2"/>
-  <edgecolor i="22" r="0.2" g="0.2" b="0.2"/>
-  <edgecolor i="23" r="0.2" g="0.2" b="0.2"/>
+  <!-- Hammer edges colors -->
+  <edgecolor i="23" r="0.8" g="0.8" b="0.0"/>
+  <edgecolor i="24" r="0.8" g="0.8" b="0.0"/>
+  <edgecolor i="25" r="0.8" g="0.8" b="0.0"/>
+  <edgecolor i="26" r="0.2" g="0.2" b="0.2"/>
+  <edgecolor i="27" r="0.2" g="0.2" b="0.2"/>
+  <edgecolor i="28" r="0.2" g="0.2" b="0.2"/>
+  <edgecolor i="29" r="0.2" g="0.2" b="0.2"/>
+  <edgecolor i="30" r="0.2" g="0.2" b="0.2"/>
 
+  <!--
   <edgecolor i="24" r="0.0" g="0.0" b="0.9"/>
   <edgecolor i="25" r="0.0" g="0.0" b="0.9"/>
   <edgecolor i="26" r="0.0" g="0.0" b="0.9"/>
@@ -154,14 +206,7 @@
   <edgecolor i="29" r="0.0" g="0.0" b="0.9"/>
   <edgecolor i="30" r="0.0" g="0.0" b="0.9"/>
   <edgecolor i="31" r="0.0" g="0.0" b="0.9"/>
-
-  <edgecolor i="32" r="0.3" g="0.3" b="0.3"/>
-  <edgecolor i="33" r="0.3" g="0.3" b="0.3"/>
-  <edgecolor i="34" r="0.3" g="0.3" b="0.3"/>
-  <edgecolor i="35" r="0.3" g="0.3" b="0.3"/>
-  <edgecolor i="36" r="0.3" g="0.3" b="0.3"/>
-  <edgecolor i="37" r="0.3" g="0.3" b="0.3"/>
-  <edgecolor i="38" r="0.3" g="0.3" b="0.3"/>
+  -->
 
 
   <simplegravity fx="0.0" fy="-1.62"/>
