@@ -2,9 +2,25 @@
 #include "Ops.h"
 
 
-inline static std::pair<Vector2s, Vector2s> calculateForceGrad( \
+
+inline static T_VecPair calculateDampingForceGrad( \
+    Vector2s const & _Vi, \
+    Vector2s const & _Vj, \
+    Vector2s const & _Nij, \
+    scalar const &_B)
+{
+  Vector2s GradEi, GradEj;
+  GradEi = _B * _Nij.dot((_Vi - _Vj)) * _Nij;
+  GradEj = -GradEi;
+
+  return T_VecPair(GradEi, GradEj);
+}
+
+inline static T_VecPair calculateForceGrad( \
     Vector2s const & _Xi, \
     Vector2s const & _Xj, \
+    Vector2s const & _Vi, \
+    Vector2s const & _Vj, \
     scalar const &_K, \
     scalar const &_L0, \
     scalar const _L, \
@@ -15,8 +31,25 @@ inline static std::pair<Vector2s, Vector2s> calculateForceGrad( \
   Nij.normalize();
   GradEi = _K * (_L - _L0) * Nij;
   GradEj = -GradEi;
-  return std::pair<Vector2s, Vector2s>(GradEi, GradEj);
+  T_VecPair GradDampE = calculateDampingForceGrad(_Vi, _Vj, Nij, _B);
+
+  return T_VecPair(GradEi+GradDampE.first, GradEj+GradDampE.second);
 }
+
+inline static scalar calculateOscilatorEnergy( \
+    Vector2s const & _Xi, \
+    Vector2s const & _Xj, \
+    scalar const &_K, \
+    scalar const &_L0, \
+    scalar const _L, \
+    scalar const &_B)
+{
+  scalar E = 0.0, D = _L - _L0;
+  E = _K/2 * D * D;
+
+  return E;
+}
+
 
 
 void SpringForce::addEnergyToTotal( const VectorXs& x, const VectorXs& v, const VectorXs& m, scalar& E )
@@ -44,10 +77,11 @@ void SpringForce::addGradEToTotal( const VectorXs& x, const VectorXs& v, const V
   // Your code goes here!
   Vector2s Xi = extractVector(x, m_endpoints.first);
   Vector2s Xj = extractVector(x, m_endpoints.second);
+  Vector2s Vi = extractVector(v, m_endpoints.first);
+  Vector2s Vj = extractVector(v, m_endpoints.second);
 
-  std::pair<Vector2s, Vector2s> GradEi = 
-    calculateForceGrad(Xi, Xj, m_k, m_l0, calculateDistance(Xi, Xj), m_b);
+  T_VecPair GradEn = calculateForceGrad(Xi, Xj, Vi, Vj, m_k, m_l0, calculateDistance(Xi, Xj), m_b);
 
-  updateGradVector(gradE, m_endpoints.first, GradEi.first);
-  updateGradVector(gradE, m_endpoints.second, GradEi.second);
+  updateVector(gradE, m_endpoints.first, GradEn.first);
+  updateVector(gradE, m_endpoints.second, GradEn.second);
 }
