@@ -90,16 +90,18 @@ bool ExplicitEuler::stepScene( TwoDScene& scene, scalar dt )
             F[i] = 0; F[j] = 0;
         } else {
             Vector2s Xn(X[i], X[j]);
+            Vector2s Xn1 = Xn;
             Vector2s Vn(V[i], V[j]);
+            Vector2s Vn1 = Vn;
             Matrix2s Mn; Mn << M[i], 0, 0, M[j];
             Vector2s Fn(F[i], F[j]);
 
-            dq(Xn, Vn, dt);
-            dv(Xn, Vn, Mn, Fn, dt);
+            dq(Xn1, Vn, dt);
+            dv(Xn, Vn1, Mn, Fn, dt);
 
-            X[i] = Xn[0]; X[j] = Xn[1];
-            V[i] = Vn[0]; V[j] = Vn[1];
-            Vt += Vn;
+            X[i] = Xn1[0]; X[j] = Xn1[1];
+            V[i] = Vn1[0]; V[j] = Vn1[1];
+            Vt += Vn1;
         };
     };
 
