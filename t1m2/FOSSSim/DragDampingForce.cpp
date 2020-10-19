@@ -26,11 +26,11 @@ void DragDampingForce::addGradEToTotal( const VectorXs& x, const VectorXs& v, co
   // Your code goes here!
   int Size = v.size();
   for(int i=0, n=0; i < Size; i+=2, n++) {
-    Vector2s V = extractVectorIdx(x, i);
+    Vector2s V = extractVectorIdx(v, i);
     if(!V.isZero(0)) {
       Vector2s GradEn = calculateForceGrad(V, m_b);
       updateVectorDirect(gradE, n, GradEn);
-      cout << "V[" << i << ":" << n << "]=" << V.transpose() << ", E:" << GradEn.transpose() << endl;
+      // cout << "V[" << i << ":" << n << "]=" << V.transpose() << ", E:" << GradEn.transpose() << endl;
     };
   }
 }
