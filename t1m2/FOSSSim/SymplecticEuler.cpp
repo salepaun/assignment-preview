@@ -1,6 +1,7 @@
 #include "SymplecticEuler.h"
 #include "Ops.h"
 
+#include <stdio.h>
 #include <iostream>
 
 
