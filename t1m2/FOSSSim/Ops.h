@@ -45,6 +45,11 @@ inline static void addVectorDirect(VectorXs& _X, int _N, Vector2s const & _Xn)
   addVectorDirectIdx(_X, Idx, _Xn);
 }
 
+inline static void addVector(VectorXs &_V, int _N, Vector2s const & _Vn)
+{
+  addVectorDirect(_V, _N, Vector2s(_Vn.dot(Vector2s(1,0)), _Vn.dot(Vector2s(0,1))));
+}
+
 inline static void updateVectorDirectIdx(VectorXs& _X, int _Idx, Vector2s const & _Xn)
 {
   _X[_Idx++] = _Xn.x();

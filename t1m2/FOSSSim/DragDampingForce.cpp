@@ -29,7 +29,7 @@ void DragDampingForce::addGradEToTotal( const VectorXs& x, const VectorXs& v, co
     Vector2s V = extractVectorIdx(v, i);
     if(!V.isZero(0)) {
       Vector2s GradEn = calculateForceGrad(V, m_b);
-      updateVectorDirect(gradE, n, GradEn);
+      addVectorDirect(gradE, n, GradEn);
       // cout << "V[" << i << ":" << n << "]=" << V.transpose() << ", E:" << GradEn.transpose() << endl;
     };
   }

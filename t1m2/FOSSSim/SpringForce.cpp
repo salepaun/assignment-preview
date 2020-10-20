@@ -82,6 +82,6 @@ void SpringForce::addGradEToTotal( const VectorXs& x, const VectorXs& v, const V
 
   T_VecPair GradEn = calculateForceGrad(Xi, Xj, Vi, Vj, m_k, m_l0, calculateDistance(Xi, Xj), m_b);
 
-  updateVector(gradE, m_endpoints.first, GradEn.first);
-  updateVector(gradE, m_endpoints.second, GradEn.second);
+  addVector(gradE, m_endpoints.first, GradEn.first);
+  addVector(gradE, m_endpoints.second, GradEn.second);
 }

@@ -71,8 +71,8 @@ void GravitationalForce::addGradEToTotal( const VectorXs& x, const VectorXs& v, 
   Matrix2s Mj = extractMassMx(m, m_particles.second);
   std::pair<Vector2s, Vector2s> GradEn = calculateForceGrad(Xi, Xj, Mi, Mj, m_G, calculateSquaredDistance(Xi, Xj));
 
-  updateVector(gradE, m_particles.first, GradEn.first);
-  updateVector(gradE, m_particles.second, GradEn.second);
+  addVector(gradE, m_particles.first, GradEn.first);
+  addVector(gradE, m_particles.second, GradEn.second);
 
 #ifndef NDEBUG
   /*
