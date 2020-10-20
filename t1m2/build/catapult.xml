@@ -1,5 +1,5 @@
 <scene>
-  <description text="An anti-gravity catapult"/>
+  <description text="An anti-gravity catapult, i.e. due to lack of particles interactions repulsive gravity is used to catapult a projectile."/>
     
   <duration time="10.2"/>
   <integrator type="symplectic-euler" dt="0.01"/>
