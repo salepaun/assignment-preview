@@ -101,4 +101,34 @@ inline static scalar calculateSquaredDistance(
   return L;
 }
 
+
+static void dumpParticles( \
+    VectorXs const & _X, \
+    VectorXs const & _V, \
+    VectorXs const & _M, \
+    int _Max=0, \
+    int _Min=0, \
+    bool _WithV=false, \
+    char const * const _FileName="ParticlesDump.xml")
+{
+  FILE *fd = NULL;
+  fd = fopen(_FileName, "w");
+  if(!fd) {
+    perror("Failed to open scene dump file");
+  } else {
+    int Size = _Max==0 ? _X.size() : (_Max << 1) + 1;
+    for(int i=0, n=0; i < Size; i+=2, ++n) {
+      Vector2s X = extractVectorIdx(_X, i);
+      Vector2s V = extractVectorIdx(_V, i);
+      Vector2s M = extractVectorIdx(_M, i);
+      if(!_WithV)
+        V.setZero();
+      fprintf(fd, \
+          "<particle m=\"%.2lf\" px=\"%.2lf\" py=\"%.2lf\" vx=\"%.2lf\" vy=\"%.2lf\" fixed=\"0\"/>\n", \
+          M.x(), X.x(), X.y(), V.x(), V.y());
+    };
+    fclose(fd);
+  };
+}
+
 #endif // OPS_H

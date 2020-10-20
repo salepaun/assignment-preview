@@ -1,0 +1,389 @@
+<scene>
+  <description text="An anti-gravity catapult"/>
+    
+  <duration time="10.2"/>
+  <integrator type="symplectic-euler" dt="0.01"/>
+  <maxsimfreq max="500.0"/>
+
+  <particle m="1.00" py="0.00" px="0.00" vx="0.00" vy="0.00" fixed="1"/>
+  <particle m="1.00" py="0.00" px="-1.00" vx="0.00" vy="0.00" fixed="1"/>
+  <particle m="1.00" py="1.00" px="0.00" vx="0.00" vy="0.00" fixed="1"/>
+  <particle m="1.00" py="1.00" px="-1.00" vx="0.00" vy="0.00" fixed="1"/>
+  <particle m="1.00" py="2.23" px="-0.56" vx="0.00" vy="0.00" fixed="0"/>
+  <particle m="1.00" py="1.69" px="-1.22" vx="0.00" vy="0.00" fixed="0"/>
+  <particle m="1.00" py="2.90" px="-1.66" vx="0.00" vy="0.00" fixed="0"/>
+  <particle m="1.00" py="1.98" px="-2.00" vx="0.00" vy="0.00" fixed="0"/>
+  <particle m="1.00" py="3.08" px="-2.81" vx="0.00" vy="0.00" fixed="0"/>
+  <particle m="1.00" py="2.11" px="-2.88" vx="0.00" vy="0.00" fixed="0"/>
+  <particle m="1.00" py="3.02" px="-3.93" vx="0.00" vy="0.00" fixed="0"/>
+  <particle m="1.00" py="2.05" px="-3.83" vx="0.00" vy="0.00" fixed="0"/>
+  <particle m="1.00" py="2.82" px="-5.00" vx="0.00" vy="0.00" fixed="0"/>
+  <particle m="1.00" py="1.86" px="-4.78" vx="0.00" vy="0.00" fixed="0"/>
+  <particle m="1.00" py="2.54" px="-6.02" vx="0.00" vy="0.00" fixed="0"/>
+  <particle m="1.00" py="1.59" px="-5.73" vx="0.00" vy="0.00" fixed="0"/>
+  <particle m="1.00" py="2.20" px="-7.00" vx="0.00" vy="0.00" fixed="0"/>
+  <particle m="1.00" py="1.27" px="-6.68" vx="0.00" vy="0.00" fixed="0"/>
+  <particle m="1.00" py="1.86" px="-7.97" vx="0.00" vy="0.00" fixed="0"/>
+  <particle m="1.00" py="0.93" px="-7.63" vx="0.00" vy="0.00" fixed="0"/>
+  <particle m="1.00" py="1.48" px="-8.93" vx="0.00" vy="0.00" fixed="0"/>
+  <particle m="1.00" py="0.56" px="-8.55" vx="0.00" vy="0.00" fixed="0"/>
+  <particle m="1.00" py="1.08" px="-9.87" vx="0.00" vy="0.00" fixed="0"/>
+  <particle m="1.00" py="0.17" px="-9.48" vx="0.00" vy="0.00" fixed="0"/>
+  <particle m="1.00" py="0.68" px="-10.79" vx="0.00" vy="0.00" fixed="0"/>
+  <particle m="1.00" py="-0.15" px="-10.44" vx="0.00" vy="0.00" fixed="0"/> <!-- 25 -->
+
+  <!-- Basket -->
+  <particle m="1.00" py="3.17" px="-7.33" vx="0.00" vy="0.00" fixed="0"/>
+  <particle m="1.00" py="3.08" px="-10.27" vx="0.00" vy="0.00" fixed="0"/>
+
+  <!-- Base -->
+  <particle m="1.0" px="-4.0" py="-6.0" vx="0.0" vy="0.0" fixed="1"/>
+  <particle m="1.0" px="3.0" py="-6.0" vx="0.0" vy="0.0" fixed="1"/>
+
+  <!-- Ball -->
+  <particle m="2.00" py="2.4" px="-8.8" vx="0.20" vy="0.00" fixed="0" radius="0.7"/> <!-- 30 -->
+  <particlecolor i="30" r="0.01" g="0.01" b="0.01"/>
+  <particlepath i="30" duration="5" r="0.4" g="0.3" b="0.3"/>
+  <particlepath i="30" duration="4" r="0.6" g="0.2" b="0.2"/>
+  <particlepath i="30" duration="3" r="0.9" g="0.2" b="0.2"/>
+  <particlepath i="30" duration="2" r="1.0" g="0.2" b="0.2"/>
+
+  <gravitationalforce i="30" j="26" G="-5.1"/>
+  <gravitationalforce i="30" j="27" G="-10.1"/>
+  <gravitationalforce i="30" j="25" G="-10.1"/>
+  <gravitationalforce i="30" j="24" G="-10.1"/>
+  <gravitationalforce i="30" j="23" G="-10.1"/>
+  <gravitationalforce i="30" j="22" G="-10.1"/>
+  <gravitationalforce i="30" j="21" G="-10.1"/>
+
+
+  <!-- Vertical edges -->
+  <edge i="0" j="1" radius="0.1"/>
+  <edge i="2" j="3"/>
+  <edge i="4" j="5"/>
+  <edge i="6" j="7"/>
+  <edge i="8" j="9"/>
+  <edge i="10" j="11"/>
+  <edge i="12" j="13"/>
+  <edge i="14" j="15"/>
+  <edge i="16" j="17"/>
+  <edge i="18" j="19"/>
+  <edge i="20" j="21"/>
+  <edge i="22" j="23"/>
+  <edge i="24" j="25" radius="0.1"/>
+  <!-- Horizontal edges, top -->
+  <edge i="0" j="2" radius="0.1"/>
+  <edge i="2" j="4" radius="0.1"/>
+  <edge i="4" j="6" radius="0.1"/>
+  <edge i="6" j="8" radius="0.1"/>
+  <edge i="8" j="10" radius="0.1"/>
+  <edge i="10" j="12" radius="0.1"/>
+  <edge i="12" j="14" radius="0.1"/>
+  <edge i="14" j="16" radius="0.1"/>
+  <edge i="16" j="18" radius="0.1"/>
+  <edge i="18" j="20" radius="0.1"/>
+  <edge i="20" j="22" radius="0.1"/>
+  <edge i="22" j="24" radius="0.1"/>
+  <!-- Horizontal edges, bottom -->
+  <edge i="1" j="3" radius="0.1"/>
+  <edge i="3" j="5" radius="0.1"/>
+  <edge i="5" j="7" radius="0.1"/>
+  <edge i="7" j="9" radius="0.1"/>
+  <edge i="9" j="11" radius="0.1"/>
+  <edge i="11" j="13" radius="0.1"/>
+  <edge i="13" j="15" radius="0.1"/>
+  <edge i="15" j="17" radius="0.1"/>
+  <edge i="17" j="19" radius="0.1"/>
+  <edge i="19" j="21" radius="0.1"/>
+  <edge i="21" j="23" radius="0.1"/>
+  <edge i="23" j="25" radius="0.1"/>
+  <!-- -45 degree diagonal edges -->
+  <edge i="0" j="3"/>
+  <edge i="2" j="5"/>
+  <edge i="4" j="7"/>
+  <edge i="6" j="9"/>
+  <edge i="8" j="11"/>
+  <edge i="10" j="13"/>
+  <edge i="12" j="15"/>
+  <edge i="14" j="17"/>
+  <edge i="16" j="19"/>
+  <edge i="18" j="21"/>
+  <edge i="20" j="23"/>
+  <edge i="22" j="25"/>
+  <!-- 45 degree diagonal edges -->
+  <edge i="1" j="2"/>
+  <edge i="3" j="4"/>
+  <edge i="5" j="6"/>
+  <edge i="7" j="8"/>
+  <edge i="9" j="10"/>
+  <edge i="11" j="12"/>
+  <edge i="13" j="14"/>
+  <edge i="15" j="16"/>
+  <edge i="17" j="18"/>
+  <edge i="19" j="20"/>
+  <edge i="21" j="22"/>
+  <edge i="23" j="24"/>
+  <!-- Vertical springs -->
+  <springforce edge="0" k="4000.0" l0="1.0" />
+  <springforce edge="1" k="4000.0" l0="1.0" />
+  <springforce edge="2" k="4000.0" l0="1.0" />
+  <springforce edge="3" k="4000.0" l0="1.0" />
+  <springforce edge="4" k="4000.0" l0="1.0" />
+  <springforce edge="5" k="4000.0" l0="1.0" />
+  <springforce edge="6" k="4000.0" l0="1.0" />
+  <springforce edge="7" k="4000.0" l0="1.0" />
+  <springforce edge="8" k="4000.0" l0="1.0" />
+  <springforce edge="9" k="4000.0" l0="1.0" />
+  <springforce edge="10" k="4000.0" l0="1.0" />
+  <springforce edge="11" k="4000.0" l0="1.0" />
+  <springforce edge="12" k="4000.0" l0="1.0" />
+  <!-- Horizontal springs, top -->
+  <springforce edge="13" k="4000.0" l0="1.0" />
+  <springforce edge="14" k="4000.0" l0="1.0" />
+  <springforce edge="15" k="4000.0" l0="1.0" />
+  <springforce edge="16" k="4000.0" l0="1.0" />
+  <springforce edge="17" k="4000.0" l0="1.0" />
+  <springforce edge="18" k="4000.0" l0="1.0" />
+  <springforce edge="19" k="4000.0" l0="1.0" />
+  <springforce edge="20" k="4000.0" l0="1.0" />
+  <springforce edge="21" k="4000.0" l0="1.0" />
+  <springforce edge="22" k="4000.0" l0="1.0" />
+  <springforce edge="23" k="4000.0" l0="1.0" />
+  <springforce edge="24" k="4000.0" l0="1.0" />
+  <!-- Horizontal springs, bottom -->
+  <springforce edge="25" k="4000.0" l0="1.0" />
+  <springforce edge="26" k="4000.0" l0="1.0" />
+  <springforce edge="27" k="4000.0" l0="1.0" />
+  <springforce edge="28" k="4000.0" l0="1.0" />
+  <springforce edge="29" k="4000.0" l0="1.0" />
+  <springforce edge="30" k="4000.0" l0="1.0" />
+  <springforce edge="31" k="4000.0" l0="1.0" />
+  <springforce edge="32" k="4000.0" l0="1.0" />
+  <springforce edge="33" k="4000.0" l0="1.0" />
+  <springforce edge="34" k="4000.0" l0="1.0" />
+  <springforce edge="35" k="4000.0" l0="1.0" />
+  <springforce edge="36" k="4000.0" l0="1.0" />
+  <!-- -45 degree diagonal springs -->
+  <springforce edge="37" k="4000.0" l0="1.41421356237" />
+  <springforce edge="38" k="4000.0" l0="1.41421356237" />
+  <springforce edge="39" k="4000.0" l0="1.41421356237" />
+  <springforce edge="40" k="4000.0" l0="1.41421356237" />
+  <springforce edge="41" k="4000.0" l0="1.41421356237" />
+  <springforce edge="42" k="4000.0" l0="1.41421356237" />
+  <springforce edge="43" k="4000.0" l0="1.41421356237" />
+  <springforce edge="44" k="4000.0" l0="1.41421356237" />
+  <springforce edge="45" k="4000.0" l0="1.41421356237" />
+  <springforce edge="46" k="4000.0" l0="1.41421356237" />
+  <springforce edge="47" k="4000.0" l0="1.41421356237" />
+  <springforce edge="48" k="4000.0" l0="1.41421356237" />
+  <!-- 45 degree diagonal springs -->
+  <springforce edge="49" k="4000.0" l0="1.41421356237" />
+  <springforce edge="50" k="4000.0" l0="1.41421356237" />
+  <springforce edge="51" k="4000.0" l0="1.41421356237" />
+  <springforce edge="52" k="4000.0" l0="1.41421356237" />
+  <springforce edge="53" k="4000.0" l0="1.41421356237" />
+  <springforce edge="54" k="4000.0" l0="1.41421356237" />
+  <springforce edge="55" k="4000.0" l0="1.41421356237" />
+  <springforce edge="56" k="4000.0" l0="1.41421356237" />
+  <springforce edge="57" k="4000.0" l0="1.41421356237" />
+  <springforce edge="58" k="4000.0" l0="1.41421356237" />
+  <springforce edge="59" k="4000.0" l0="1.41421356237" />
+  <springforce edge="60" k="4000.0" l0="1.41421356237" />
+
+
+  <!-- Extra base edges -->
+  <edge i="1" j="28" radius="0.2"/>
+  <edge i="29" j="28" radius="0.2"/>
+  <edge i="0" j="29" radius="0.2"/>
+
+  <!-- Backet -->
+  <edge i="26" j="14" radius="0.12"/> <!-- 64 -->
+  <edge i="26" j="16" radius="0.12"/>
+  <edge i="26" j="18" radius="0.12"/>
+
+  <edge i="27" j="20" radius="0.12"/>
+  <edge i="27" j="22" radius="0.12"/>
+  <edge i="27" j="24" radius="0.12"/>
+
+  <springforce edge="64" k="4000.0" l0="1.41421356237" b="10.0"/>
+  <springforce edge="65" k="4000.0" l0="1" b="10.0"/>
+  <springforce edge="66" k="4000.0" l0="1.41421356237" b="10.0"/>
+  <springforce edge="67" k="4000.0" l0="2.2360679774" b="10.0"/>
+  <springforce edge="68" k="4000.0" l0="2" b="10.0"/>
+  <springforce edge="69" k="4000.0" l0="2.2360679774" b="10.0"/>
+
+  <!-- Decoration -->
+  <!-- Ground -->
+  <particle m="1.0" px="-10.0" py="-6.0" vx="0.0" vy="0.0" fixed="1"/> <!-- 31 -->
+  <particle m="1.0" px=" 40.0" py="-6.0" vx="0.0" vy="0.0" fixed="1"/>
+  <particlecolor i="31" r="0.2" g="0.2" b="0.2"/>
+  <particlecolor i="32" r="0.2" g="0.2" b="0.2"/>
+  <edge i="31" j="32" radius="0.4"/>
+  <edgecolor i="70" r="0.2" g="0.2" b="0.2"/>
+
+  <!-- Castle -->
+  <particle m="1.0" px="20.0" py="-6.0" vx="0.0" vy="0.0" fixed="1"/> <!-- 33 -->
+  <particle m="1.0" px="20.0" py="15.0" vx="0.0" vy="0.0" fixed="1"/>
+  <particle m="1.0" px="22.0" py="15.0" vx="0.0" vy="0.0" fixed="1"/>
+  <particle m="1.0" px="22.0" py="13.0" vx="0.0" vy="0.0" fixed="1"/>
+  <particle m="1.0" px="24.0" py="13.0" vx="0.0" vy="0.0" fixed="1"/>
+  <particle m="1.0" px="24.0" py="15.0" vx="0.0" vy="0.0" fixed="1"/>
+  <particle m="1.0" px="26.0" py="15.0" vx="0.0" vy="0.0" fixed="1"/>
+  <particle m="1.0" px="26.0" py="13.0" vx="0.0" vy="0.0" fixed="1"/>
+  <particle m="1.0" px="28.0" py="13.0" vx="0.0" vy="0.0" fixed="1"/>
+  <particle m="1.0" px="28.0" py="15.0" vx="0.0" vy="0.0" fixed="1"/>
+  <particle m="1.0" px="30.0" py="15.0" vx="0.0" vy="0.0" fixed="1"/>
+  <particle m="1.0" px="30.0" py="13.0" vx="0.0" vy="0.0" fixed="1"/>
+  <particle m="1.0" px="32.0" py="13.0" vx="0.0" vy="0.0" fixed="1"/>
+  <particle m="1.0" px="32.0" py="15.0" vx="0.0" vy="0.0" fixed="1"/>
+  <particle m="1.0" px="34.0" py="15.0" vx="0.0" vy="0.0" fixed="1"/>
+  <particle m="1.0" px="34.0" py="13.0" vx="0.0" vy="0.0" fixed="1"/>
+  <particle m="1.0" px="36.0" py="13.0" vx="0.0" vy="0.0" fixed="1"/>
+  <particle m="1.0" px="36.0" py="15.0" vx="0.0" vy="0.0" fixed="1"/>
+  <particle m="1.0" px="38.0" py="15.0" vx="0.0" vy="0.0" fixed="1"/>
+  <particle m="1.0" px="38.0" py="13.0" vx="0.0" vy="0.0" fixed="1"/>
+  <particle m="1.0" px="40.0" py="13.0" vx="0.0" vy="0.0" fixed="1"/>
+  <particle m="1.0" px="40.0" py="15.0" vx="0.0" vy="0.0" fixed="1"/>
+  <!-- Castle left part -->
+  <particle m="1.0" px="19.0" py="14.0" vx="0.0" vy="0.0" fixed="1"/>
+  <particle m="1.0" px="19.0" py="13.0" vx="0.0" vy="0.0" fixed="1"/>
+  <particle m="1.0" px="18.0" py="12.0" vx="0.0" vy="0.0" fixed="1"/>
+  <particle m="1.0" px="18.0" py="13.0" vx="0.0" vy="0.0" fixed="1"/>
+  <particle m="1.0" px="17.0" py="12.0" vx="0.0" vy="0.0" fixed="1"/>
+  <particle m="1.0" px="17.0" py="11.0" vx="0.0" vy="0.0" fixed="1"/>
+  <particle m="1.0" px="16.0" py="10.0" vx="0.0" vy="0.0" fixed="1"/>
+  <particle m="1.0" px="16.0" py="11.0" vx="0.0" vy="0.0" fixed="1"/>
+  <particle m="1.0" px="15.0" py="10.0" vx="0.0" vy="0.0" fixed="1"/>
+  <particle m="1.0" px="15.0" py="9.0" vx="0.0" vy="0.0" fixed="1"/>
+  <particle m="1.0" px="14.0" py="8.0" vx="0.0" vy="0.0" fixed="1"/>
+  <particle m="1.0" px="14.0" py="9.0" vx="0.0" vy="0.0" fixed="1"/>
+  <particle m="1.0" px="13.0" py="8.0" vx="0.0" vy="0.0" fixed="1"/>
+  <particle m="1.0" px="13.0" py="7.0" vx="0.0" vy="0.0" fixed="1"/>
+  <particle m="1.0" px="13.0" py="-6.0" vx="0.0" vy="0.0" fixed="1"/>
+
+  <particlecolor i="33" r="0.4" g="0.4" b="0.4"/>
+  <particlecolor i="34" r="0.4" g="0.4" b="0.4"/>
+  <particlecolor i="35" r="0.4" g="0.4" b="0.4"/>
+  <particlecolor i="36" r="0.4" g="0.4" b="0.4"/>
+  <particlecolor i="37" r="0.4" g="0.4" b="0.4"/>
+  <particlecolor i="38" r="0.4" g="0.4" b="0.4"/>
+  <particlecolor i="39" r="0.4" g="0.4" b="0.4"/>
+  <particlecolor i="41" r="0.4" g="0.4" b="0.4"/>
+  <particlecolor i="42" r="0.4" g="0.4" b="0.4"/>
+  <particlecolor i="43" r="0.4" g="0.4" b="0.4"/>
+  <particlecolor i="44" r="0.4" g="0.4" b="0.4"/>
+  <particlecolor i="45" r="0.4" g="0.4" b="0.4"/>
+  <particlecolor i="46" r="0.4" g="0.4" b="0.4"/>
+  <particlecolor i="47" r="0.4" g="0.4" b="0.4"/>
+  <particlecolor i="48" r="0.4" g="0.4" b="0.4"/>
+  <particlecolor i="49" r="0.4" g="0.4" b="0.4"/>
+  <particlecolor i="50" r="0.4" g="0.4" b="0.4"/>
+  <particlecolor i="51" r="0.4" g="0.4" b="0.4"/>
+  <particlecolor i="52" r="0.4" g="0.4" b="0.4"/>
+  <particlecolor i="53" r="0.4" g="0.4" b="0.4"/>
+  <particlecolor i="54" r="0.4" g="0.4" b="0.4"/>
+  <!-- Castle left part -->
+  <particlecolor i="55" r="0.4" g="0.4" b="0.4"/>
+  <particlecolor i="56" r="0.4" g="0.4" b="0.4"/>
+  <particlecolor i="57" r="0.4" g="0.4" b="0.4"/>
+  <particlecolor i="58" r="0.4" g="0.4" b="0.4"/>
+  <particlecolor i="59" r="0.4" g="0.4" b="0.4"/>
+  <particlecolor i="60" r="0.4" g="0.4" b="0.4"/>
+  <particlecolor i="61" r="0.4" g="0.4" b="0.4"/>
+  <particlecolor i="62" r="0.4" g="0.4" b="0.4"/>
+  <particlecolor i="63" r="0.4" g="0.4" b="0.4"/>
+  <particlecolor i="64" r="0.4" g="0.4" b="0.4"/>
+  <particlecolor i="65" r="0.4" g="0.4" b="0.4"/>
+  <particlecolor i="66" r="0.4" g="0.4" b="0.4"/>
+  <particlecolor i="67" r="0.4" g="0.4" b="0.4"/>
+  <particlecolor i="68" r="0.4" g="0.4" b="0.4"/>
+  <particlecolor i="69" r="0.4" g="0.4" b="0.4"/>
+
+  <edge i="33" j="34" radius="0.4"/>
+  <edge i="34" j="35" radius="0.4"/>
+  <edge i="35" j="36" radius="0.4"/>
+  <edge i="36" j="37" radius="0.4"/>
+  <edge i="37" j="38" radius="0.4"/>
+  <edge i="38" j="39" radius="0.4"/>
+  <edge i="39" j="40" radius="0.4"/>
+  <edge i="40" j="41" radius="0.4"/>
+  <edge i="41" j="42" radius="0.4"/>
+  <edge i="42" j="43" radius="0.4"/>
+  <edge i="43" j="44" radius="0.4"/>
+  <edge i="44" j="45" radius="0.4"/>
+  <edge i="45" j="46" radius="0.4"/>
+  <edge i="46" j="47" radius="0.4"/>
+  <edge i="47" j="48" radius="0.4"/>
+  <edge i="48" j="49" radius="0.4"/>
+  <edge i="49" j="50" radius="0.4"/>
+  <edge i="50" j="51" radius="0.4"/>
+  <edge i="51" j="52" radius="0.4"/>
+  <edge i="52" j="53" radius="0.4"/>
+  <edge i="53" j="54" radius="0.4"/>
+  <edge i="54" j="32" radius="0.4"/>
+  <!-- Castle left part -->
+  <edge i="34" j="55" radius="0.25"/>
+  <edge i="55" j="56" radius="0.25"/>
+  <edge i="56" j="57" radius="0.25"/>
+  <edge i="57" j="58" radius="0.25"/>
+  <edge i="58" j="59" radius="0.25"/>
+  <edge i="59" j="60" radius="0.25"/>
+  <edge i="60" j="61" radius="0.25"/>
+  <edge i="61" j="62" radius="0.25"/>
+  <edge i="62" j="63" radius="0.25"/>
+  <edge i="63" j="64" radius="0.25"/>
+  <edge i="64" j="65" radius="0.25"/>
+  <edge i="65" j="66" radius="0.25"/>
+  <edge i="66" j="67" radius="0.25"/>
+  <edge i="67" j="68" radius="0.25"/>
+  <edge i="68" j="69" radius="0.25"/>
+
+  <edgecolor i="71" r="0.4" g="0.4" b="0.4"/>
+  <edgecolor i="72" r="0.4" g="0.4" b="0.4"/>
+  <edgecolor i="73" r="0.4" g="0.4" b="0.4"/>
+  <edgecolor i="74" r="0.4" g="0.4" b="0.4"/>
+  <edgecolor i="75" r="0.4" g="0.4" b="0.4"/>
+  <edgecolor i="76" r="0.4" g="0.4" b="0.4"/>
+  <edgecolor i="77" r="0.4" g="0.4" b="0.4"/>
+  <edgecolor i="78" r="0.4" g="0.4" b="0.4"/>
+  <edgecolor i="79" r="0.4" g="0.4" b="0.4"/>
+  <edgecolor i="80" r="0.4" g="0.4" b="0.4"/>
+  <edgecolor i="81" r="0.4" g="0.4" b="0.4"/>
+  <edgecolor i="82" r="0.4" g="0.4" b="0.4"/>
+  <edgecolor i="83" r="0.4" g="0.4" b="0.4"/>
+  <edgecolor i="84" r="0.4" g="0.4" b="0.4"/>
+  <edgecolor i="85" r="0.4" g="0.4" b="0.4"/>
+  <edgecolor i="86" r="0.4" g="0.4" b="0.4"/>
+  <edgecolor i="87" r="0.4" g="0.4" b="0.4"/>
+  <edgecolor i="88" r="0.4" g="0.4" b="0.4"/>
+  <edgecolor i="89" r="0.4" g="0.4" b="0.4"/>
+  <edgecolor i="90" r="0.4" g="0.4" b="0.4"/>
+  <edgecolor i="91" r="0.4" g="0.4" b="0.4"/>
+  <edgecolor i="92" r="0.4" g="0.4" b="0.4"/>
+  <!-- Castle left part -->
+  <edgecolor i="93" r="0.4" g="0.4" b="0.4"/>
+  <edgecolor i="94" r="0.4" g="0.4" b="0.4"/>
+  <edgecolor i="95" r="0.4" g="0.4" b="0.4"/>
+  <edgecolor i="96" r="0.4" g="0.4" b="0.4"/>
+  <edgecolor i="97" r="0.4" g="0.4" b="0.4"/>
+  <edgecolor i="98" r="0.4" g="0.4" b="0.4"/>
+  <edgecolor i="99" r="0.4" g="0.4" b="0.4"/>
+  <edgecolor i="100" r="0.4" g="0.4" b="0.4"/>
+  <edgecolor i="101" r="0.4" g="0.4" b="0.4"/>
+  <edgecolor i="102" r="0.4" g="0.4" b="0.4"/>
+  <edgecolor i="103" r="0.4" g="0.4" b="0.4"/>
+  <edgecolor i="104" r="0.4" g="0.4" b="0.4"/>
+  <edgecolor i="105" r="0.4" g="0.4" b="0.4"/>
+  <edgecolor i="106" r="0.4" g="0.4" b="0.4"/>
+  <edgecolor i="107" r="0.4" g="0.4" b="0.4"/>
+
+  <!-- Border markers -->
+  <particle m="1.0" px="-10.0" py=" 20.0" vx="0.0" vy="0.0" fixed="1"/>
+  <particle m="1.0" px=" 40.0" py=" 20.0" vx="0.0" vy="0.0" fixed="1"/>
+  <particle m="1.0" px=" 40.0" py="-8.0" vx="0.0" vy="0.0" fixed="1"/>
+  <particle m="1.0" px="-10.0" py="-8.0" vx="0.0" vy="0.0" fixed="1"/>
+
+  <dragdamping b="0.3"/>
+  <simplegravity fx="0.0" fy="-1.8"/>
+
+</scene>
