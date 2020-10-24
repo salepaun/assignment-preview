@@ -85,6 +85,27 @@ inline static void dXStep( \
 }
 
 
+inline static void handleFixedParticles( \
+    TwoDScene const &_Scene, \
+    int _NDof, \
+    int _NP, \
+    VectorXs &_X, \
+    VectorXs &_V, \
+    VectorXs &_GradU, \
+    MatrixXs &_Hx, \
+    MatrixXs &_Hv)
+{
+  for(int n=0, i=0; n < _NP; ++n) {
+    if(_Scene.isFixed(n)) {
+      i = n << 1;
+      _V.segment<2>(i).setZero();
+      _Hx.col(i).setZero(); _Hx.row(i).setZero(); _Hx(i,i) = 1;
+      _Hv.col(i).setZero(); _Hv.row(i).setZero(); _Hv(i,i) = 1;
+    };
+  };
+}
+
+
 
 
 /**
@@ -119,6 +140,9 @@ bool LinearizedImplicitEuler::stepScene( TwoDScene& scene, scalar dt )
   scene.accumulateGradU(GradU, dX, dV);
   scene.accumulateddUdxdx(Hx, dX, dV);
   scene.accumulateddUdxdv(Hv, dX, dV);
+
+  handleFixedParticles(scene, NDof, NP, X, V, GradU, Hx, Hv);
+
 
 #ifndef NDEBUG
 #ifdef MY_DEBUG
