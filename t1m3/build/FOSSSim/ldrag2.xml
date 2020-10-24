@@ -1,5 +1,5 @@
 <scene>
-  <description text="Particle should approach the finish line at x = 1 asymptotically. Intended to test the basic functionality of the drag force and to benchmark against an analytical solution."/>
+  <description text="Simple drag test with fixed particles"/>
 
   <duration time="1.0"/>
   <integrator type="explicit-euler" dt="0.1"/>
