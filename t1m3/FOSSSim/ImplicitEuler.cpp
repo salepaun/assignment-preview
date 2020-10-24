@@ -1,4 +1,5 @@
 #include "ImplicitEuler.h"
+#include <Eigen/Dense>
 
 bool ImplicitEuler::stepScene( TwoDScene& scene, scalar dt )
 {

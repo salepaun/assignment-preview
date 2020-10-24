@@ -1,5 +1,9 @@
 #include "SimpleGravityForce.h"
 
+#include <iostream>
+
+using namespace std;
+
 void SimpleGravityForce::addHessXToTotal( const VectorXs& x, const VectorXs& v, const VectorXs& m, MatrixXs& hessE )
 {
   assert( x.size() == v.size() );
@@ -9,6 +13,7 @@ void SimpleGravityForce::addHessXToTotal( const VectorXs& x, const VectorXs& v, 
   assert( x.size()%2 == 0 );
     
   // Nothing to do.
+  // cout << "Called:" << __FUNCTION__ << endl;
 }
 
 void SimpleGravityForce::addHessVToTotal( const VectorXs& x, const VectorXs& v, const VectorXs& m, MatrixXs& hessE )
@@ -20,4 +25,5 @@ void SimpleGravityForce::addHessVToTotal( const VectorXs& x, const VectorXs& v, 
   assert( x.size()%2 == 0 );
     
   // Nothing to do.
+  // cout << "Called:" << __FUNCTION__ << endl;
 }

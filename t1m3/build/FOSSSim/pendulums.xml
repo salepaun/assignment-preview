@@ -1,0 +1,29 @@
+<scene>
+  <description text="Various pendulums indicating gravity and spring forces."/>
+    
+  <duration time="10.0"/>
+  <integrator type="symplectic-euler" dt="0.1"/>
+  <maxsimfreq max="500.0"/>
+
+  <particle m="1.0" px=" 1.0" py=" 0.0" vx="0.0" vy="0.0" fixed="1"/>
+  <particle m="1.0" px=" 3.0" py=" 0.0" vx="0.0" vy="0.0" fixed="1"/>
+  <particle m="1.0" px=" 2.0" py="-2.0" vx="0.0" vy="0.0" fixed="1"/>
+  <particle m="1.0" px=" 4.0" py="-2.0" vx="0.0" vy="-10.0" fixed="0"/>
+  <particle m="10.0" px=" 6.0" py="-2.0" vx="0.0" vy="0.0" fixed="0"/>
+  <edge i="0" j="1"/>
+  <edge i="1" j="2"/>
+  <edge i="0" j="2"/>
+  <edge i="2" j="3"/>
+  <edge i="3" j="4"/>
+  <springforce edge="3" k="100.0" l0="2.0" />
+  <springforce edge="4" k="1.0" l0="2.0" />
+
+  <particle m="1.0" px="-10.0" py="  0.0" vx="0.0" vy="0.0" fixed="1"/>
+  <particle m="1.0" px=" 10.0" py="  0.0" vx="0.0" vy="0.0" fixed="1"/>
+  <particle m="1.0" px=" 10.0" py="-10.0" vx="0.0" vy="0.0" fixed="1"/>
+  <particle m="1.0" px="-10.0" py="-10.0" vx="0.0" vy="0.0" fixed="1"/>
+
+  <dragdamping b="1.0"/>
+  <simplegravity fx="0.0" fy="-9.89"/>
+
+</scene>
