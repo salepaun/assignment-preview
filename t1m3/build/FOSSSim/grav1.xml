@@ -2,7 +2,7 @@
   <description text="The earth orbiting the sun. In these units, one simulation second corresponds to one real year. Intended to benchmark the simulation against an analytical solution, to provide a basic test of the gravitational force, and to highlight differences between explicit, forward-backward, and implicit Euler. Notice how the orbit spirals outward with explicit Euler."/>
 
   <duration time="1.5"/>
-  <integrator type="explicit-euler" dt="0.01"/>
+  <integrator type="linearized-implicit-euler" dt="0.01"/>
   <maxsimfreq max="500.0"/>
 
   <!-- The sun -->
