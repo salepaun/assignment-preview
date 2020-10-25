@@ -115,8 +115,8 @@ inline static void handleFixedParticles( \
 /**
  * Global variables.
  */
-bool g_bUseStep = false;
-scalar g_sTime = 0.0;
+static bool g_bUseStep = false;
+static scalar g_sTime = 0.0;
 
 
 
