@@ -37,7 +37,7 @@ void SpringForce::addHessXToTotal( const VectorXs& x, const VectorXs& v, const V
   K = -m_k*(NNt + (L-m_l0)/L * (Id - NNt));
 
   // Contribution from damping
-  K += - m_b/L * (N.dot(Vij)*Id + N*Vij.transpose()) * (Id - NNt);
+  K += -m_b/L * (N.dot(Vij)*Id + N*Vij.transpose()) * (Id - NNt);
 
   updateHessianWithJacobianBlock(Ii, Ij, hessE, K);
 }
@@ -69,7 +69,7 @@ void SpringForce::addHessVToTotal( const VectorXs& x, const VectorXs& v, const V
   Matrix2s NNt = N*N.transpose();
 
   // Contribution from damping
-  K = m_b * NNt;
+  K = -m_b * NNt;
 
   updateHessianWithJacobianBlock(Ii, Ij, hessE, K);
 }

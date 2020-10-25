@@ -4,7 +4,7 @@
 #include <iostream>
 
 
-#define MY_DEBUG
+#undef MY_DEBUG
 
 using namespace std;
 
