@@ -39,10 +39,7 @@ void GravitationalForce::addHessXToTotal( const VectorXs& x, const VectorXs& v, 
   J.block<2,2>(2,2) = K;
   */
 
-  hessE.block<2,2>(Ii,Ii) += K;
-  hessE.block<2,2>(Ii,Ij) += -K;
-  hessE.block<2,2>(Ij,Ii) += -K;
-  hessE.block<2,2>(Ij,Ij) += K;
+  updateHessianWithJacobianBlock(Ii, Ij, hessE, K);
 }
 
 void GravitationalForce::addHessVToTotal( const VectorXs& x, const VectorXs& v, const VectorXs& m, MatrixXs& hessE )

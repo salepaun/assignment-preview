@@ -95,12 +95,16 @@ inline static void handleFixedParticles( \
     MatrixXs &_Hx, \
     MatrixXs &_Hv)
 {
-  for(int n=0, i=0; n < _NP; ++n) {
+  for(int n=0, i=0, j=0; n < _NP; ++n) {
     if(_Scene.isFixed(n)) {
       i = n << 1;
+      j = i + 1;
       _V.segment<2>(i).setZero();
+      _GradU.segment<2>(i).setZero();
       _Hx.col(i).setZero(); _Hx.row(i).setZero(); _Hx(i,i) = 1;
+      _Hx.col(j).setZero(); _Hx.row(j).setZero(); _Hx(j,j) = 1;
       _Hv.col(i).setZero(); _Hv.row(i).setZero(); _Hv(i,i) = 1;
+      _Hv.col(j).setZero(); _Hv.row(j).setZero(); _Hv(j,j) = 1;
     };
   };
 }
