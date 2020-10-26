@@ -34,4 +34,6 @@ void DragDampingForce::addHessVToTotal( const VectorXs& x, const VectorXs& v, co
   };
   */
   hessE.diagonal() += VectorXs::Constant(Size, -m_b);
+
+  cout << "Called:" << __FUNCTION__ << ": H:\n" << hessE << endl;
 }

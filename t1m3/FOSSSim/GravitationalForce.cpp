@@ -28,12 +28,13 @@ void GravitationalForce::addHessXToTotal( const VectorXs& x, const VectorXs& v, 
   Matrix2s Mj = m.segment<2>(Ij).asDiagonal();
   Vector2s Xi = X.segment<2>(Ii);
   Vector2s Xj = X.segment<2>(Ij);
-  scalar L = calculateDistance(Xi, Xj);
+  scalar nL = 1.0 / calculateDistance(Xi, Xj);
   Vector2s N = Xi - Xj;
   N.normalize();
   
   // Calculate 
-  K = - m_G/(L*L*L) * Mi * Mj * (Matrix2s::Identity() - 3 * N * N.transpose()); 
+  K = - m_G * nL * Mi * Mj * (Matrix2s::Identity() - 3 * N * N.transpose()); 
+  K *= nL * nL;
 
   /* 
   Matrix4s J = Matrix4s::Zero();

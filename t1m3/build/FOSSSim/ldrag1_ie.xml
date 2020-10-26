@@ -1,10 +1,10 @@
 <scene>
   <description text="Simple drag test"/>
 
-  <duration time="5.0"/>
+  <duration time="9.0"/>
   <integrator type="implicit-euler" dt="0.1"/>
 
   <particle m="1.0" px="0.0" py="0.0" vx="1.0" vy="0.0" fixed="0" radius="0.02"/>
 
-  <dragdamping b="2.5"/>
+  <dragdamping b="1.0"/>
 </scene>

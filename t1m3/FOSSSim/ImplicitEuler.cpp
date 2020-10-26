@@ -146,9 +146,11 @@ static void calculateImplicitEulerStep(
 
 static bool keepNewton( \
     int _NDof, int _NP, \
+    int &_Iter, \
     VectorXs const &_Vi, \
     VectorXs const &_Vi1)
 {
+  /*
   for(int i=0, n=0; i < _NDof; i+=2, n++) {
     scalar err = abs((_Vi.segment<2>(i) - _Vi1.segment<2>(i)).norm());
     if(err >= g_sNewtonError) {
@@ -159,11 +161,16 @@ static bool keepNewton( \
       return true;
     }
   }
+  */
 
+  scalar Err = (_Vi - _Vi1).squaredNorm();
 #ifndef NDEBUG
-      cout << "Vi+1 - Vi:  " << (_Vi1 - _Vi).transpose() << endl;
+  cout << (_Iter ? "  " : "**") \
+    << (Err >= g_sNewtonError ? " keep " : " last ") \
+    << "[" << _Iter << "] (Vi+1-Vi).norm()=" << Err << ", Vi+1 - Vi:  " << (_Vi1 - _Vi).transpose() << endl;
 #endif
-  return false;
+  ++_Iter;
+  return Err >= g_sNewtonError;
 }
 
 
@@ -194,6 +201,7 @@ bool ImplicitEuler::stepScene( TwoDScene& scene, scalar dt )
 
   FILE *Fd = energyDumpInit(g_sTime);
 
+  int Iter = 0;
   do {
     calculateImplicitEulerStep( \
         scene, dt, \
@@ -201,7 +209,7 @@ bool ImplicitEuler::stepScene( TwoDScene& scene, scalar dt )
         X, V, Vi, \
         Xn1, Vn1, Mm);
     
-  } while (keepNewton(NDof, NP, Vi, Vn1));
+  } while (keepNewton(NDof, NP, Iter, Vi, Vn1));
 
   // Final assignments
   X = Xn1;
@@ -218,9 +226,7 @@ bool ImplicitEuler::stepScene( TwoDScene& scene, scalar dt )
 
 
 #ifndef NDEBUG
-#ifdef MY_DEBUG
   dumpParticles(X, V, M, 0, 0, true, true);
-#endif
 #endif
   
   

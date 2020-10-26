@@ -202,9 +202,7 @@ bool LinearizedImplicitEuler::stepScene( TwoDScene& scene, scalar dt )
 
 
 #ifndef NDEBUG
-#ifdef MY_DEBUG
   dumpParticles(X, V, M, 0, 0, true, true);
-#endif
 #endif
   
   return true;

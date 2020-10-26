@@ -43,5 +43,12 @@ int main() {
 
   Vector2s Rvc = Mc * Rc * B;
   cout << "10 * Mc * Rc * B = " << 10 * Rvc.transpose() << endl;
+
+  Vector2s An = Vector2s::Random();
+  Vector2s Bn = Vector2s::Random();
+  Vector2s Nn = An - Bn;
+  Nn.normalize();
+  cout << "A:" << An.transpose() << ", B:" << Bn.transpose() \
+    << ", (A - B).normalized =" << Nn << endl;
   return 0;
 }
