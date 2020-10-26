@@ -163,7 +163,7 @@ static bool keepNewton( \
   }
   */
 
-  scalar Err = (_Vi - _Vi1).squaredNorm();
+  scalar Err = (_Vi - _Vi1).norm();
 #ifndef NDEBUG
   cout << (_Iter ? "  " : "**") \
     << (Err >= g_sNewtonError ? " keep " : " last ") \
