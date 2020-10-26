@@ -1,0 +1,81 @@
+<scene>
+  <description text="This scene simulates Roche limit, when gravity gradient overwhelms forces keeping the orbiting body together, aka a satellite falls apart comming too close (too deep in gravity field). This scene takes advantage of a flaw of linearized implicit Euler, which reduses system's energy, i.e. orbit decayes due to inegrator (otherwise a proper orbital speed would do the same)"/>
+
+  <duration time="10.0"/>
+  <integrator type="implicit-euler" dt="0.001"/>
+  <maxsimfreq max="500.0"/>
+
+  <!-- The sun -->
+  <particle m="0.331436e6" px="0.0" py="0.0" vx="0.0" vy="0.0" fixed="0" radius="0.06"/>
+
+  <!-- Earth -->
+  <particle m="1.0" px="1.0" py="0.00" vx="0.0" vy="6.28316" fixed="0" radius="0.02"/>
+
+  <!-- A commet - hiperbolic -->
+  <particle m="0.1" px="-8.0" py="0.00" vy="-0.2" vx="16.28316" fixed="0" radius="0.02"/>
+  <particle m="0.1" px="-8.00000000001" py="0.00" vy="-0.2" vx="16.28316" fixed="0" radius="0.02"/>
+  <particle m="0.1" px="-8.00000000002" py="0.00" vy="-0.2" vx="16.28316" fixed="0" radius="0.02"/>
+
+  <!-- A commet - parabolic -->
+  <particle m="0.1" px="0.0" py="-10.00" vx="0.09" vy="11.28316" fixed="0" radius="0.02"/>
+  <particle m="0.1" px="0.0" py="-10.000000000001" vx="0.09" vy="11.28316" fixed="0" radius="0.02"/>
+  <particle m="0.1" px="0.0" py="-10.000000000002" vx="0.09" vy="11.28316" fixed="0" radius="0.02"/>
+
+  <!-- A black hole -->
+  <particle m="0.331436e7" px="-20.0" py="-20.0" vx="1.0" vy="2.1" fixed="0" radius="0.06"/>
+
+  <gravitationalforce i="2" j="3" G="0.000118419"/>
+  <gravitationalforce i="3" j="4" G="0.000118419"/>
+  <gravitationalforce i="2" j="4" G="0.000118419"/>
+
+  <gravitationalforce i="5" j="6" G="0.000118419"/>
+  <gravitationalforce i="6" j="7" G="0.000118419"/>
+  <gravitationalforce i="5" j="7" G="0.000118419"/>
+
+  <gravitationalforce i="0" j="1" G="0.000118419"/>
+  <gravitationalforce i="0" j="2" G="0.000118419"/>
+  <gravitationalforce i="0" j="3" G="0.000118419"/>
+  <gravitationalforce i="0" j="4" G="0.000118419"/>
+  <gravitationalforce i="0" j="5" G="0.000118419"/>
+  <gravitationalforce i="0" j="6" G="0.000118419"/>
+  <gravitationalforce i="0" j="7" G="0.000118419"/>
+
+  <gravitationalforce i="8" j="0" G="0.000118419"/>
+  <gravitationalforce i="8" j="1" G="0.000118419"/>
+
+  <particlecolor i="0" r="1.0" g="1.0" b="0.2"/>
+
+  <particlecolor i="1" r="0.0" g="0.8" b="0.4"/>
+
+  <particlecolor i="2" r="0.8" g="0.4" b="0.4"/>
+  <particlecolor i="3" r="0.8" g="0.4" b="0.4"/>
+  <particlecolor i="4" r="0.8" g="0.4" b="0.4"/>
+
+  <particlecolor i="5" r="0.8" g="0.6" b="0.4"/>
+  <particlecolor i="6" r="0.8" g="0.6" b="0.4"/>
+  <particlecolor i="7" r="0.8" g="0.6" b="0.4"/>
+
+  <particlecolor i="8" r="0.2" g="0.2" b="0.2"/>
+
+  <!-- Frame -->
+  <particle m="1.0" px="-2.0" py="-2.0" vx="0.0" vy="0.0" fixed="1" radius="0.01"/>
+  <particle m="1.0" px=" 2.0" py="-2.0" vx="0.0" vy="0.0" fixed="1" radius="0.01"/>
+  <particle m="1.0" px="-2.0" py=" 2.0" vx="0.0" vy="0.0" fixed="1" radius="0.01"/>
+  <particle m="1.0" px=" 2.0" py=" 2.0" vx="0.0" vy="0.0" fixed="1" radius="0.01"/>
+
+  <particlepath i="0" duration="20.0" r="0.8" g="0.8" b="0.1"/>
+
+  <particlepath i="1" duration="20.0" r="0.0" g="0.6" b="0.2"/>
+
+  <particlepath i="2" duration="1.0" r="0.6" g="0.2" b="0.2"/>
+  <particlepath i="3" duration="1.0" r="0.6" g="0.2" b="0.2"/>
+  <particlepath i="4" duration="1.0" r="0.6" g="0.2" b="0.2"/>
+
+  <particlepath i="5" duration="1.0" r="0.6" g="0.4" b="0.2"/>
+  <particlepath i="6" duration="1.0" r="0.6" g="0.4" b="0.2"/>
+  <particlepath i="7" duration="1.0" r="0.6" g="0.4" b="0.2"/>
+
+  <particlepath i="8" duration="3.0" r="0.1" g="0.1" b="0.1"/>
+
+  <backgroundcolor r="0.0" g="0.0" b="0.0"/>
+</scene>

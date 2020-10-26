@@ -6,6 +6,7 @@
 #include <iostream>
 
 
+#define MY_DEBUG
 #undef MY_DEBUG
 
 using namespace std;
@@ -87,7 +88,7 @@ inline static void handleFixedParticles( \
  */
 static scalar g_sTime = 0.0;
 
-static scalar g_sNewtonError = 10.0e-9; // !!!! might be power of 10 ???
+static scalar g_sNewtonError = 10.0e-9;
 
 
 
@@ -149,11 +150,19 @@ static bool keepNewton( \
     VectorXs const &_Vi1)
 {
   for(int i=0, n=0; i < _NDof; i+=2, n++) {
-    if(abs((_Vi.segment<2>(i) - _Vi1.segment<2>(i)).norm()) >= g_sNewtonError) {
+    scalar err = abs((_Vi.segment<2>(i) - _Vi1.segment<2>(i)).norm());
+    if(err >= g_sNewtonError) {
+#ifndef NDEBUG
+      cout << __FUNCTION__ << "error[" << i << "]:" << err << endl;
+      cout << "Vi+1 - Vi:  " << (_Vi1 - _Vi).transpose() << endl;
+#endif
       return true;
     }
   }
 
+#ifndef NDEBUG
+      cout << "Vi+1 - Vi:  " << (_Vi1 - _Vi).transpose() << endl;
+#endif
   return false;
 }
 
@@ -176,8 +185,8 @@ bool ImplicitEuler::stepScene( TwoDScene& scene, scalar dt )
   int NDof = X.size(), NP = scene.getNumParticles();
   assert(NDof%2 == 0);
 
-  VectorXs Xn = X;
-  VectorXs Vn = V;
+  VectorXs Xn1 = X;
+  VectorXs Vn1 = V;
   VectorXs Vi = V;
 
   // Mass matrix
@@ -189,10 +198,14 @@ bool ImplicitEuler::stepScene( TwoDScene& scene, scalar dt )
     calculateImplicitEulerStep( \
         scene, dt, \
         NDof, NP, \
-        Xn, Vn, Vi, \
-        X, V, M);
+        X, V, Vi, \
+        Xn1, Vn1, Mm);
     
-  } while (keepNewton(NDof, NP, Vi, V));
+  } while (keepNewton(NDof, NP, Vi, Vn1));
+
+  // Final assignments
+  X = Xn1;
+  V = Vn1;
 
   //
   // Scene kinetic energy

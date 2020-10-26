@@ -28,9 +28,10 @@ void DragDampingForce::addHessVToTotal( const VectorXs& x, const VectorXs& v, co
   
   // Compute the force Jacobian here!
   int Size = x.size();
+  /*
   for(int i=0; i < Size; i++) {
     hessE(i,i) -= m_b;
   };
-
-  // cout << "Called:" << __FUNCTION__ << ": H:" << hessE << endl;
+  */
+  hessE.diagonal() += VectorXs::Constant(Size, -m_b);
 }

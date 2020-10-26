@@ -1,6 +1,11 @@
 #include "GravitationalForce.h"
 #include "Ops.h"
 
+#include <iostream>
+
+using namespace std;
+
+
 void GravitationalForce::addHessXToTotal( const VectorXs& x, const VectorXs& v, const VectorXs& m, MatrixXs& hessE )
 {
   assert( x.size() == v.size() );
@@ -28,7 +33,7 @@ void GravitationalForce::addHessXToTotal( const VectorXs& x, const VectorXs& v, 
   N.normalize();
   
   // Calculate 
-  K = - m_G/pow(L,3) * Mi * Mj * (Matrix2s::Identity() - 3 * N * N.transpose()); 
+  K = - m_G/(L*L*L) * Mi * Mj * (Matrix2s::Identity() - 3 * N * N.transpose()); 
 
   /* 
   Matrix4s J = Matrix4s::Zero();
@@ -38,6 +43,13 @@ void GravitationalForce::addHessXToTotal( const VectorXs& x, const VectorXs& v, 
   J.block<2,2>(0,2) = -K;
   J.block<2,2>(2,2) = K;
   */
+
+#ifndef NDEBUG
+  cout << __FUNCTION__ \
+    << ": K:\n" << K \
+    << "\nNNt:\n" << N*N.transpose() \
+    << endl;
+#endif
 
   updateHessianWithJacobianBlock(Ii, Ij, hessE, K);
 }
