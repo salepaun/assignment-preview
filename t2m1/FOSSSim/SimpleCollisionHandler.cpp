@@ -23,8 +23,8 @@ inline static void findAlpha( \
     Vector2s const &_V3, 
     Vector2s &_Ne, \
     Vector2s &_Ve, \
-    scalar _sAlpha, \
-    scalar _sEAlpha)
+    scalar &_sAlpha, \
+    scalar &_sEAlpha)
 
 {
     Vector2s A = _X1 - _X2;
@@ -53,6 +53,13 @@ inline static void findAlpha( \
       _Ne = _sEAlpha * EAxN - A;
       _Ve = _V2 + _sAlpha * (_V3 - _V2);
     };
+
+#ifndef NDEBUG
+    cout << __FUNCTION__ \
+      << "(): Alpha:" << _sAlpha << ", EAlpha:" << _sEAlpha \
+      << ", A:(" << A << "), B:(" << B << ")" \
+      << endl;
+#endif
 }
 
     
@@ -158,7 +165,7 @@ bool SimpleCollisionHandler::detectParticleEdge(TwoDScene &scene, int vidx, int 
     scalar R2 = Radii[E.first];
     scalar R3 = Radii[E.second];
     scalar Re = scene.getEdgeRadii()[eidx];
-    scalar R = max(max(R2,R3),Re); //max3(R2,R3,Re);
+    scalar R = Re; // seems like oracle uses edge, max(max(R2,R3),Re); //max3(R2,R3,Re);
 
 
     // alpha parameter (edge drop point absolute distance)
