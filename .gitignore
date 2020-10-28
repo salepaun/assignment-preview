@@ -6,5 +6,9 @@
 **/Makefile
 **/*.mp4
 **/*.core
-**/build/*.txt
+**/build/*/*.txt
 **/build/CMakeFiles
+**/residual.txt
+**/ParticlesDump.xml
+**/kinetic_energy_output.txt
+**/log.txt

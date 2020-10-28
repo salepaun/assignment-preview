@@ -23,41 +23,45 @@ inline static void findAlpha( \
     Vector2s const &_V3, 
     Vector2s &_Ne, \
     Vector2s &_Ve, \
-    scalar &_sAlpha, \
-    scalar &_sEAlpha)
-
+    scalar &_sAlpha)
 {
     Vector2s A = _X1 - _X2;
     Vector2s B = _X3 - _X2;
     Vector2s EAxN = B;
+    Vector2s EPAx; // Edge Particle axis
     EAxN.normalize();
 
     // alpha parameter (edge drop point absolute distance)
-    scalar BLen = B.norm();
-    _sEAlpha = A.dot(B) / BLen;
-    _sAlpha = _sEAlpha / BLen;
+    // scalar BLen = B.norm();
+    // _sEAlpha = A.dot(B) / BLen;
+    // _sAlpha = _sEAlpha / BLen;
+    scalar B2Ln = B.squaredNorm();
+    _sAlpha = A.dot(B) / B2Ln;
 
     // 
     // Alpha constraints
     //
     if (_sAlpha <= 0) {
       // away from or on X2 edge vertex
-      _Ne = (_X1 - _X2);
+      EPAx = (_X2 - _X1);
       _Ve = _V2;
     } else if (_sAlpha >= 1) {
       // away from or on X3 edge vertex
-      _Ne = (_X1 - _X3);
+      EPAx = (_X3 - _X1);
       _Ve = _V3;
     } else {
       // calculating Normal and distance with 'drop' point
-      _Ne = _sEAlpha * EAxN - A;
+      // EPAx = _sEAlpha * EAxN - A; - caused discrapancies with the oracle
+      EPAx = _sAlpha * B - A;
       _Ve = _V2 + _sAlpha * (_V3 - _V2);
     };
 
+    _Ne = EPAx;
+
 #ifndef NDEBUG
     cout << __FUNCTION__ \
-      << "(): Alpha:" << _sAlpha << ", EAlpha:" << _sEAlpha \
-      << ", A:(" << A << "), B:(" << B << ")" \
+      << "(): Alpha:" << _sAlpha \
+      << ", A:(" << A << "), B:(" << B << "), N:(" << _Ne << ")" \
       << endl;
 #endif
 }
@@ -173,7 +177,7 @@ bool SimpleCollisionHandler::detectParticleEdge(TwoDScene &scene, int vidx, int 
     scalar sEAlpha;
     scalar sAlpha;
 
-    findAlpha(X1, X2, X3, V1, V2, V3, n, Vx, sAlpha, sEAlpha);
+    findAlpha(X1, X2, X3, V1, V2, V3, n, Vx, sAlpha);
 
     scalar D = n.norm();
 
@@ -189,7 +193,7 @@ bool SimpleCollisionHandler::detectParticleEdge(TwoDScene &scene, int vidx, int 
       << "\n  X1:" << X1.transpose() << ", X2:" << X2.transpose() << ", X3:" << X3.transpose() \
       << ", D:" << D << ", R1:" << R1 << ", R2:" << R2 << ", R3:" << R3 << ", Re:" << Re << ", R:" << R \
       << ", sEAlpha:" << sEAlpha << ", Alpha:" << sAlpha << ", Xx:" << n.transpose() \
-      << ", Vx:" << Vx.transpose() << ", V1:" << V1 \
+      << ", Vx:" << Vx.transpose() << ", V1:" << V1.transpose() << ", N:" << n.transpose() \
       << ": T:" << bTouch << ", A:" << bApproach \
       << endl;
 #endif
@@ -302,7 +306,7 @@ void SimpleCollisionHandler::respondParticleParticle(TwoDScene &scene, int idx1,
     V.segment<2>(I2) = V2p;
 
 #ifndef NDEBUG
-    cout << __FUNCTION__ \
+    cout << "**** " << __FUNCTION__ \
       << "\n  PP collision: n:(" << n.transpose() << ") COR=" << getCOR() << " Vaux:(" << Vaux \
       << ") V1:(" << V1.transpose() << "), V1p:(" << V1p.transpose() \
       << ") V2:(" << V2.transpose() << "), V2p:(" << V2p.transpose() << ")" \
@@ -353,7 +357,7 @@ void SimpleCollisionHandler::respondParticleEdge(TwoDScene &scene, int vidx, int
     scalar sAlpha;
     Vector2s N = n;
 
-    findAlpha(X1, X2, X3, V1, V2, V3, N, Ve, sAlpha, sEAlpha);
+    findAlpha(X1, X2, X3, V1, V2, V3, N, Ve, sAlpha);
 
     N.normalize();
     scalar sAlpha2 = sAlpha*sAlpha;
@@ -378,7 +382,7 @@ void SimpleCollisionHandler::respondParticleEdge(TwoDScene &scene, int vidx, int
     V.segment<2>(I3) = V3p;
 
 #ifndef NDEBUG
-    cout << __FUNCTION__ \
+    cout << "**** " << __FUNCTION__ \
       << "\n  PP collision: n:(" << n.transpose() << ") COR=" << getCOR() << " Alpha:" << sAlpha \
       << " Vaux:(" << Vaux \
       << ") V1:(" << V1.transpose() << "), V1p:(" << V1p.transpose() \
@@ -401,8 +405,26 @@ void SimpleCollisionHandler::respondParticleEdge(TwoDScene &scene, int vidx, int
 //   None.
 void SimpleCollisionHandler::respondParticleHalfplane(TwoDScene &scene, int vidx, int pidx, const Vector2s &n)
 {
-    VectorXs nhat = n;
-    
     // Your code goes here!
+    VectorXs &V = scene.getV();
+    Vector2s Xp = scene.getHalfplane(pidx).first;
+    
+    int I1 = vidx << 1;
+    scalar C = (1.0 + getCOR());
+    Vector2s V1 = V.segment<2>(I1);
+    Vector2s N = n;
+    N.normalize(); // just in case
+
+    Vector2s Vaux = C * (V1).dot(N) * N;
+    Vector2s V1p = V1 - Vaux;
+
+    V.segment<2>(I1) = V1p;
+
+#ifndef NDEBUG
+    cout << "**** " << __FUNCTION__ \
+      << "\n  PP collision: n:(" << n.transpose() << ") COR=" << getCOR() << " Vaux:(" << Vaux \
+      << ") V1:(" << V1.transpose() << "), V1p:(" << V1p.transpose() \
+      << endl;
+#endif
     
 }
