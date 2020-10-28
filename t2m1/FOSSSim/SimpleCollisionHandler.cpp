@@ -4,6 +4,7 @@
 #include <vector>
 // #include <lapacke.h>
 #include <Eigen/Dense>
+#include <math.h>
 
 #include "MathDefs.h"
 
@@ -12,6 +13,49 @@
 using namespace std;
 
 
+
+inline static void findAlpha( \
+    Vector2s const &_X1, \
+    Vector2s const &_X2, \
+    Vector2s const &_X3, 
+    Vector2s const &_V1, \
+    Vector2s const &_V2, \
+    Vector2s const &_V3, 
+    Vector2s &_Ne, \
+    Vector2s &_Ve, \
+    scalar _sAlpha, \
+    scalar _sEAlpha)
+
+{
+    Vector2s A = _X1 - _X2;
+    Vector2s B = _X3 - _X2;
+    Vector2s EAxN = B;
+    EAxN.normalize();
+
+    // alpha parameter (edge drop point absolute distance)
+    scalar BLen = B.norm();
+    _sEAlpha = A.dot(B) / BLen;
+    _sAlpha = _sEAlpha / BLen;
+
+    // 
+    // Alpha constraints
+    //
+    if (_sAlpha <= 0) {
+      // away from or on X2 edge vertex
+      _Ne = (_X1 - _X2);
+      _Ve = _V2;
+    } else if (_sAlpha >= 1) {
+      // away from or on X3 edge vertex
+      _Ne = (_X1 - _X3);
+      _Ve = _V3;
+    } else {
+      // calculating Normal and distance with 'drop' point
+      _Ne = _sEAlpha * EAxN - A;
+      _Ve = _V2 + _sAlpha * (_V3 - _V2);
+    };
+}
+
+    
 
 // BEGIN STUDENT CODE //
 
@@ -116,41 +160,15 @@ bool SimpleCollisionHandler::detectParticleEdge(TwoDScene &scene, int vidx, int 
     scalar Re = scene.getEdgeRadii()[eidx];
     scalar R = max(max(R2,R3),Re); //max3(R2,R3,Re);
 
-    Vector2s A = X1 - X2;
-    Vector2s B = X3 - X2;
-    Vector2s EAxN = B;
-    EAxN.normalize();
-
-    Vector2s X1EAx;
-    Vector2s Vx;
 
     // alpha parameter (edge drop point absolute distance)
-    scalar BLen = B.norm();
-    scalar sEAlpha = A.dot(B) / BLen;
-    scalar sAlpha = sEAlpha / BLen;
+    Vector2s Vx;
+    scalar sEAlpha;
+    scalar sAlpha;
 
-    // 
-    // Alpha constraints
-    //
-    if (sAlpha <= 0) {
-      // away from or on X2 edge vertex
-      X1EAx = (X1 - X2);
-      Vx = V2;
-    } else if (sAlpha >= 1) {
-      // away from or on X3 edge vertex
-      X1EAx = (X1 - X3);
-      Vx = V3;
-    } else {
-      // calculating Normal and distance with 'drop' point
-      X1EAx = sEAlpha * EAxN - A;
-      Vx = V2 + sAlpha * (V3 - V2);
-    };
+    findAlpha(X1, X2, X3, V1, V2, V3, n, Vx, sAlpha, sEAlpha);
 
-    // output according to description (not normalized!)
-    n = -X1EAx;
-
-    scalar D = X1EAx.norm();
-    X1EAx.normalize(); // need normalized for speed vectors
+    scalar D = n.norm();
 
     bTouch = D < R1 + R;
 
@@ -158,6 +176,16 @@ bool SimpleCollisionHandler::detectParticleEdge(TwoDScene &scene, int vidx, int 
       bApproach = (V1 - Vx).dot(n) > 0;
     else
       bApproach = false;
+
+#ifndef NDEBUG
+    cout << __FUNCTION__ \
+      << "\n  X1:" << X1.transpose() << ", X2:" << X2.transpose() << ", X3:" << X3.transpose() \
+      << ", D:" << D << ", R1:" << R1 << ", R2:" << R2 << ", R3:" << R3 << ", Re:" << Re << ", R:" << R \
+      << ", sEAlpha:" << sEAlpha << ", Alpha:" << sAlpha << ", Xx:" << n.transpose() \
+      << ", Vx:" << Vx.transpose() << ", V1:" << V1 \
+      << ": T:" << bTouch << ", A:" << bApproach \
+      << endl;
+#endif
     
     return bTouch && bApproach;
 }
@@ -243,7 +271,6 @@ void SimpleCollisionHandler::respondParticleParticle(TwoDScene &scene, int idx1,
     Vector2s N = n;
     N.normalize();
 
-    // n.normalize(); // just in case
     Vector2s Vaux = C * (V2-V1).dot(N) * N;
 
     Matrix2s M1 = M.segment<2>(I1).asDiagonal();
@@ -275,7 +302,6 @@ void SimpleCollisionHandler::respondParticleParticle(TwoDScene &scene, int idx1,
       << ", M2:" << M2 << ", M1:" << M1 << ", M12i:" << M12i \
       << endl;
 #endif
-
 }
 
 // Responds to a collision detected between a particle and an edge by applying
@@ -289,21 +315,69 @@ void SimpleCollisionHandler::respondParticleParticle(TwoDScene &scene, int idx1,
 //   None.
 void SimpleCollisionHandler::respondParticleEdge(TwoDScene &scene, int vidx, int eidx, const Vector2s &n)
 {
-    const VectorXs &M = scene.getM();
-    
-    int eidx1 = scene.getEdges()[eidx].first;
-    int eidx2 = scene.getEdges()[eidx].second;
-    
-    VectorXs x1 = scene.getX().segment<2>(2*vidx);
-    VectorXs x2 = scene.getX().segment<2>(2*eidx1);
-    VectorXs x3 = scene.getX().segment<2>(2*eidx2);
-    
-    VectorXs v1 = scene.getV().segment<2>(2*vidx);
-    VectorXs v2 = scene.getV().segment<2>(2*eidx1);
-    VectorXs v3 = scene.getV().segment<2>(2*eidx2);
-    
     // Your code goes here!
+    pair<int, int> const &E = scene.getEdges()[eidx];
+
+    int I1 = vidx << 1;
+    int I2 = E.first << 1;
+    int I3 = E.second << 1;
+
+    VectorXs const &X = scene.getX();
+    VectorXs const &M = scene.getM();
+    VectorXs &V = scene.getV();
     
+    vector<scalar> const & Radii = scene.getRadii();
+
+    Vector2s X1 = X.segment<2>(I1);
+    Vector2s X2 = X.segment<2>(I2);
+    Vector2s X3 = X.segment<2>(I3);
+
+    Vector2s V1 = V.segment<2>(I1);
+    Vector2s V2 = V.segment<2>(I2);
+    Vector2s V3 = V.segment<2>(I3);
+
+    Matrix2s M1 = M.segment<2>(I1).asDiagonal();
+    Matrix2s M2 = M.segment<2>(I2).asDiagonal();
+    Matrix2s M3 = M.segment<2>(I3).asDiagonal();
+
+    // alpha parameter (edge drop point absolute distance)
+    Vector2s Ve;
+    scalar sEAlpha;
+    scalar sAlpha;
+    Vector2s N = n;
+
+    findAlpha(X1, X2, X3, V1, V2, V3, N, Ve, sAlpha, sEAlpha);
+
+    N.normalize();
+    scalar sAlpha2 = sAlpha*sAlpha;
+    scalar sBeta2 = (1-sAlpha)*(1-sAlpha);
+
+    scalar C = (1.0 + getCOR());
+
+    Vector2s Vaux = C * (Ve-V1).dot(N) * N;
+    // For mass matrixes with only diagnoal M1 * M2 = M2 * M1
+    Matrix2s M12 = M1 * M2;
+    Matrix2s M13 = M1 * M3;
+    Matrix2s M23 = M2 * M3;
+    Matrix2s Maux = M23 + M1 * (sBeta2*M3 + sAlpha2*M2);
+    Matrix2s MauxI = Maux.inverse();
+
+    Vector2s V1p = V1 + M23 * MauxI * Vaux;
+    Vector2s V2p = V2 - M13 * MauxI * Vaux * sAlpha;
+    Vector2s V3p = V3 - M12 * MauxI * Vaux * (1-sAlpha);
+
+    V.segment<2>(I1) = V1p;
+    V.segment<2>(I2) = V2p;
+    V.segment<2>(I3) = V3p;
+
+#ifndef NDEBUG
+    cout << __FUNCTION__ \
+      << "\n  PP collision: n:(" << n.transpose() << ") COR=" << getCOR() << " Vaux:(" << Vaux \
+      << ") V1:(" << V1.transpose() << "), V1p:(" << V1p.transpose() \
+      << ") V2:(" << V2.transpose() << "), V2p:(" << V2p.transpose() << ")" \
+      << ", M1:" << M1 << ", M2:" << M2 << ", M3:" << M3 << ", MauxI:" << MauxI \
+      << endl;
+#endif
 }
 
 
