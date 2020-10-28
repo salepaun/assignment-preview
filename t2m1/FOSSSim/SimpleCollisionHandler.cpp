@@ -363,8 +363,8 @@ void SimpleCollisionHandler::respondParticleEdge(TwoDScene &scene, int vidx, int
     Matrix2s MauxI = Maux.inverse();
 
     Vector2s V1p = V1 + M23 * MauxI * Vaux;
-    Vector2s V2p = V2 - M13 * MauxI * Vaux * sAlpha;
-    Vector2s V3p = V3 - M12 * MauxI * Vaux * (1-sAlpha);
+    Vector2s V2p = V2 - M13 * MauxI * Vaux * (1-sAlpha);
+    Vector2s V3p = V3 - M12 * MauxI * Vaux * sAlpha;
 
     V.segment<2>(I1) = V1p;
     V.segment<2>(I2) = V2p;
@@ -372,9 +372,11 @@ void SimpleCollisionHandler::respondParticleEdge(TwoDScene &scene, int vidx, int
 
 #ifndef NDEBUG
     cout << __FUNCTION__ \
-      << "\n  PP collision: n:(" << n.transpose() << ") COR=" << getCOR() << " Vaux:(" << Vaux \
+      << "\n  PP collision: n:(" << n.transpose() << ") COR=" << getCOR() << " Alpha:" << sAlpha \
+      << " Vaux:(" << Vaux \
       << ") V1:(" << V1.transpose() << "), V1p:(" << V1p.transpose() \
       << ") V2:(" << V2.transpose() << "), V2p:(" << V2p.transpose() << ")" \
+      << ") V3:(" << V2.transpose() << "), V3p:(" << V3p.transpose() << ")" \
       << ", M1:" << M1 << ", M2:" << M2 << ", M3:" << M3 << ", MauxI:" << MauxI \
       << endl;
 #endif
