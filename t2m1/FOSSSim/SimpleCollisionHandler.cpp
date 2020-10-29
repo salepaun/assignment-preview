@@ -396,8 +396,9 @@ void SimpleCollisionHandler::respondParticleEdge(TwoDScene &scene, int vidx, int
 
     N = n; // calculated from detection not now
     N.normalize();
+    scalar sBeta = 1 - sAlpha;
     scalar sAlpha2 = sAlpha*sAlpha;
-    scalar sBeta2 = (1-sAlpha)*(1-sAlpha);
+    scalar sBeta2 = sBeta * sBeta;
 
     scalar C = (1.0 + getCOR());
 
@@ -409,7 +410,7 @@ void SimpleCollisionHandler::respondParticleEdge(TwoDScene &scene, int vidx, int
         Matrix2s M12 = M2 + M1*sBeta2;
         Matrix2s M12i = M12.inverse();
         V1p = V1 + M2 * M12i * Vaux;
-        V2p = V2 - M1 * M12i * Vaux;
+        V2p = V2 - M1 * M12i * Vaux * sBeta;
 
         V.segment<2>(I1) = V1p;
         V.segment<2>(I2) = V2p;
@@ -419,17 +420,19 @@ void SimpleCollisionHandler::respondParticleEdge(TwoDScene &scene, int vidx, int
         Matrix2s M13 = M3 + M1*sAlpha2;
         Matrix2s M13i = M13.inverse();
         V1p = V1 + M3 * M13i * Vaux;
-        V3p = V3 - M1 * M13i * Vaux;
+        V3p = V3 - M1 * M13i * Vaux * sAlpha;
 
         V.segment<2>(I1) = V1p;
         V.segment<2>(I3) = V3p;
+
+        //V1p = V1 + Vaux / (1 + sBeta2*m1/m2 + sAlpha2*m1/m3);
       }
       else if (!F2 && !F3)
       {
         Matrix2s M23 = M3*sBeta2 + M2*sAlpha2;
         Matrix2s M23i = M23.inverse();
-        V2p = V2 - M3 * M23i * Vaux;
-        V3p = V3 - M2 * M23i * Vaux;
+        V2p = V2 - M3 * M23i * Vaux * sBeta;
+        V3p = V3 - M2 * M23i * Vaux * sAlpha;
 
         V.segment<2>(I2) = V2p;
         V.segment<2>(I3) = V3p;
@@ -441,12 +444,12 @@ void SimpleCollisionHandler::respondParticleEdge(TwoDScene &scene, int vidx, int
       }
       else if (!F2)
       {
-        V2p = V2 - Vaux;
+        V2p = V2 - Vaux / sBeta;
         V.segment<2>(I2) = V2p;
       }
       else if (!F3)
       {
-        V3p = V3 - Vaux;
+        V3p = V3 - Vaux / sAlpha;
         V.segment<2>(I3) = V3p;
       };
     }
