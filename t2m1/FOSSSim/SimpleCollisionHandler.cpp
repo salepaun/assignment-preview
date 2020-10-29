@@ -10,6 +10,7 @@
 #include <limits>
 #include <cmath>
 
+#include "Ops.h"
 
 using namespace std;
 
@@ -17,60 +18,6 @@ using namespace std;
 #define IS_INF(a) (isinf(a(0,0)))
 #define IS_NOT_INF(a) (!isinf(a(0,0)))
 #define ASSERT_MASS_CHECK(a) assert(a(0,0) == a(1,1))
-
-inline static void findAlpha( \
-    Vector2s const &_X1, \
-    Vector2s const &_X2, \
-    Vector2s const &_X3, 
-    Vector2s const &_V1, \
-    Vector2s const &_V2, \
-    Vector2s const &_V3, 
-    Vector2s &_Ne, \
-    Vector2s &_Ve, \
-    scalar &_sAlpha)
-{
-    Vector2s A = _X1 - _X2;
-    Vector2s B = _X3 - _X2;
-    Vector2s EAxN = B;
-    Vector2s EPAx; // Edge Particle axis
-    EAxN.normalize();
-
-    // alpha parameter (edge drop point absolute distance)
-    // scalar BLen = B.norm();
-    // _sEAlpha = A.dot(B) / BLen;
-    // _sAlpha = _sEAlpha / BLen;
-    scalar B2Ln = B.squaredNorm();
-    _sAlpha = A.dot(B) / B2Ln;
-
-    // 
-    // Alpha constraints
-    //
-    if (_sAlpha <= 0) {
-      // away from or on X2 edge vertex
-      _sAlpha = 0;
-      EPAx = (_X2 - _X1);
-      _Ve = _V2;
-    } else if (_sAlpha >= 1) {
-      // away from or on X3 edge vertex
-      _sAlpha = 1;
-      EPAx = (_X3 - _X1);
-      _Ve = _V3;
-    } else {
-      // calculating Normal and distance with 'drop' point
-      // EPAx = _sEAlpha * EAxN - A; - caused discrapancies with the oracle
-      EPAx = _sAlpha * B - A;
-      _Ve = _V2 + _sAlpha * (_V3 - _V2);
-    };
-
-    _Ne = EPAx;
-
-#ifndef NDEBUG
-    cout << __FUNCTION__ \
-      << "(): Alpha:" << _sAlpha \
-      << ", A:(" << A.transpose() << "), B:(" << B.transpose() << "), N:(" << _Ne.transpose() << ")" \
-      << endl;
-#endif
-}
 
     
 

@@ -1,3 +1,9 @@
+/**
+ * set makeprg=g++\ -I/usr/include/eigen3\ -o\ %<\ %
+ */
+
+
+
 #include <iostream>
 
 #include <Eigen/Core>
@@ -50,5 +56,14 @@ int main() {
   Nn.normalize();
   cout << "A:" << An.transpose() << ", B:" << Bn.transpose() \
     << ", (A - B).normalized =" << Nn << endl;
+
+  
+  Matrix2s I = Matrix2s::Identity();
+  MatrixXs E(2,4);
+  E.block<2,2>(0,0) = I;
+  E.block<2,2>(0,2) = I;
+
+  cout << "E:\n" << E << endl;
+
   return 0;
 }
