@@ -1,18 +1,22 @@
 #include "SimpleCollisionHandler.h"
 #include <iostream>
 #include <set>
-#include <vector>
-// #include <lapacke.h>
-#include <Eigen/Dense>
-#include <math.h>
 
 #include "MathDefs.h"
 
+#include <vector>
+// #include <lapacke.h>
+#include <Eigen/Dense>
+#include <limits>
+#include <cmath>
 
 
 using namespace std;
 
 
+#define IS_INF(a) (isinf(a(0,0)))
+#define IS_NOT_INF(a) (!isinf(a(0,0)))
+#define ASSERT_MASS_CHECK(a) assert(a(0,0) == a(1,1))
 
 inline static void findAlpha( \
     Vector2s const &_X1, \
@@ -286,13 +290,6 @@ void SimpleCollisionHandler::respondParticleParticle(TwoDScene &scene, int idx1,
 
     Vector2s Vaux = C * (V2-V1).dot(N) * N;
 
-    Matrix2s M1 = M.segment<2>(I1).asDiagonal();
-    Matrix2s M2 = M.segment<2>(I2).asDiagonal();
-    Matrix2s M12 = M2 + M1;
-    Matrix2s M12i = M12.inverse();
-    Vector2s V1p = V1 + M2 * M12i * Vaux;
-    Vector2s V2p = V2 - M1 * M12i * Vaux;
-
     /*
     Vector2s Mv1 = M.segment<2>(I1);
     Vector2s Mv2 = M.segment<2>(I2);
@@ -304,15 +301,44 @@ void SimpleCollisionHandler::respondParticleParticle(TwoDScene &scene, int idx1,
     Vector2s V2p = V2 - M21 * Vaux;
     */
 
-    V.segment<2>(I1) = V1p;
-    V.segment<2>(I2) = V2p;
+    Matrix2s M1 = M.segment<2>(I1).asDiagonal();
+    Matrix2s M2 = M.segment<2>(I2).asDiagonal();
+    Vector2s V1p, V2p;
+    bool F1 = scene.isFixed(idx1);
+    bool F2 = scene.isFixed(idx2);
+
+    ASSERT_MASS_CHECK(M1);
+    ASSERT_MASS_CHECK(M2);
+
+    V1p = V2p = Vector2s::Zero();
+
+    if (F1 || F2) {
+      if (!F1) {
+        V1p = V1 + Vaux;
+        V.segment<2>(I1) = V1p;
+      } else if (!F2) {
+        V2p = V2 - Vaux;
+        V.segment<2>(I2) = V2p;
+      };
+    }
+    else
+    {
+      Matrix2s M12 = M2 + M1;
+      Matrix2s M12i = M12.inverse();
+      V1p = V1 + M2 * M12i * Vaux;
+      V2p = V2 - M1 * M12i * Vaux;
+
+      V.segment<2>(I1) = V1p;
+      V.segment<2>(I2) = V2p;
+    };
+
 
 #ifndef NDEBUG
     cout << "**** " << __FUNCTION__ \
-      << "\n  PP collision: n:(" << n.transpose() << ") COR=" << getCOR() << " Vaux:(" << Vaux \
+      << "\n  PP collision: n:(" << n.transpose() << ") COR=" << getCOR() << " Vaux:(" << Vaux.transpose() \
       << ") V1:(" << V1.transpose() << "), V1p:(" << V1p.transpose() \
       << ") V2:(" << V2.transpose() << "), V2p:(" << V2p.transpose() << ")" \
-      << ", M2:" << M2 << ", M1:" << M1 << ", M12i:" << M12i \
+      << ", M2:" << M2 << ", M1:" << M1 \
       << endl;
 #endif
 }
@@ -350,6 +376,14 @@ void SimpleCollisionHandler::respondParticleEdge(TwoDScene &scene, int vidx, int
     Matrix2s M1 = M.segment<2>(I1).asDiagonal();
     Matrix2s M2 = M.segment<2>(I2).asDiagonal();
     Matrix2s M3 = M.segment<2>(I3).asDiagonal();
+    Vector2s V1p, V2p, V3p;
+    bool F1 = scene.isFixed(vidx);
+    bool F2 = scene.isFixed(E.first);
+    bool F3 = scene.isFixed(E.second);
+
+    ASSERT_MASS_CHECK(M1);
+    ASSERT_MASS_CHECK(M2);
+    ASSERT_MASS_CHECK(M3);
 
     // alpha parameter (edge drop point absolute distance)
     Vector2s Ve;
@@ -357,6 +391,7 @@ void SimpleCollisionHandler::respondParticleEdge(TwoDScene &scene, int vidx, int
     scalar sAlpha;
     Vector2s N;
 
+    V1p = V2p = V3p = Vector2s::Zero();
     findAlpha(X1, X2, X3, V1, V2, V3, N, Ve, sAlpha);
 
     N = n; // calculated from detection not now
@@ -367,29 +402,80 @@ void SimpleCollisionHandler::respondParticleEdge(TwoDScene &scene, int vidx, int
     scalar C = (1.0 + getCOR());
 
     Vector2s Vaux = C * (Ve-V1).dot(N) * N;
-    // For mass matrixes with only diagnoal M1 * M2 = M2 * M1
-    Matrix2s M12 = M1 * M2;
-    Matrix2s M13 = M1 * M3;
-    Matrix2s M23 = M2 * M3;
-    Matrix2s Maux = M23 + M1 * (sBeta2*M3 + sAlpha2*M2);
-    Matrix2s MauxI = Maux.inverse();
 
-    Vector2s V1p = V1 + M23 * MauxI * Vaux;
-    Vector2s V2p = V2 - M13 * MauxI * Vaux * (1-sAlpha);
-    Vector2s V3p = V3 - M12 * MauxI * Vaux * sAlpha;
+    if (F1 || F2 || F3) {
+      if (!F1 && !F2)
+      {
+        Matrix2s M12 = M2 + M1*sBeta2;
+        Matrix2s M12i = M12.inverse();
+        V1p = V1 + M2 * M12i * Vaux;
+        V2p = V2 - M1 * M12i * Vaux;
 
-    V.segment<2>(I1) = V1p;
-    V.segment<2>(I2) = V2p;
-    V.segment<2>(I3) = V3p;
+        V.segment<2>(I1) = V1p;
+        V.segment<2>(I2) = V2p;
+      }
+      else if (!F1 && !F3)
+      {
+        Matrix2s M13 = M3 + M1*sAlpha2;
+        Matrix2s M13i = M13.inverse();
+        V1p = V1 + M3 * M13i * Vaux;
+        V3p = V3 - M1 * M13i * Vaux;
+
+        V.segment<2>(I1) = V1p;
+        V.segment<2>(I3) = V3p;
+      }
+      else if (!F2 && !F3)
+      {
+        Matrix2s M23 = M3*sBeta2 + M2*sAlpha2;
+        Matrix2s M23i = M23.inverse();
+        V2p = V2 - M3 * M23i * Vaux;
+        V3p = V3 - M2 * M23i * Vaux;
+
+        V.segment<2>(I2) = V2p;
+        V.segment<2>(I3) = V3p;
+      }
+      else if (!F1)
+      {
+        V1p = V1 + Vaux;
+        V.segment<2>(I1) = V1p;
+      }
+      else if (!F2)
+      {
+        V2p = V2 - Vaux;
+        V.segment<2>(I2) = V2p;
+      }
+      else if (!F3)
+      {
+        V3p = V3 - Vaux;
+        V.segment<2>(I3) = V3p;
+      };
+    }
+    else
+    {
+      // For mass matrixes with only diagnoal M1 * M2 = M2 * M1
+      Matrix2s M12 = M1 * M2;
+      Matrix2s M13 = M1 * M3;
+      Matrix2s M23 = M2 * M3;
+      Matrix2s Maux = M23 + M1 * (sBeta2*M3 + sAlpha2*M2);
+      Matrix2s MauxI = Maux.inverse();
+
+      Vector2s V1p = V1 + M23 * MauxI * Vaux;
+      Vector2s V2p = V2 - M13 * MauxI * Vaux * (1-sAlpha);
+      Vector2s V3p = V3 - M12 * MauxI * Vaux * sAlpha;
+
+      V.segment<2>(I1) = V1p;
+      V.segment<2>(I2) = V2p;
+      V.segment<2>(I3) = V3p;
+    };
 
 #ifndef NDEBUG
     cout << "**** " << __FUNCTION__ \
       << "\n  PP collision: n:(" << n.transpose() << ") COR=" << getCOR() << " Alpha:" << sAlpha \
-      << " Vaux:(" << Vaux \
+      << " Vaux:(" << Vaux.transpose() \
       << ") V1:(" << V1.transpose() << "), V1p:(" << V1p.transpose() \
       << ") V2:(" << V2.transpose() << "), V2p:(" << V2p.transpose() << ")" \
       << ") V3:(" << V2.transpose() << "), V3p:(" << V3p.transpose() << ")" \
-      << ", M1:" << M1 << ", M2:" << M2 << ", M3:" << M3 << ", MauxI:" << MauxI \
+      << ", M1:" << M1 << ", M2:" << M2 << ", M3:" << M3 \
       << endl;
 #endif
 }
@@ -409,7 +495,11 @@ void SimpleCollisionHandler::respondParticleHalfplane(TwoDScene &scene, int vidx
     // Your code goes here!
     VectorXs &V = scene.getV();
     Vector2s Xp = scene.getHalfplane(pidx).first;
+    bool F1 = scene.isFixed(vidx);
     
+    if (F1)
+      return;
+
     int I1 = vidx << 1;
     scalar C = (1.0 + getCOR());
     Vector2s V1 = V.segment<2>(I1);
