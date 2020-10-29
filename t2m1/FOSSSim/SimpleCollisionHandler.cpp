@@ -43,10 +43,12 @@ inline static void findAlpha( \
     //
     if (_sAlpha <= 0) {
       // away from or on X2 edge vertex
+      _sAlpha = 0;
       EPAx = (_X2 - _X1);
       _Ve = _V2;
     } else if (_sAlpha >= 1) {
       // away from or on X3 edge vertex
+      _sAlpha = 1;
       EPAx = (_X3 - _X1);
       _Ve = _V3;
     } else {
@@ -61,7 +63,7 @@ inline static void findAlpha( \
 #ifndef NDEBUG
     cout << __FUNCTION__ \
       << "(): Alpha:" << _sAlpha \
-      << ", A:(" << A << "), B:(" << B << "), N:(" << _Ne << ")" \
+      << ", A:(" << A.transpose() << "), B:(" << B.transpose() << "), N:(" << _Ne.transpose() << ")" \
       << endl;
 #endif
 }
@@ -337,8 +339,6 @@ void SimpleCollisionHandler::respondParticleEdge(TwoDScene &scene, int vidx, int
     VectorXs const &M = scene.getM();
     VectorXs &V = scene.getV();
     
-    vector<scalar> const & Radii = scene.getRadii();
-
     Vector2s X1 = X.segment<2>(I1);
     Vector2s X2 = X.segment<2>(I2);
     Vector2s X3 = X.segment<2>(I3);
@@ -355,10 +355,11 @@ void SimpleCollisionHandler::respondParticleEdge(TwoDScene &scene, int vidx, int
     Vector2s Ve;
     scalar sEAlpha;
     scalar sAlpha;
-    Vector2s N = n;
+    Vector2s N;
 
     findAlpha(X1, X2, X3, V1, V2, V3, N, Ve, sAlpha);
 
+    N = n; // calculated from detection not now
     N.normalize();
     scalar sAlpha2 = sAlpha*sAlpha;
     scalar sBeta2 = (1-sAlpha)*(1-sAlpha);
