@@ -17,11 +17,12 @@ def random_selection(*args):
 def generate_balls(num, base):
     """
     """
-    mass_range = tuple(((0.1, 10),))
-    size_range = tuple(((0.1, 1),))
+    mass_range = tuple(((0.2, 10),))
+    size_range = tuple(((0.3, 1.5),))
     color_range = tuple(((0.1, 1.0), (0.1, 1.0), (0.1, 1.0)))
     x_range = tuple(((-18, 38),))
-    y_range = tuple(((1000, 1600),))
+    y_range = tuple(((1500, 1800),))
+
 
     for i in range(num):
         m, = random_selection(*mass_range)
@@ -39,7 +40,7 @@ def generate_balls(num, base):
 def main(name, args):
     """
     """
-    num = 200
+    num = 100
     base = 24
 
     if args:
