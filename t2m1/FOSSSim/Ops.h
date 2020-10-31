@@ -2,7 +2,6 @@
 #define OPS_H
 
 #include <Eigen/Dense>
-#include <Eigen/Core>
 
 #include "MathDefs.h"
 
@@ -12,8 +11,23 @@
 using namespace std;
 
 
+/**
+ * Type definitions.
+ */
+
 typedef pair<Vector2s, Vector2s> T_VecPair;
 
+
+/**
+ * Static module global variables.
+ */
+
+static scalar g_Time = 0;
+
+
+/**
+ * Inline functions.
+ */
 
 inline static Vector2s extractVectorIdx(const VectorXs& _X, int _Idx)
 {
