@@ -4,6 +4,11 @@
 
 // BEGIN STUDENT CODE //
 
+#include <iomanip>
+
+
+using namespace std;
+
 
 // Given the start position (oldpos) and end position (scene.getX) of two
 // particles, and assuming the particles moved in a straight line between the
@@ -30,28 +35,83 @@ bool ContinuousTimeCollisionHandler::detectParticleParticle(const TwoDScene &sce
 {
     VectorXs dx = qe-qs;
     
-    VectorXs x1 = qs.segment<2>(2*idx1);
-    VectorXs x2 = qs.segment<2>(2*idx2);
+    //VectorXs x1 = qs.segment<2>(2*idx1);
+    //VectorXs x2 = qs.segment<2>(2*idx2);
     
-    VectorXs dx1 = dx.segment<2>(2*idx1);
-    VectorXs dx2 = dx.segment<2>(2*idx2);
-    
-    double r1 = scene.getRadius(idx1);
-    double r2 = scene.getRadius(idx2);
+    //VectorXs dx1 = dx.segment<2>(2*idx1);
+    //VectorXs dx2 = dx.segment<2>(2*idx2);
 
-    std::vector<double> position_polynomial;
-    std::vector<double> velocity_polynomial;
+    Vector2s X1 = qs.segment<2>(idx1<<1);
+    Vector2s X2 = qs.segment<2>(idx2<<1);
+
+    Vector2s dX1 = dx.segment<2>(idx1<<1);
+    Vector2s dX2 = dx.segment<2>(idx2<<1);
+    
+    double R1 = scene.getRadius(idx1);
+    double R2 = scene.getRadius(idx2);
+
+    vector<Polynomial> polynomials;
+    vector<double> position_polynomial;
+    vector<double> velocity_polynomial;
     
     // Your implementation here should fill the polynomials with right coefficients
   
-    // Do not change the order of the polynomials here, or your program will fail the oracle
-    std::vector<Polynomial> polynomials;
+    /*
+    double X1n = x1.segment<2>(0).dot(n);
+    double X2n = x2.segment<2>(0).dot(n);
+    double dX1n = dx1.segment<2>(0).dot(n);
+    double dX2n = dx2.segment<2>(0).dot(n);
+
+    position_polynomial.push_back(-(dX2n-dX1n) * (dX2n-dX1n));
+    position_polynomial.push_back(-2*(X2n-X1n) * (dX2n-dX1n));
+    position_polynomial.push_back((r1+r2) - (X2n-X1n) * (X2n-X1n));
+    
+    velocity_polynomial.push_back((dX1n-dX2n) * (dX2n-dX1n));
+    velocity_polynomial.push_back((dX1n-dX2n) * (X2n-X1n));
+
     polynomials.push_back(Polynomial(position_polynomial));
     polynomials.push_back(Polynomial(velocity_polynomial));
+    */
+    /*
+    Vector2s X1n = x1.segment<2>(0);
+    Vector2s X2n = x2.segment<2>(0);
+    Vector2s dX1n = dx1.segment<2>(0);
+    Vector2s dX2n = dx2.segment<2>(0);
+    */
+
+    position_polynomial.push_back(-(dX2-dX1).dot(dX2-dX1));
+    position_polynomial.push_back(-2*(X2-X1).dot(dX2-dX1));
+    position_polynomial.push_back((R1+R2)*(R1+R2) - (X2-X1).dot(X2-X1));
     
-    time = PolynomialIntervalSolver::findFirstIntersectionTime(polynomials);
-    
+    velocity_polynomial.push_back((dX1-dX2).dot(dX2-dX1));
+    velocity_polynomial.push_back((dX1-dX2).dot(X2-X1));
+    /*
+    position_polynomial.push_back(-1);
+    position_polynomial.push_back(1);
+    position_polynomial.push_back(0);
+    velocity_polynomial.push_back(1);
+    velocity_polynomial.push_back(-0.5);
+    */
+
+    // Do not change the order of the polynomials here, or your program will fail the oracle
+    polynomials.push_back(Polynomial(position_polynomial));
+    polynomials.push_back(Polynomial(velocity_polynomial));
+
     // Your implementation here should compute n, and examine time to decide the return value
+    time = PolynomialIntervalSolver::findFirstIntersectionTime(polynomials);
+    n = (X2 + time * dX2) - (X1 + time * dX1);
+    bool bCollision = time >= 0 && time <= 1;
+
+#ifndef NDEBUG
+    cout << __FUNCTION__ << setprecision(5)
+      << (bCollision ? "COLLISION" : " no collision")
+      << ", X1=" << X1.transpose() << ", dX1:" << dX1.transpose()
+      << ", X2=" << X2.transpose() << ", dX2:" << dX2.transpose()
+      << ", N=" << n.transpose() << ", T=" << time << endl;
+#endif
+
+      return bCollision;
+
     
 //
 //    Example code:
@@ -74,7 +134,7 @@ bool ContinuousTimeCollisionHandler::detectParticleParticle(const TwoDScene &sce
 //    Then you can use time and other info to decide if a collision has happened in this time step.
 //
     
-    return false;
+//    return false;
 }
 
 
