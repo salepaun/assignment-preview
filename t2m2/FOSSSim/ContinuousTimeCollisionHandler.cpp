@@ -6,6 +6,8 @@
 
 #include <iomanip>
 
+#include "Ops.h"
+
 
 using namespace std;
 
@@ -35,12 +37,6 @@ bool ContinuousTimeCollisionHandler::detectParticleParticle(const TwoDScene &sce
 {
     VectorXs dx = qe-qs;
     
-    //VectorXs x1 = qs.segment<2>(2*idx1);
-    //VectorXs x2 = qs.segment<2>(2*idx2);
-    
-    //VectorXs dx1 = dx.segment<2>(2*idx1);
-    //VectorXs dx2 = dx.segment<2>(2*idx2);
-
     Vector2s X1 = qs.segment<2>(idx1<<1);
     Vector2s X2 = qs.segment<2>(idx2<<1);
 
@@ -56,29 +52,6 @@ bool ContinuousTimeCollisionHandler::detectParticleParticle(const TwoDScene &sce
     
     // Your implementation here should fill the polynomials with right coefficients
   
-    /*
-    double X1n = x1.segment<2>(0).dot(n);
-    double X2n = x2.segment<2>(0).dot(n);
-    double dX1n = dx1.segment<2>(0).dot(n);
-    double dX2n = dx2.segment<2>(0).dot(n);
-
-    position_polynomial.push_back(-(dX2n-dX1n) * (dX2n-dX1n));
-    position_polynomial.push_back(-2*(X2n-X1n) * (dX2n-dX1n));
-    position_polynomial.push_back((r1+r2) - (X2n-X1n) * (X2n-X1n));
-    
-    velocity_polynomial.push_back((dX1n-dX2n) * (dX2n-dX1n));
-    velocity_polynomial.push_back((dX1n-dX2n) * (X2n-X1n));
-
-    polynomials.push_back(Polynomial(position_polynomial));
-    polynomials.push_back(Polynomial(velocity_polynomial));
-    */
-    /*
-    Vector2s X1n = x1.segment<2>(0);
-    Vector2s X2n = x2.segment<2>(0);
-    Vector2s dX1n = dx1.segment<2>(0);
-    Vector2s dX2n = dx2.segment<2>(0);
-    */
-
     position_polynomial.push_back(-(dX2-dX1).dot(dX2-dX1));
     position_polynomial.push_back(-2*(X2-X1).dot(dX2-dX1));
     position_polynomial.push_back((R1+R2)*(R1+R2) - (X2-X1).dot(X2-X1));
@@ -111,30 +84,6 @@ bool ContinuousTimeCollisionHandler::detectParticleParticle(const TwoDScene &sce
 #endif
 
       return bCollision;
-
-    
-//
-//    Example code:
-//
-//    std::vector<double> pospoly;
-//    pospoly.push_back(TSQUARED_COEF);   // position polynomial for particle-particle detection is quadratic
-//    pospoly.push_back(T_COEF);
-//    pospoly.push_back(CONSTANT_COEF);
-//    
-//    std::vector<double> velpoly;
-//    velpoly.push_back(T_COEF);      // velocity polynomial for particle-particle detection is linear
-//    velpoly.push_back(CONSTANT_COEF);
-//    
-//    std::vector<Polynomial> polys;
-//    polys.push_back(Polynomial(pospoly));
-//    polys.push_back(Polynomial(velpoly));
-//    
-//    time = PolynomialIntervalSolver::findFirstIntersectionTime(polys);    // this give the first contact time
-//
-//    Then you can use time and other info to decide if a collision has happened in this time step.
-//
-    
-//    return false;
 }
 
 
@@ -165,13 +114,13 @@ bool ContinuousTimeCollisionHandler::detectParticleEdge(const TwoDScene &scene, 
 {
     VectorXs dx = qe - qs;
     
-    VectorXs x1 = qs.segment<2>(2*vidx);
-    VectorXs x2 = qs.segment<2>(2*scene.getEdge(eidx).first);
-    VectorXs x3 = qs.segment<2>(2*scene.getEdge(eidx).second);
+    VectorXs x1 = qs.segment<2>(vidx<<1);
+    VectorXs x2 = qs.segment<2>(scene.getEdge(eidx).first<<1);
+    VectorXs x3 = qs.segment<2>(scene.getEdge(eidx).second<<1);
     
-    VectorXs dx1 = dx.segment<2>(2*vidx);
-    VectorXs dx2 = dx.segment<2>(2*scene.getEdge(eidx).first);
-    VectorXs dx3 = dx.segment<2>(2*scene.getEdge(eidx).second);
+    VectorXs dx1 = dx.segment<2>(vidx<<1);
+    VectorXs dx2 = dx.segment<2>(scene.getEdge(eidx).first<<1);
+    VectorXs dx3 = dx.segment<2>(scene.getEdge(eidx).second<<1);
 
     double r1 = scene.getRadius(vidx);
     double r2 = scene.getEdgeRadii()[eidx];
@@ -181,6 +130,80 @@ bool ContinuousTimeCollisionHandler::detectParticleEdge(const TwoDScene &scene, 
     std::vector<double> alpha_less_than_one_polynomial;
     
     // Your implementation here should fill the polynomials with right coefficients
+
+    Vector2s X1 = x1.segment<2>(0);
+    Vector2s X2 = x2.segment<2>(0);
+    Vector2s X3 = x3.segment<2>(0);
+
+    Vector2s dX1 = dx1.segment<2>(0);
+    Vector2s dX2 = dx2.segment<2>(0);
+    Vector2s dX3 = dx3.segment<2>(0);
+
+    double rr2 = (r1+r2)*(r1+r2);
+
+    Vector2s dX12 = dX1-dX2;
+    Vector2s dX32 = dX3-dX2;
+    Vector2s X12 = X1-X2;
+    Vector2s X32 = X3-X2;
+
+    Vector2s dX13 = dX1-dX3;
+    Vector2s dX23 = dX2-dX3;
+    Vector2s X13 = X1-X3;
+    Vector2s X23 = X2-X3;
+    
+    double dX12_dX32 = dX12.dot(dX32);
+    double dX12_dX12 = dX12.dot(dX12);
+    double dX32_dX32 = dX32.dot(dX32);
+    double X12_dX12 = X12.dot(dX12);
+    double X32_dX32 = X32.dot(dX32);
+    double X12_dX32 = X12.dot(dX32);
+    double dX12_X32 = dX12.dot(X32);
+    double X32_X32 = X32.dot(X32);
+    double X12_X12 = X12.dot(X12);
+    double X12_X32 = X12.dot(X32);
+    double X32_dX12 = X32.dot(dX12); //dX12_X32;
+    double A1 = (X12_dX32 + dX12_X32);
+ 
+    // t4
+    position_polynomial.push_back(
+        dX12_dX32*dX12_dX32 - dX12_dX12*dX32_dX32);
+    // t3
+    position_polynomial.push_back(-2*(
+        dX32_dX32*X12_dX12 + dX12_dX12*X32_dX32 - dX12_dX32*X12_dX32 + dX12_X32));
+    // t2
+    position_polynomial.push_back(
+        2 * rr2 * dX32_dX32 
+        - X32_X32 * dX12_dX12
+        - X12_X12 * dX32_dX32
+        - 4 * X12_dX12 * X32_dX32
+        + 2 * X12_X32 * dX12_dX32
+        + A1*A1);
+    // t1
+    position_polynomial.push_back(
+        2 * (rr2 * X32_dX32
+        - X32_X32 * X12_dX12
+        - X12_X12 * X32_dX32
+        + X12_X32 * (X12_dX32 + dX12_X32)));
+    // t0
+    position_polynomial.push_back(
+        rr2 * X32_X32
+        - X32_X32 * X12_X12
+        + X12_X32 * X12_X32);
+
+
+    alpha_greater_than_zero_polynomial.push_back(
+        (dX12.dot(dX32)));
+    alpha_greater_than_zero_polynomial.push_back(
+        (X12.dot(dX32) + dX12.dot(X32)));
+    alpha_greater_than_zero_polynomial.push_back(
+        X12.dot(X32));
+
+    alpha_less_than_one_polynomial.push_back(
+        dX13.dot(dX23));
+    alpha_less_than_one_polynomial.push_back(
+        X13.dot(dX23)+dX13.dot(X23));
+    alpha_less_than_one_polynomial.push_back(
+        X13.dot(X23));
 
     // Here's the quintic velocity polynomial:
     std::vector<double> velcity_polynomial;
@@ -221,7 +244,25 @@ bool ContinuousTimeCollisionHandler::detectParticleEdge(const TwoDScene &scene, 
     time = PolynomialIntervalSolver::findFirstIntersectionTime(polynomials);
     
     // Your implementation here should compute n, and examine time to decide the return value
-    return false;
+    Vector2s X1t = X1 + dX1*time;
+    Vector2s X2t = X2 + dX2*time;
+    Vector2s X3t = x3 + dX3*time;
+    Vector2s V0 = Vector2s::Zero();
+    Vector2s Ve = Vector2s::Zero();
+    double sAlpha = 0; //(X1t-X2t).dot(X3t-X21) / (X3t-X2t).squaredNorm();
+    findAlpha(X1t, X2t, X3t, V0, V0, V0, n, Ve, sAlpha);
+    bool bCollision = time >= 0 && time <= 1;
+
+#ifndef NDEBUG
+    cout << __FUNCTION__ << setprecision(5)
+      << (bCollision ? "COLLISION" : " no collision")
+      << ", X1=" << X1.transpose() << ", dX1:" << dX1.transpose()
+      << ", X2=" << X2.transpose() << ", dX2:" << dX2.transpose()
+      << ", X3=" << X3.transpose() << ", dX3:" << dX3.transpose()
+      << ", N=" << n.transpose() << ", T=" << time << endl;
+#endif
+
+      return bCollision;
 }
 
 // Given start positions (oldpos) and end positions (scene.getX) of a
