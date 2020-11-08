@@ -293,8 +293,8 @@ bool ContinuousTimeCollisionHandler::detectParticleHalfplane(const TwoDScene &sc
 {
     VectorXs dx = qe - qs;
     
-    VectorXs x1 = qs.segment<2>(2*vidx);
-    VectorXs dx1 = dx.segment<2>(2*vidx);
+    VectorXs x1 = qs.segment<2>(vidx<<1);
+    VectorXs dx1 = dx.segment<2>(vidx<<1);
     
     VectorXs xp = scene.getHalfplane(pidx).first;
     VectorXs np = scene.getHalfplane(pidx).second;
@@ -305,7 +305,28 @@ bool ContinuousTimeCollisionHandler::detectParticleHalfplane(const TwoDScene &sc
     std::vector<double> velocity_polynomial;
     
     // Your implementation here should fill the polynomials with right coefficients
-  
+    Vector2s X1 = x1.segment<2>(0);
+    Vector2s dX1 = dx1.segment<2>(0);
+    Vector2s Xp = xp.segment<2>(0);
+    Vector2s Np = np.segment<2>(0);
+    Vector2s Xp1 = Xp - X1;
+
+    double Xp1Np = Xp1.dot(Np);
+    double dX1Np = dX1.dot(Np);
+    double r2 = r*r;
+
+    position_polynomial.push_back(
+        -dX1Np*dX1Np);
+    position_polynomial.push_back(
+        2*Xp1Np*dX1Np);
+    position_polynomial.push_back(
+        r2*Np.squaredNorm() - Xp1Np*Xp1Np);
+
+    velocity_polynomial.push_back(
+        -dX1Np*dX1Np);
+    velocity_polynomial.push_back(
+        (Xp-X1).dot(Np));
+
     // Do not change the order of the polynomials here, or your program will fail the oracle
     std::vector<Polynomial> polynomials;
     polynomials.push_back(Polynomial(position_polynomial));
@@ -314,8 +335,20 @@ bool ContinuousTimeCollisionHandler::detectParticleHalfplane(const TwoDScene &sc
     time = PolynomialIntervalSolver::findFirstIntersectionTime(polynomials);
     
     // Your implementation here should compute n, and examine time to decide the return value
-    
-    return false;
+    Vector2s X1t = X1 + dX1*time;
+    n = (Xp - X1t).dot(Np) * Np;
+
+    bool bCollision = time >= 0 && time <= 1;
+
+#ifndef NDEBUG
+    cout << __FUNCTION__ << setprecision(5)
+      << (bCollision ? "COLLISION" : " no collision")
+      << ", Xp=" << Xp.transpose() << ", Np:" << Np.transpose()
+      << ", X1=" << X1.transpose() << ", dX1:" << dX1.transpose() << ", X1t:" << X1t.transpose()
+      << ", N=" << n.transpose() << ", T=" << time << endl;
+#endif
+
+    return bCollision;
 }
 
 
