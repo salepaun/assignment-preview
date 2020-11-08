@@ -320,12 +320,12 @@ bool ContinuousTimeCollisionHandler::detectParticleHalfplane(const TwoDScene &sc
     position_polynomial.push_back(
         2*Xp1Np*dX1Np);
     position_polynomial.push_back(
-        r2*Np.squaredNorm() - Xp1Np*Xp1Np);
+        r2*Np.dot(Np) - Xp1Np*Xp1Np);
 
     velocity_polynomial.push_back(
         -dX1Np*dX1Np);
     velocity_polynomial.push_back(
-        (Xp-X1).dot(Np));
+        Xp1.dot(Np)*dX1.dot(Np));
 
     // Do not change the order of the polynomials here, or your program will fail the oracle
     std::vector<Polynomial> polynomials;
