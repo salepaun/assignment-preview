@@ -5,7 +5,99 @@
 #include <algorithm>
 #include "HybridCollisionComparison.h"
 
+#include "MathDefs.h"
 #include "Ops.h"
+
+
+
+using namespace std;
+
+
+
+/**********************************************************************************
+ * Local not exported methods.
+ */
+
+
+inline static double cross(Vector2s _A, Vector2s _B)
+{
+    return _A[0] * _B[1] - _A[1] * _B[0]; // or through M.det
+}
+
+
+
+
+static void calculateImpactZone(
+        TwoDScene const &_Scene,
+        ImpactZone const &_Zone,
+        VectorXs const &_Qs,
+        VectorXs &_dQ,
+        Vector2s &_ZoneCM,
+        double &_ZoneRot,
+        Vector2s &_ZoneDeltaCM)
+{
+    VectorXs const &M = _Scene.getM();
+
+    Vector2s XMsum = Vector2s::Zero();
+    Vector2s dQMsum = Vector2s::Zero();
+    double Lsum = 0;
+    double Isum = 0;
+    double Msum = 0;
+
+    // mass calculations on scalar m1 (following answer to a previous assignment)
+    for (auto i: _Zone.m_verts) {
+        int j = i<<1;
+        double m = M.segment<2>(j)[0];
+        Msum += m;
+        XMsum += m * _Qs.segment<2>(j);
+        dQMsum += m * _dQ.segment<2>(j);
+    };
+
+    _ZoneCM = XMsum / Msum;
+    _ZoneDeltaCM = dQMsum / Msum;
+
+    for (auto i: _Zone.m_verts) {
+        int j = i<<1;
+        double m = M.segment<2>(j)[0];
+        Vector2s xi = _Qs.segment<2>(j);
+        Vector2s vi = _dQ.segment<2>(j);
+        Lsum += m * cross((xi - _ZoneCM), (vi - _ZoneDeltaCM));
+        Isum += m * (xi - _ZoneCM).squaredNorm();
+    };
+
+    _ZoneRot = Lsum / Isum;
+}
+
+
+
+static void applyImpactZone(
+        double _Dt,
+        ImpactZone const &_Zone,
+        VectorXs const &_Qs,
+        Vector2s const &_ZoneCM,
+        double const &_ZoneRot,
+        Vector2s const &_ZoneDeltaCM,
+        VectorXs &_Qe,
+        VectorXs &_Ve)
+{
+    for (auto i: _Zone.m_verts) {
+        int j = i<<1;
+        Vector2s Xi = _Qs.segment<2>(j);
+
+        Vector2s Xir = (Xi - _ZoneCM);
+        Vector2s Xiro(-Xir[1], Xir[0]);
+        Vector2s Xie = _ZoneCM + _ZoneDeltaCM + cos(_ZoneRot)*(Xir) + sin(_ZoneRot)*(Xiro);
+
+        _Qe.segment<2>(j) = Xie;
+        _Ve.segment<2>(j) = (Xie - Xi) / _Dt;
+    };
+}
+
+
+
+
+
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -164,16 +256,20 @@ bool HybridCollisionHandler::applyIterativeImpulses(const TwoDScene &scene, cons
 {
     // Your code goes here!
     bool bRet = false;
+    int i = 0;
+
+    vector<CollisionInfo> Collisions;
+
     VectorXs qe_tmp;
     VectorXs qdote_tmp;
 
     qefinal = qe;
     qdotefinal = qdote;
 
-    for (int i=0; i < m_maxiters; ++i) {
-        auto collisions = detectCollisions(scene, qs, qefinal);
-        if (collisions.size()) {
-            applyImpulses(scene, collisions, qs, qefinal, qdote, dt, qe_tmp, qdote_tmp);
+    for (i=0; i < m_maxiters; ++i) {
+        Collisions = detectCollisions(scene, qs, qefinal);
+        if (Collisions.size()) {
+            applyImpulses(scene, Collisions, qs, qefinal, qdote, dt, qe_tmp, qdote_tmp);
             qefinal = qe_tmp;
             qdotefinal = qdote_tmp;
         } else {
@@ -181,6 +277,13 @@ bool HybridCollisionHandler::applyIterativeImpulses(const TwoDScene &scene, cons
             break;
         };
     };
+
+#ifndef NDEBUG
+    cout << __FUNCTION__
+        << ", Iterations:=" << i << ", max=" << m_maxiters << " ret:" << bRet
+        << " Collisions num=" << Collisions.size()
+        << endl;
+#endif
 
     return bRet;
 }
@@ -222,7 +325,12 @@ void HybridCollisionHandler::performFailsafe(const TwoDScene &scene, const Vecto
     //SetVertedFixed SetVertexFixedOp(qs, qe, qdote);
 
     bool bFixedZone = zone.m_halfplane || std::any_of(zone.m_verts.begin(), zone.m_verts.end(), IsVertexFixedPred);
+    VectorXs dQ = qe - qs;
+    Vector2s ZoneCM = Vector2s::Zero();
+    double ZoneRot = 0;
+    Vector2s ZoneDeltaCM = Vector2s::Zero();
 
+    // Impact zone involved with fixed objects as per this milestone - just freeze
     if (bFixedZone) {
         for (auto i : zone.m_verts) {
             int j = i<<1;
@@ -230,7 +338,21 @@ void HybridCollisionHandler::performFailsafe(const TwoDScene &scene, const Vecto
             qdote.segment<2>(j).setZero();
         };
     } else {
+        calculateImpactZone(scene, zone, qs, dQ, ZoneCM, ZoneRot, ZoneDeltaCM);
+        applyImpactZone(dt, zone, qs, ZoneCM, ZoneRot, ZoneDeltaCM, qe, qdote);
     };
+
+#ifndef NDEBUG
+    std::cout << __FUNCTION__
+        << ", Zone Vnum=" << zone.m_verts.size() << ", HalfPlane:" << zone.m_halfplane
+        << ", Fixed:" << bFixedZone
+        << ", ZoneCM:" << ZoneCM.transpose()
+        << ", ZoneRot:" << ZoneRot
+        << ", ZoneDeltaCM:" << ZoneDeltaCM.transpose()
+        << ", dt=" << dt
+        << std::endl;
+#endif
+
 }
 
 
@@ -274,6 +396,29 @@ void HybridCollisionHandler::applyGeometricCollisionHandling(const TwoDScene &sc
     //
     
     // Your code goes here!
+    vector<CollisionInfo> Collisions;
+
+    qm = qe;
+    qdotm = qdote;
+
+    do {
+        Z = Zprime;
+        Collisions = detectCollisions(scene, qs, qm);
+        growImpactZones(scene, Zprime, Collisions);
+        if (Collisions.size()) {
+            for (auto Zone: Zprime) {
+                performFailsafe(scene, qs, Zone, dt, qm, qdotm);
+            };
+        };
+    } while (!zonesEqual(Z, Zprime));
+
+#ifndef NDEBUG
+    cout << __FUNCTION__
+        << " Collisions num=" << Collisions.size()
+        << " Zones num=" << Z.size()
+        << " dt=" << dt
+        << endl;
+#endif
 
 }
 

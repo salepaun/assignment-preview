@@ -65,5 +65,16 @@ int main() {
 
   cout << "E:\n" << E << endl;
 
+  cout << "Testing norm, squared norm\n"
+    << " An=" << An.transpose()
+    << " An.An=" << An.dot(An)
+    << " An.norm=" << An.norm()
+    << " An.sqNorm=" << An.squaredNorm()
+    << endl;
+
+  cout << "Testing cross product:\n"
+    << " An x Bn = " << 0 // An.cross(Bn)
+    << endl;
+
   return 0;
 }
