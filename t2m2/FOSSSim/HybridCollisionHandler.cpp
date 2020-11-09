@@ -398,9 +398,30 @@ void HybridCollisionHandler::applyGeometricCollisionHandling(const TwoDScene &sc
     // Your code goes here!
     vector<CollisionInfo> Collisions;
 
+    int i = 0;
+    bool bContinue = true;
+    Collisions = detectCollisions(scene, qs, qe);
     qm = qe;
     qdotm = qdote;
+    growImpactZones(scene, Z, Collisions);
 
+    for (i=0; bContinue; ++i) {
+        for (auto Zone: Z) {
+            performFailsafe(scene, qs, Zone, dt, qm, qdotm);
+        };
+        Collisions = detectCollisions(scene, qs, qm);
+        Zprime = Z;
+        growImpactZones(scene, Zprime, Collisions);
+
+        if (zonesEqual(Z, Zprime)) {
+            bContinue = false;
+            continue;
+        }
+
+        Z = Zprime;
+    };
+
+    /*
     do {
         Z = Zprime;
         Collisions = detectCollisions(scene, qs, qm);
@@ -411,6 +432,7 @@ void HybridCollisionHandler::applyGeometricCollisionHandling(const TwoDScene &sc
             };
         };
     } while (!zonesEqual(Z, Zprime));
+    */
 
 #ifndef NDEBUG
     cout << __FUNCTION__
