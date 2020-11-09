@@ -77,7 +77,7 @@ bool ContinuousTimeCollisionHandler::detectParticleParticle(const TwoDScene &sce
 
 #ifndef NDEBUG
     cout << __FUNCTION__ << setprecision(5)
-      << (bCollision ? "COLLISION" : " no collision")
+      << (bCollision ? " COLLISION" : " no collision")
       << ", X1=" << X1.transpose() << ", dX1:" << dX1.transpose()
       << ", X2=" << X2.transpose() << ", dX2:" << dX2.transpose()
       << ", N=" << n.transpose() << ", T=" << time << endl;
@@ -162,22 +162,27 @@ bool ContinuousTimeCollisionHandler::detectParticleEdge(const TwoDScene &scene, 
     double X12_X12 = X12.dot(X12);
     double X12_X32 = X12.dot(X32);
     double X32_dX12 = X32.dot(dX12); //dX12_X32;
-    double A1 = (X12_dX32 + dX12_X32);
+    //double A1 = (X12_dX32 + dX12_X32);
  
     // t4
     position_polynomial.push_back(
         dX12_dX32*dX12_dX32 - dX12_dX12*dX32_dX32);
     // t3
-    position_polynomial.push_back(-2*(
-        dX32_dX32*X12_dX12 + dX12_dX12*X32_dX32 - dX12_dX32*X12_dX32 + dX12_X32));
+    position_polynomial.push_back(
+        2*(dX12_dX32 * (X12_dX32 + dX12_X32)
+          - dX12_dX12*X32_dX32
+          - dX32_dX32*X12_dX12));
     // t2
     position_polynomial.push_back(
-        2 * rr2 * dX32_dX32 
-        - X32_X32 * dX12_dX12
+        rr2 * dX32_dX32 
         - X12_X12 * dX32_dX32
+        - X32_X32 * dX12_dX12
         - 4 * X12_dX12 * X32_dX32
         + 2 * X12_X32 * dX12_dX32
-        + A1*A1);
+        + 2 * X12_dX32 * X32_dX12
+        + X12_dX32*X12_dX32
+        + X32_dX12*X32_dX12);
+     
     // t1
     position_polynomial.push_back(
         2 * (rr2 * X32_dX32
@@ -255,11 +260,14 @@ bool ContinuousTimeCollisionHandler::detectParticleEdge(const TwoDScene &scene, 
 
 #ifndef NDEBUG
     cout << __FUNCTION__ << setprecision(5)
-      << (bCollision ? "COLLISION" : " no collision")
+      << (bCollision ? " COLLISION" : " no collision")
       << ", X1=" << X1.transpose() << ", dX1:" << dX1.transpose()
       << ", X2=" << X2.transpose() << ", dX2:" << dX2.transpose()
       << ", X3=" << X3.transpose() << ", dX3:" << dX3.transpose()
-      << ", N=" << n.transpose() << ", T=" << time << endl;
+      << ", N=" << n.transpose() << ", T=" << time 
+      << ", |N|=" << n.norm() << ", rr=" << (r1+r2)
+      << ", X1t=" << X1t.transpose() << ", N.A=" << n.dot(X2t-X3t)
+      << endl;
 #endif
 
       return bCollision;
@@ -336,16 +344,20 @@ bool ContinuousTimeCollisionHandler::detectParticleHalfplane(const TwoDScene &sc
     
     // Your implementation here should compute n, and examine time to decide the return value
     Vector2s X1t = X1 + dX1*time;
+    Np.normalize();
     n = (Xp - X1t).dot(Np) * Np;
 
     bool bCollision = time >= 0 && time <= 1;
 
 #ifndef NDEBUG
     cout << __FUNCTION__ << setprecision(5)
-      << (bCollision ? "COLLISION" : " no collision")
+      << (bCollision ? " COLLISION" : " no collision")
       << ", Xp=" << Xp.transpose() << ", Np:" << Np.transpose()
       << ", X1=" << X1.transpose() << ", dX1:" << dX1.transpose() << ", X1t:" << X1t.transpose()
-      << ", N=" << n.transpose() << ", T=" << time << endl;
+      << ", N=" << n.transpose() << ", T=" << time
+      << ", |N|=" << n.norm() << ", r=" << r
+      << ", X1t=" << X1t.transpose() << ", N.Np^=" << n.dot(Np)
+      << endl;
 #endif
 
     return bCollision;
