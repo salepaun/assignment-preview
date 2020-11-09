@@ -6,6 +6,7 @@
 #include "MathDefs.h"
 
 #include <stdio.h>
+#include <algorithm>
 
 
 using namespace std;
@@ -256,5 +257,17 @@ static void findAlpha( \
 }
 
 
+struct IsVertexFixed {
+    public:
+        IsVertexFixed(TwoDScene const &_Scene) : m_Scene(_Scene) {
+        };
+
+    bool operator()(int _i) {
+        return m_Scene.isFixed(_i);
+    };
+
+    private:
+        TwoDScene const &m_Scene;
+};
 
 #endif // OPS_H

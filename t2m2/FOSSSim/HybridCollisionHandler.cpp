@@ -5,6 +5,8 @@
 #include <algorithm>
 #include "HybridCollisionComparison.h"
 
+#include "Ops.h"
+
 ////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////
 ////
@@ -216,7 +218,19 @@ void HybridCollisionHandler::performFailsafe(const TwoDScene &scene, const Vecto
     // Don't forget to handle fixed objects properly as in writeup section 4.5.1    
     
     // Your code goes here!
+    IsVertexFixed IsVertexFixedPred(scene);
+    //SetVertedFixed SetVertexFixedOp(qs, qe, qdote);
 
+    bool bFixedZone = zone.m_halfplane || std::any_of(zone.m_verts.begin(), zone.m_verts.end(), IsVertexFixedPred);
+
+    if (bFixedZone) {
+        for (auto i : zone.m_verts) {
+            int j = i<<1;
+            qe.segment<2>(j) = qs.segment<2>(j);
+            qdote.segment<2>(j).setZero();
+        };
+    } else {
+    };
 }
 
 
