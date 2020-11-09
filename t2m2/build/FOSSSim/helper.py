@@ -20,15 +20,17 @@ def random_selection(*args):
 def generate_particles(num, base, x, y, size, psize, mass, cmin, cmax):
     """
     """
-    gap = 0.1 * psize
+    gap = 1 * psize
     step = 2*psize+gap
-    a = int(sqrt(num))+1;
+    a = int(sqrt(num));
     xmin = x - step * a/2
     ymin = y - step * a/2
     xmax = xmin + a * step
     ymax = ymin + a * step
     X = np.asarray((x,y))
-    dmax = np.linalg.norm(np.asarray((xmin, ymin)) - X)
+    Xmin = np.asarray((xmin, ymin))
+    Xmax = np.asarray((xmax, ymax))
+    dmax = np.linalg.norm(Xmax - Xmin) / 2
 
     xc = xmin
     i = 0
@@ -36,7 +38,8 @@ def generate_particles(num, base, x, y, size, psize, mass, cmin, cmax):
         yc = ymin
         while yc < ymax:
             d = np.linalg.norm(X - np.asarray((xc,yc)))
-            r,g,b = tuple([cmin[i] + d*(cmax[i]-cmin[i])/dmax for i in range(len(cmin))])
+            colors= tuple([cmin[i] + d*(cmax[i]-cmin[i])/dmax for i in range(len(cmin))])
+            r,g,b = tuple([i if i<=1.0 else 1 for i in colors])
 
             print('  <particle m="%5.3f" px="%5.3f" py="%5.3f" vx="0.0" vy="0.0" fixed="0" radius="%5.3f"/>' \
                     % (mass, xc, yc, psize))
@@ -47,6 +50,8 @@ def generate_particles(num, base, x, y, size, psize, mass, cmin, cmax):
             yc = yc + step
 
         xc = xc + step
+
+    print('</scene>')
 
 
 
