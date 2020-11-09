@@ -159,10 +159,28 @@ bool zonesEqual(const ImpactZones &zones1, const ImpactZones &zones2)
 //   free state.
 // Possibly useful functions: detectCollisions, applyImpulses.
 bool HybridCollisionHandler::applyIterativeImpulses(const TwoDScene &scene, const VectorXs &qs, const VectorXs &qe, const VectorXs &qdote, double dt, VectorXs &qefinal, VectorXs &qdotefinal)
-{	
+{
     // Your code goes here!
+    bool bRet = false;
+    VectorXs qe_tmp;
+    VectorXs qdote_tmp;
 
-    return false;
+    qefinal = qe;
+    qdotefinal = qdote;
+
+    for (int i=0; i < m_maxiters; ++i) {
+        auto collisions = detectCollisions(scene, qs, qefinal);
+        if (collisions.size()) {
+            applyImpulses(scene, collisions, qs, qefinal, qdote, dt, qe_tmp, qdote_tmp);
+            qefinal = qe_tmp;
+            qdotefinal = qdote_tmp;
+        } else {
+            bRet = true;
+            break;
+        };
+    };
+
+    return bRet;
 }
 
 
