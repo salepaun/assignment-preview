@@ -40,13 +40,16 @@ static void calculateImpactZone(
 
     Vector2s XMsum = Vector2s::Zero();
     Vector2s dQMsum = Vector2s::Zero();
+
     double Lsum = 0;
     double Isum = 0;
     double Msum = 0;
 
+    set<int>::const_iterator i = _Zone.m_verts.begin();
+
     // mass calculations on scalar m1 (following answer to a previous assignment)
-    for (auto i: _Zone.m_verts) {
-        int j = i<<1;
+    for (;i != _Zone.m_verts.end(); ++i) { // for (auto i: _Zone.m_verts) {
+        int j = (*i) <<1;
         double m = M.segment<2>(j)[0];
         Msum += m;
         XMsum += m * _Qs.segment<2>(j);
@@ -56,8 +59,8 @@ static void calculateImpactZone(
     _ZoneCM = XMsum / Msum;
     _ZoneDeltaCM = dQMsum / Msum;
 
-    for (auto i: _Zone.m_verts) {
-        int j = i<<1;
+    for (i=_Zone.m_verts.begin(); i != _Zone.m_verts.end(); ++i) { // for (auto i: _Zone.m_verts) {
+        int j = (*i)<<1;
         double m = M.segment<2>(j)[0];
         Vector2s xi = _Qs.segment<2>(j);
         Vector2s vi = _dQ.segment<2>(j);
@@ -80,8 +83,9 @@ static void applyImpactZone(
         VectorXs &_Qe,
         VectorXs &_Ve)
 {
-    for (auto i: _Zone.m_verts) {
-        int j = i<<1;
+    set<int>::const_iterator i = _Zone.m_verts.begin();
+    for (;i != _Zone.m_verts.end(); ++i) { // for (auto i: _Zone.m_verts) {
+        int j = (*i)<<1;
         Vector2s Xi = _Qs.segment<2>(j);
 
         Vector2s Xir = (Xi - _ZoneCM);
@@ -321,19 +325,28 @@ void HybridCollisionHandler::performFailsafe(const TwoDScene &scene, const Vecto
     // Don't forget to handle fixed objects properly as in writeup section 4.5.1    
     
     // Your code goes here!
-    IsVertexFixed IsVertexFixedPred(scene);
-    //SetVertedFixed SetVertexFixedOp(qs, qe, qdote);
 
-    bool bFixedZone = zone.m_halfplane || std::any_of(zone.m_verts.begin(), zone.m_verts.end(), IsVertexFixedPred);
+    //SetVertedFixed SetVertexFixedOp(qs, qe, qdote);
+    // IsVertexFixed IsVertexFixedPred(scene);
+    // bool bFixedZone = zone.m_halfplane || std::any_of(zone.m_verts.begin(), zone.m_verts.end(), IsVertexFixedPred);
+    bool bFixedZone = zone.m_halfplane;
+
     VectorXs dQ = qe - qs;
     Vector2s ZoneCM = Vector2s::Zero();
     double ZoneRot = 0;
     Vector2s ZoneDeltaCM = Vector2s::Zero();
 
+    for (set<int>::const_iterator i=zone.m_verts.begin(); i!=zone.m_verts.end(); ++i) {
+        if (scene.isFixed(*i)) {
+            bFixedZone = true;
+            break;
+        };
+    };
+
     // Impact zone involved with fixed objects as per this milestone - just freeze
     if (bFixedZone) {
-        for (auto i : zone.m_verts) {
-            int j = i<<1;
+        for (set<int>::const_iterator i=zone.m_verts.begin(); i != zone.m_verts.end(); ++i) { // : zone.m_verts) {
+            int j = (*i)<<1;
             qe.segment<2>(j) = qs.segment<2>(j);
             qdote.segment<2>(j).setZero();
         };
@@ -406,7 +419,8 @@ void HybridCollisionHandler::applyGeometricCollisionHandling(const TwoDScene &sc
     growImpactZones(scene, Z, Collisions);
 
     for (i=0; bContinue; ++i) {
-        for (auto Zone: Z) {
+        for (vector<ImpactZone>::iterator i=Z.begin(); i!=Z.end(); ++i) { // auto Zone: Z) {
+            ImpactZone &Zone = (*i);
             performFailsafe(scene, qs, Zone, dt, qm, qdotm);
         };
         Collisions = detectCollisions(scene, qs, qm);
