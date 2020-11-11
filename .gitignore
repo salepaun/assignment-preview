@@ -1,3 +1,4 @@
+Tests/!*.*
 **/*.swp
 **/*.swo
 **/.*.swp
@@ -6,9 +7,13 @@
 **/Makefile
 **/*.mp4
 **/*.core
+**/core
 **/build/*/*.txt
 **/build/CMakeFiles
 **/residual.txt
 **/ParticlesDump.xml
 **/kinetic_energy_output.txt
 **/log.txt
+**/pngs/
+**/.*
+**/.gitignore
