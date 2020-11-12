@@ -87,6 +87,8 @@ class Box {
   public:
 
     typedef pair<int, BoxType> T_Key;
+    typedef map<T_Key, Box*> T_Parent;
+    typedef pair<T_Parent::key_type, T_Parent::mapped_type> T_ParentElm;
 
     static char const * typeAsStr(BoxType _Type) {
       switch (_Type) {
@@ -121,13 +123,29 @@ class Box {
       return intersectX(_B) && intersectY(_B);
     };
 
-    inline void resetChange() {
-      aChanged = false;
+    inline void registerParent(Box &_Parent) {
+      aParents.insert(T_ParentElm(_Parent.getKey(), &_Parent));
+    };
+    inline void deregisterParent(Box &_Parent) {
+      aParents.erase(_Parent.getKey());
+    };
+    inline bool hasParent(Box const &_Parent) const {
+      return aParents.find(_Parent.getKey()) != aParents.end();
     };
 
     inline bool hasChanged() const {
       return aChanged;
     };
+    inline void resetChange() {
+      aChanged = false;
+    };
+
+    void changed() {
+      aChanged = true;
+      for_each(aParents.begin(), aParents.end(), 
+          [](T_ParentElm const &_p) { _p.second->changed(); });
+    };
+
 
     friend ostream & operator << (ostream &_, Box const &_o);
 
@@ -136,6 +154,7 @@ class Box {
     int aId;
     BoxType aType;
     bool aChanged;
+    T_Parent aParents;
     array<double, 4> aBorder;
 };
 
@@ -202,7 +221,7 @@ class BoxedObj : public Box {
     inline void update(Vector2s const &_X, double const &_R) {
       aX = _X[0]; aY = _X[1];
       updateR(_R);
-      aChanged = true;
+      changed();
     };
 
 
@@ -255,6 +274,13 @@ class BoxedEdge : public Box {
       return aVrtx.first && aVrtx.second;
     };
 
+    inline void registerSelf() {
+      if (initialized()) {
+        aVrtx.first->registerParent(*this);
+        aVrtx.second->registerParent(*this);
+      };
+    };
+
     /** 
      * Returns true for fixed vertexes.
      *
@@ -270,7 +296,9 @@ class BoxedEdge : public Box {
     };
 
     inline bool changedX() const {
-      return initialized() && (a()->hasChanged() || b()->hasChanged());
+      // should update by it's children
+      // initialized() && (a()->hasChanged() || b()->hasChanged());
+      return hasChanged();
     };
 
     inline void updateR(double const &_R) {
@@ -284,7 +312,7 @@ class BoxedEdge : public Box {
 
     inline void update(double const &_R) {
       updateR(_R);
-      aChanged = true;
+      changed();
     };
 
 
@@ -405,8 +433,8 @@ typedef set<AxisOrderElm> T_AxisOrdered;
  */
 
 
-typedef deque<BoxedObj> T_BoxPartCntr;
-typedef deque<BoxedEdge> T_EdgeBoxCntr;
+typedef vector<BoxedObj> T_BoxPartCntr;
+typedef vector<BoxedEdge> T_EdgeBoxCntr;
 
 typedef map<int, BoxedObj *> T_BoxPartMap;
 typedef pair<int, BoxedObj *> T_MapPair;
@@ -519,6 +547,7 @@ void BoxedObjCntr::boxObjs(TwoDScene const &_Scene)
   aAvgSize = 0.0;
 
   boxVrtxs(_Scene);
+  // Edges have to go after Vertexes!
   boxEdges(_Scene);
 
   aInitialized = true;
@@ -608,6 +637,7 @@ void BoxedObjCntr::updateScene(TwoDScene const &_Scene)
     };
   };
 
+  // Edges have to go after Vertexes!
   T_EdgeBoxCntr::iterator pIterE = aEdgeBoxes.begin();
   for (; pIterE != aEdgeBoxes.end(); ++pIterE) {
     if (!(*pIter).isFixed()) {
