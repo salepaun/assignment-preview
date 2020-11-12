@@ -6,9 +6,11 @@
 #include "MathDefs.h"
 
 #include <stdio.h>
+#include <string.h>
 #include <algorithm>
 #include <set>
 #include <utility>
+#include <iostream>
 
 
 using namespace std;
@@ -83,6 +85,31 @@ static void energyDumpEnd(scalar &_sTime, scalar const &_Dt, FILE *_Fd, scalar c
     fclose(_Fd);
   };
 }
+
+
+
+/**********************************************************************************
+ * Local stream helper functions
+ */
+
+
+template<typename T_Iter>
+ostream & dumpContainer(int _Limit, ostream &_s,
+    char const * const _Function,
+    char const * const _Name,
+    T_Iter const &_Begin,
+    T_Iter const &_End)
+{
+  if (_Function) _s.write(_Function, strlen(_Function));
+  if (_Name) _s.write(_Name, strlen(_Name));
+  T_Iter I = _Begin;
+  for(int i=0; i<_Limit && I!=_End; ++I) {
+    _s << *I << ", ";
+  };
+
+  return _s;
+}
+
 
 
 

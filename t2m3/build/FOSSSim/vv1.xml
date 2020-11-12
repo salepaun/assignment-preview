@@ -1,0 +1,48 @@
+<scene>
+  <description text="Testing touching detection"/>
+
+  <duration time="1.0"/>
+  <integrator type="forward-backward-euler" dt="0.5"/>
+  <collision type="penalty" thickness="0"/>
+  <collisiondetection type="contest"/>
+
+  <!-- touching -->
+  <particle m="1.0" px="-1.0" py="7.0" vx="0.0" vy="0.0" fixed="0" radius="0.5"/>
+  <particle m="1.0" px="0.0" py="6.0" vx="0.0" vy="0.0" fixed="0" radius="0.5"/>
+  <particlecolor i="0" r="1" g="0" b="0"/>
+  <particlecolor i="1" r="0" g="0" b="1"/>
+
+  <!-- intersecting -->
+  <particle m="1.0" px="3.0" py="7.0" vx="0.0" vy="0.0" fixed="0" radius="0.6"/>
+  <particle m="1.0" px="4.0" py="6.0" vx="0.0" vy="0.0" fixed="0" radius="0.6"/>
+  <particlecolor i="2" r="1" g="0" b="0"/>
+  <particlecolor i="3" r="0" g="0" b="1"/>
+
+  <!-- touching -->
+  <particle m="1.0" px="-1.0" py="0.0" vx="0.0" vy="0.0" fixed="0" radius="0.5"/>
+  <particle m="1.0" px="0.0" py="0.0" vx="0.0" vy="0.0" fixed="0" radius="0.5"/>
+  <particlecolor i="4" r="1" g="0" b="0"/>
+  <particlecolor i="5" r="0" g="0" b="1"/>
+
+  <particle m="1.0" px="3.0" py="-1.0" vx="0.0" vy="0.0" fixed="0" radius="0.5"/>
+  <particle m="1.0" px="3.0" py="0.0" vx="0.0" vy="0.0" fixed="0" radius="0.5"/>
+  <particlecolor i="6" r="1" g="0" b="0"/>
+  <particlecolor i="7" r="0" g="0" b="1"/>
+
+  <!-- not intersecting -->
+  <particle m="1.0" px="6.0" py="7.0" vx="0.0" vy="0.0" fixed="0" radius="0.4"/>
+  <particle m="1.0" px="7.0" py="6.0" vx="0.0" vy="0.0" fixed="0" radius="0.4"/>
+  <particlecolor i="8" r="1" g="0" b="0"/>
+  <particlecolor i="9" r="0" g="0" b="1"/>
+
+  <particle m="1.0" px="6.0" py="3.0" vx="0.0" vy="0.0" fixed="0" radius="0.4"/>
+  <particle m="1.0" px="7.0" py="3.0" vx="0.0" vy="0.0" fixed="0" radius="0.4"/>
+  <particlecolor i="10" r="1" g="0" b="0"/>
+  <particlecolor i="11" r="0" g="0" b="1"/>
+
+  <particle m="1.0" px="6.0" py="0.0" vx="0.0" vy="0.0" fixed="0" radius="0.4"/>
+  <particle m="1.0" px="6.0" py="-1.0" vx="0.0" vy="0.0" fixed="0" radius="0.4"/>
+  <particlecolor i="12" r="1" g="0" b="0"/>
+  <particlecolor i="13" r="0" g="0" b="1"/>
+
+</scene>

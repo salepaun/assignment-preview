@@ -22,8 +22,21 @@
 using namespace std;
 
 
+/**
+ * ToDo Improvements:
+ * 1. Search Y axis for only found candidates at X axis.
+ * 2. Regions
+ * 3. Auto method detection
+ * 4. L. optimization
+ * 5. Possibly only rechecking regions with moved (changed) objects at X and Y axises.
+ * 6. Undetermined: Report touching objects (?)
+ * 7. Optimize checking if particles belong to an edge.
+ * 8. Optimize updates with checking change (X,Y) and updating only proper axis (X,Y).
+ */
 
-#define MY_DEBUG
+
+// For now: 0,1,2
+#define MY_DEBUG 0
 
 
 /**********************************************************************************
@@ -58,7 +71,7 @@ enum BoxType {
  */
 
 
-int g_MaxCoutNum = 3;
+int g_MaxCoutNum = 10;
 
 
 
@@ -136,7 +149,7 @@ ostream & operator << (ostream &_s, Box::T_Key const &_o) {
 
 ostream & operator << (ostream &_s, Box const &_o) {
   //copy(_o.aBorder.begin(), _o.aBorder.end(), ostream_iterator<double>(_s, ","));
-  _s << "{" << _o.aId << ":" << Box::typeAsStr(_o.aType)
+  _s << "#{" << _o.aId << ":" << Box::typeAsStr(_o.aType)
     << " (mnX:" << _o.aBorder[0]
     << ", mxX:" << _o.aBorder[1]
     << ", mnY:" << _o.aBorder[2]
@@ -159,10 +172,20 @@ class BoxedObj : public Box {
 
     BoxedObj() : Box() {};
     BoxedObj(int _Id) : Box(_Id, VrtxBox) {};
-    BoxedObj(int _Id, Vector2s const &_X, double const &_R) : 
-      Box(_Id, VrtxBox), aX(_X[0]), aY(_X[1]) {
+    BoxedObj(int _Id, bool _Fixed, Vector2s const &_X, double const &_R) : 
+      Box(_Id, VrtxBox), aFixed(_Fixed), aX(_X[0]), aY(_X[1]) {
       // !!! aAvgSize += _R;
       updateR(_R);
+    };
+
+    /** 
+     * Returns true for fixed vertexes.
+     *
+     * Similar functionality for edges - no virtual methods in the box though -
+     * high performance penalty for virtual objects - to improve if otherwise.
+     */
+    inline bool isFixed() const {
+      return aFixed;
     };
 
     inline bool changedX(Vector2s const &_X) {
@@ -188,6 +211,7 @@ class BoxedObj : public Box {
 
   private:
 
+    bool aFixed;
     double aX;
     double aY;
 };
@@ -231,6 +255,20 @@ class BoxedEdge : public Box {
       return aVrtx.first && aVrtx.second;
     };
 
+    /** 
+     * Returns true for fixed vertexes.
+     *
+     * Similar functionality for edges - no virtual methods in the box though -
+     * high performance penalty for virtual objects - to improve if otherwise.
+     */
+    inline bool isFixed() const {
+      return initialized() && (a()->isFixed() && b()->isFixed());
+    };
+
+    inline bool isMember(int _Id) const {
+      return initialized() && (a()->getId() == _Id || b()->getId() == _Id);
+    };
+
     inline bool changedX() const {
       return initialized() && (a()->hasChanged() || b()->hasChanged());
     };
@@ -265,6 +303,7 @@ class BoxedEdge : public Box {
 
   private:
 
+    bool aFixed;
     T_VrtxPair aVrtx;
 };
 
@@ -440,7 +479,7 @@ void BoxedObjCntr::boxVrtxs(TwoDScene const &_Scene)
   aParticleBoxes.resize(ParticlesNum);
   T_BoxPartCntr::iterator pIter = aParticleBoxes.begin();
   for (int i=0; i < ParticlesNum; ++i) {
-    *pIter = BoxedObj(i, X.segment<2>(i<<1), _Scene.getRadius(i));
+    *pIter = BoxedObj(i, _Scene.isFixed(i), X.segment<2>(i<<1), _Scene.getRadius(i));
     addToOrderedAxis(*pIter);
     aParticleMap.insert(T_MapPair(i, &(*pIter)));
     pIter++;
@@ -490,30 +529,21 @@ void BoxedObjCntr::boxObjs(TwoDScene const &_Scene)
   cout << __FUNCTION__
     << ", Particles=" << ParticlesNum
     << ", PBoxSize=" << aParticleBoxes.size()
-    << ", AvgSize=" << aAvgSize
-    << "\nVrtxBox:";
+    << ", AvgSize=" << aAvgSize;
+
   // crashes! copy_n(aParticleBoxes.begin(), g_MaxCoutNum, ostream_iterator<BoxedObj>(cout, ", "));
-  T_BoxPartCntr::const_iterator I=aParticleBoxes.begin();
-  for (int i=0; i<g_MaxCoutNum && I!=aParticleBoxes.end(); ++i, ++I) {
-    cout << *I << ", ";
-  };
+  dumpContainer<>(g_MaxCoutNum, cout, NULL, "\n **** VrtxBox:",
+      aParticleBoxes.begin(), aParticleBoxes.end());
 
-  cout << "\nEdgeBox:";
-  T_EdgeBoxCntr::const_iterator IE=aEdgeBoxes.begin();
-  for (int i=0; i<g_MaxCoutNum && IE!=aEdgeBoxes.end(); ++i, ++IE) {
-    cout << *IE << ", ";
-  };
+  dumpContainer<>(g_MaxCoutNum, cout, NULL, "\n **** EdgeBox:",
+      aEdgeBoxes.begin(), aEdgeBoxes.end());
 
-  cout << "\n: XAxis:";
-  T_AxisOrdered::const_iterator IA=aXAxis.begin(); 
-  for(int i=0; i<g_MaxCoutNum && IA!=aXAxis.end(); ++IA) {
-    cout << *IA << ", ";
-  }
-  cout << "\n: YAxis:";
-  IA=aYAxis.begin(); 
-  for(int i=0; i<g_MaxCoutNum && IA!=aYAxis.end(); ++IA) {
-    cout << *IA << ", ";
-  }
+  dumpContainer<>(g_MaxCoutNum, cout, NULL, "\n ****  XAxis:",
+      aXAxis.begin(), aXAxis.end());
+
+  dumpContainer<>(g_MaxCoutNum, cout, NULL, "\n ****  YAxis:",
+      aYAxis.begin(), aYAxis.end());
+
   cout << endl;
 
 #endif
@@ -525,11 +555,13 @@ void BoxedObjCntr::updateVrtx(TwoDScene const &_Scene, VectorXs const &_X, Boxed
   if (_O.changedX(X)) {
 
 #ifndef NDEBUG
-#ifdef MY_DEBUG
+#ifdef MY_DEBUG 
+#if MY_DEBUG > 1
     cout << __FUNCTION__
       << " Detected particle to update:" << _O
       << ", with:" << X.transpose()
       << endl;
+#endif
 #endif
 #endif
 
@@ -545,9 +577,11 @@ void BoxedObjCntr::updateEdge(TwoDScene const &_Scene, BoxedEdge &_O) {
 
 #ifndef NDEBUG
 #ifdef MY_DEBUG
+#if MY_DEBUG > 1
     cout << __FUNCTION__
       << " Detected edge to update:" << _O
       << endl;
+#endif
 #endif
 #endif
 
@@ -569,12 +603,16 @@ void BoxedObjCntr::updateScene(TwoDScene const &_Scene)
 
   T_BoxPartCntr::iterator pIter = aParticleBoxes.begin();
   for (; pIter != aParticleBoxes.end(); ++pIter) {
-    updateVrtx(_Scene, X, *pIter);
+    if (!(*pIter).isFixed()) {
+      updateVrtx(_Scene, X, *pIter);
+    };
   };
 
   T_EdgeBoxCntr::iterator pIterE = aEdgeBoxes.begin();
   for (; pIterE != aEdgeBoxes.end(); ++pIterE) {
-    updateEdge(_Scene, *pIterE);
+    if (!(*pIter).isFixed()) {
+      updateEdge(_Scene, *pIterE);
+    };
   };
 
   for_each(aParticleBoxes.begin(), aParticleBoxes.end(), [](BoxedObj &_o) { _o.resetChange(); });
@@ -582,20 +620,15 @@ void BoxedObjCntr::updateScene(TwoDScene const &_Scene)
 
 #ifndef NDEBUG
 #ifdef MY_DEBUG
+#if MY_DEBUG > 1
 
-  cout << __FUNCTION__;
-  cout << "\n: XAxis:";
-  T_AxisOrdered::const_iterator IA=aXAxis.begin(); 
-  for(int i=0; i<g_MaxCoutNum && IA!=aXAxis.end(); ++IA) {
-    cout << *IA << ", ";
-  }
-  cout << "\n: YAxis:";
-  IA=aYAxis.begin(); 
-  for(int i=0; i<g_MaxCoutNum && IA!=aYAxis.end(); ++IA) {
-    cout << *IA << ", ";
-  }
+  dumpContainer<T_AxisOrdered::const_iterator>(
+      g_MaxCoutNum, cout, __FUNCTION__, "\n ****  XAxis:", aXAxis.begin(), aXAxis.end());
+  dumpContainer<T_AxisOrdered::const_iterator>(
+      g_MaxCoutNum, cout, __FUNCTION__, "\n ****  YAxis:", aYAxis.begin(), aYAxis.end());
   cout << endl;
 
+#endif
 #endif
 #endif
 }
@@ -612,45 +645,81 @@ bool BoxedObjCntr::findAxisIntersect(
   set<Box::T_Key> Active;
 
   struct IntersectsInserter {
-    IntersectsInserter(Box::T_Key _Key, T_IntersSet &_PP, T_IntersSet &_PE, T_IntersSet &_PH) : 
+    IntersectsInserter(Box::T_Key _Key, 
+        T_IntersSet &_PP, T_IntersSet &_PE, T_IntersSet &_PH,
+        T_EdgeBoxCntr &_EdgeCntr) : 
       aKey(_Key), 
       aPP(_PP),
       aPE(_PE),
-      aPH(_PH) {
+      aPH(_PH),
+      aEdgeCntr(_EdgeCntr) {
     };
 
     void operator ()(Box::T_Key _Key) {
       T_IntersSet *intersects = NULL;
-      // tests only: cout << "A:" << aKey << ", B:" << _Key << ", c:" << (aKey.second|_Key.second) << endl;
+      int Id1, Id2;
       switch((aKey.second | _Key.second)) {
-        case VrtxBox:
-          intersects = &aPP; break;
+        case VrtxBox: 
+          {
+            if (aKey.first < _Key.first) {
+              Id1 = aKey.first; Id2 = _Key.first;
+            } else {
+              Id1 = _Key.first; Id2 = aKey.first;
+            };
+            intersects = &aPP;
+          }; break;
         case EdgeBox:
         case 3:
-          intersects = &aPE; break;
+          {
+            if (aKey.second == EdgeBox) {
+              Id1 = _Key.first; Id2 = aKey.first;
+            } else {
+              Id1 = aKey.first; Id2 = _Key.first;
+            }
+            intersects = aEdgeCntr[Id2].isMember(Id1) ?  NULL : &aPE;
+          }; break;
         case HalpPlaneBox:
         case 5:
-          intersects = &aPH; break;
+          {
+            if (aKey.second == HalpPlaneBox) {
+              Id1 = _Key.first; Id2 = aKey.first;
+            } else {
+              Id1 = aKey.first; Id2 = _Key.first;
+            }
+            // intersects = aEdgeCntr[Id2].isMember(Id1) ?  NULL : &aPE;
+            intersects = &aPH; break;
+          };
       };
 
+#ifndef NDEBUG
+#ifdef MY_DEBUG
+#if MY_DEBUG > 2
+      cout << "A:" << aKey << ", B:" << _Key << ", c:" << (aKey.second|_Key.second) << ", cntr:" << intersects << endl;
+#endif
+#endif
+#endif
       if(intersects) {
-        intersects->insert(aKey.first < _Key.first ? 
-            pair<int,int>(aKey.first, _Key.first) :
-            pair<int,int>(_Key.first, aKey.first));
+        intersects->insert(pair<int,int>(Id1, Id2));
       };
     };
 
     Box::T_Key aKey;
     T_IntersSet &aPP, &aPE, &aPH;
+    T_EdgeBoxCntr &aEdgeCntr;
   };
 
   for (T_AxisOrdered::const_iterator I=_Axis.begin(); I != _Axis.end(); ++I) {
     Box::T_Key key = (*I).getKey();
 
-    /* tests only
-       for (set<Box::T_Key>::iterator i=Active.begin(); i!=Active.end(); ++i) {
-       cout << (*i) << ", ";
-       }; cout << endl;*/
+
+#ifndef NDEBUG
+#ifdef MY_DEBUG
+#if MY_DEBUG > 2
+    dumpContainer<>(g_MaxCoutNum, cout, __FUNCTION__, " **** Active:",
+        Active.begin(), Active.end()) << endl;
+#endif
+#endif
+#endif
 
     if ((*I).isMaxSearch()) {
       Active.erase(key);
@@ -662,7 +731,7 @@ bool BoxedObjCntr::findAxisIntersect(
       continue;
     };
 
-    IntersectsInserter Inserter(key, _PP, _PE, _PH); 
+    IntersectsInserter Inserter(key, _PP, _PE, _PH, aEdgeBoxes);
     for_each(Active.begin(), Active.end(), Inserter);
 
     Active.insert(key);
@@ -686,7 +755,7 @@ bool BoxedObjCntr::findIntersect(
 
   T_IntersSet XInterPP, XInterPE, XInterPH, YInterPP, YInterPE, YInterPH;
   if (findAxisIntersect(aXAxis, XInterPP, XInterPE, XInterPH)) {
-    // Improvement: only search found candidates
+    // Improvement: only search found candidates !!!
     if (findAxisIntersect(aYAxis, YInterPP, YInterPE, YInterPH)) {
       if (XInterPP.size() && YInterPP.size()){
         set_intersection(
@@ -878,12 +947,7 @@ static ostream & operator << (ostream &_s, T_IntersIds const &_o) {
 
 static ostream & operator << (ostream &_s, T_IntersSet const &_o) {
   // copy_n(_o.begin(), 10, ostream_iterator<T_IntersIds>(_s, ", "));
-  T_IntersSet::const_iterator I = _o.begin();
-  for (int i=0; i < g_MaxCoutNum && I != _o.end(); ++i, ++I) {
-    _s << *I;
-  };
-
-  return _s;
+  return dumpContainer<>(g_MaxCoutNum, _s, NULL, NULL, _o.begin(), _o.end());
 };
 
 #endif
@@ -937,11 +1001,14 @@ void ContestDetector::findCollidingPairs(const TwoDScene &scene, const VectorXs 
 #ifdef MY_DEBUG
 
   if (pppairs.size())
-      cout << __FUNCTION__ << ": PP:" << pppairs << endl;
+    dumpContainer<>(g_MaxCoutNum, cout, __FUNCTION__, " **** PP:",
+        pppairs.begin(), pppairs.end()) << endl;
   if (pepairs.size())
-      cout << __FUNCTION__ << ": PE:" << pepairs << endl;
+    dumpContainer<>(g_MaxCoutNum, cout, __FUNCTION__, " **** PE:",
+        pepairs.begin(), pepairs.end()) << endl;
   if (phpairs.size())
-      cout << __FUNCTION__ << ": PH:" << phpairs << endl;
+    dumpContainer<>(g_MaxCoutNum, cout, __FUNCTION__, " **** PH:",
+        phpairs.begin(), phpairs.end()) << endl;
 
 #endif
 #endif
