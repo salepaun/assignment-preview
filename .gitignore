@@ -16,4 +16,6 @@ Tests/!*.*
 **/log.txt
 **/pngs/
 **/.*
-**/.gitignore
+**/build/**/*assets*
+!**/build/**/*.xml
+**/ParticlesDump*.xml

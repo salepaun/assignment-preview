@@ -1,10 +1,6 @@
 #ifndef OPS_H
 #define OPS_H
 
-#include <Eigen/Dense>
-
-#include "MathDefs.h"
-
 #include <stdio.h>
 #include <string.h>
 #include <algorithm>
@@ -12,6 +8,10 @@
 #include <utility>
 #include <iostream>
 
+
+#include <Eigen/Dense>
+
+#include "MathDefs.h"
 
 using namespace std;
 
@@ -97,14 +97,16 @@ template<typename T_Iter>
 ostream & dumpContainer(int _Limit, ostream &_s,
     char const * const _Function,
     char const * const _Name,
+    size_t _Size,
     T_Iter const &_Begin,
     T_Iter const &_End)
 {
   if (_Function) _s.write(_Function, strlen(_Function));
   if (_Name) _s.write(_Name, strlen(_Name));
+  _s << "Size=" << _Size;
   T_Iter I = _Begin;
-  for(int i=0; i<_Limit && I!=_End; ++I) {
-    _s << *I << ", ";
+  for(int i=0; i<_Limit && I!=_End; ++I, ++i) {
+    _s << ", " << *I;
   };
 
   return _s;
