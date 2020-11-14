@@ -878,6 +878,23 @@ void BoxedRegion::splitAxis(int _ASize, double &_Devider,
       _BSplitAxis.insert((*I));
     };
   };
+
+#ifndef NDEBUG
+#if MY_DEBUG > 1
+    dumpContainer<>(g_MaxCoutNum, cout, __FUNCTION__, " **** Orig  SplitAxis:",
+        _SplitSrcAxis.size(), _SplitSrcAxis.begin(), _SplitSrcAxis.end()) << endl;
+    dumpContainer<>(g_MaxCoutNum, cout, __FUNCTION__, " **** Child SplitAxis:",
+        _ASplitAxis.size(), _ASplitAxis.begin(), _ASplitAxis.end()) << endl;
+    dumpContainer<>(g_MaxCoutNum, cout, __FUNCTION__, " **** Child SplitAxis:",
+        _BSplitAxis.size(), _BSplitAxis.begin(), _BSplitAxis.end()) << endl;
+    dumpContainer<>(g_MaxCoutNum, cout, __FUNCTION__, " **** Orig  KeepAxis:",
+        _SplitSrcAxis.size(), _SplitSrcAxis.begin(), _SplitSrcAxis.end()) << endl;
+    dumpContainer<>(g_MaxCoutNum, cout, __FUNCTION__, " **** Child KeepAxis:",
+        _AKeepAxis.size(), _AKeepAxis.begin(), _AKeepAxis.end()) << endl;
+    dumpContainer<>(g_MaxCoutNum, cout, __FUNCTION__, " **** Child KeepAxis:",
+        _BKeepAxis.size(), _BKeepAxis.begin(), _BKeepAxis.end()) << endl;
+#endif
+#endif
 }
 
 
@@ -1180,12 +1197,12 @@ void BoxedScene::boxObjs(TwoDScene const &_Scene)
 
   aAvgSize = 0.0;
 
-  aRootRegion.split();
 
   boxVrtxs(_Scene);
   // Edges have to go after Vertexes!
   boxEdges(_Scene);
 
+  aRootRegion.split();
   aInitialized = true;
 
 
