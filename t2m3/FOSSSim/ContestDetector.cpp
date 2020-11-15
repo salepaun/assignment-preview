@@ -12,6 +12,7 @@
 #include <vector>
 #include <limits>
 #include <unordered_set>
+#include <cmath>
 
 #ifndef NDEBUG
 #include <assert.h>
@@ -42,8 +43,8 @@ using namespace std;
  */
 
 
-// For now: 0,1,2,3
-#define MY_DEBUG 3
+// For now: 0,1,2,3,4
+#define MY_DEBUG 0
 
 
 /**********************************************************************************
@@ -54,7 +55,7 @@ using namespace std;
 
 typedef pair<double, double> T_MinMax;
 typedef pair<int, int> T_IntersIds;
-typedef set<T_IntersIds> T_IntersSet;
+typedef vector<T_IntersIds> T_IntersCntr;
 
 
 enum AlgoEnum {
@@ -137,7 +138,6 @@ class Box
     inline bool intersects(T_Boundry const &_B) const {
       bool R = intersectsAxis(_B[0], _B[1], aBorder[0], aBorder[1])
         && intersectsAxis(_B[2], _B[3], aBorder[2], aBorder[3]);
-      cout << __FUNCTION__ << " A=" << aBorder << ", B=" << _B << " R=" << R << endl;
       return R;
     };
     inline bool intersectsAxis(double const &_An, double const &_Ax,
@@ -157,6 +157,7 @@ class Box
 
     inline T_Boundry const & getBoundry() const { return aBorder; };
     inline void setBoundry(double const (&_B)[4]) {
+      // copy(aBorder.begin(), aBorder.end(), std::begin(_B));
       memcpy(aBorder.data(), _B, 4*sizeof(double));
     };
     inline void setBoundry(T_Boundry const &_B) {
@@ -608,18 +609,37 @@ class BoxedRegion : public Box
 
     struct IntersectFinder {
       bool Res = false;
-      T_IntersSet &PP, &PE, &PH;
-      IntersectFinder(T_IntersSet &_PP, T_IntersSet &_PE, T_IntersSet &_PH) : PP(_PP), PE(_PE), PH(_PH) { };
+      T_IntersCntr &PP, &PE, &PH;
+      IntersectFinder(T_IntersCntr &_PP, T_IntersCntr &_PE, T_IntersCntr &_PH) : PP(_PP), PE(_PE), PH(_PH) { };
       void operator ()(BoxedRegion &_R) { Res |= _R.findIntersect(PP, PE, PH); };
     };
 
     struct AxisIntersectFinder {
       bool Res = false;
       T_AxisOrdered &A;
-      T_IntersSet &PP, &PE, &PH;
-      AxisIntersectFinder(T_AxisOrdered &_A, T_IntersSet &_PP, T_IntersSet &_PE, T_IntersSet &_PH) : A(_A), PP(_PP), PE(_PE), PH(_PH) { };
+      T_IntersCntr &PP, &PE, &PH;
+      AxisIntersectFinder(T_AxisOrdered &_A, T_IntersCntr &_PP, T_IntersCntr &_PE, T_IntersCntr &_PH) : A(_A), PP(_PP), PE(_PE), PH(_PH) { };
       void operator ()(BoxedRegion &_R) { Res |= _R.findAxisIntersect(A, PP, PE, PH); };
     };
+
+    struct RegionsCounter {
+      size_t Num;
+      RegionsCounter() : Num(0) {};
+      void operator ()(BoxedRegion const &_R) { Num += _R.countRegions(); };
+    };
+
+
+
+    static int getObjPerRegionPow2() {
+      return cObjPerRegLimitPow2;
+    };
+    static size_t getObjPerRegion() {
+      return 1L << cObjPerRegLimitPow2;
+    }
+
+    static int cObjPerRegLimitPow2;
+
+
 
     BoxedRegion() : Box(), aDevidedYAxis(true),  apBoxedParts(NULL), apBoxedEdges(NULL) {};
     BoxedRegion(int _Id, T_BoxPartCntr const *_BoxedParts, T_BoxEdgeCntr const *_BoxedEdges) : 
@@ -667,10 +687,10 @@ class BoxedRegion : public Box
       };
     };
 
-    void split();
+    bool split(int );
     void merge();
 
-    inline bool findAxisIntersect(T_AxisOrdered &_A, T_IntersSet &_PP, T_IntersSet &_PE, T_IntersSet &_PH) {
+    inline bool findAxisIntersect(T_AxisOrdered &_A, T_IntersCntr &_PP, T_IntersCntr &_PE, T_IntersCntr &_PH) {
       if (hasChildren()) {
         AxisIntersectFinder finder(_A, _PP, _PE, _PH);
         for_each(aChildren.begin(), aChildren.end(), finder);
@@ -679,7 +699,7 @@ class BoxedRegion : public Box
         return findAxisIntersectLoc(_A, _PP, _PE, _PH);
       };
     };
-    inline bool findIntersect(T_IntersSet &_PP, T_IntersSet &_PE, T_IntersSet &_PH) {
+    inline bool findIntersect(T_IntersCntr &_PP, T_IntersCntr &_PE, T_IntersCntr &_PH) {
       if (hasChildren()) {
         IntersectFinder finder(_PP, _PE, _PH);
         for_each(aChildren.begin(), aChildren.end(), finder);
@@ -689,6 +709,17 @@ class BoxedRegion : public Box
       };
     };
 
+    inline T_AxisOrdered const & getMinAxis() const {
+      // return aDevidedYAxis ? aYAxis : aXAxis;
+      return aXAxis.size() > aYAxis.size() ? aYAxis : aXAxis;
+    };
+
+    inline size_t countRegions() const {
+      // RegionsCounter counter;
+      // for_each(aChildren.begin(), aChildren.end(), counter);
+      size_t Num=1;
+      return Num + (aChildren.size() ? aChildren.at(0).countRegions() + aChildren.at(1).countRegions() : 0);
+    };
 
     ostream & toStr(ostream &) const;
 
@@ -702,7 +733,6 @@ class BoxedRegion : public Box
       aXAxis.insert(OrderedAxisElm(false, true, &_O));
       aYAxis.insert(OrderedAxisElm(true, false, &_O));
       aYAxis.insert(OrderedAxisElm(true, true, &_O));
-      cout << *this << endl;
     };
 
     inline void eraseFromOrderedAxis(Box &_O) {
@@ -712,13 +742,21 @@ class BoxedRegion : public Box
       aYAxis.erase(OrderedAxisElm(true, true, &_O));
     };
 
+    inline double checkAxisSpan(int _Size, T_AxisOrdered &_Axis) {
+      return (*_Axis.rbegin()).getVal() - (*_Axis.begin()).getVal();
+    };
+
+    inline bool checkXSplit(int _XSize, int _YSize) {
+      return checkAxisSpan(_XSize, aXAxis) > checkAxisSpan(_YSize, aYAxis);
+    };
+
     void splitAxis(int, double &_Devider,
         T_AxisOrdered &_SplitSrcAxis, T_AxisOrdered &_KeepSrcAxis,
         T_AxisOrdered &_ASplitAxis, T_AxisOrdered &_AKeepAxis, 
         T_AxisOrdered &_BSplitAxis, T_AxisOrdered &_BKeepAxis);
 
-    bool findAxisIntersectLoc(T_AxisOrdered &, T_IntersSet &, T_IntersSet &, T_IntersSet &);
-    bool findIntersectLoc(T_IntersSet &, T_IntersSet &, T_IntersSet &);
+    bool findAxisIntersectLoc(T_AxisOrdered &, T_IntersCntr &, T_IntersCntr &, T_IntersCntr &);
+    bool findIntersectLoc(T_IntersCntr &, T_IntersCntr &, T_IntersCntr &);
 
 
   private:
@@ -735,6 +773,8 @@ class BoxedRegion : public Box
 };
 
 
+
+int BoxedRegion::cObjPerRegLimitPow2 = 5;
 
 
 ostream & BoxedRegion::toStr(ostream &_s) const
@@ -765,21 +805,33 @@ ostream & operator << (ostream &_s, BoxedRegion const &_o)
 
 
 
-void BoxedRegion::split()
+/**
+ * Splits region in half, either by X or Y
+ *
+ * @returns     True when split,
+ *              False when reached limit of objects per region or no more generations requested
+ */
+bool BoxedRegion::split(int _RegionsGen)
 {
   int Num = 2;
 
 #ifndef NDEBUG
 #if MY_DEBUG > 2
-  cout << __FUNCTION__ << " for:" << *this << endl;
+  cout << __FUNCTION__ << " RegionsGenerations:" << _RegionsGen << " for:" << *this << endl;
 #endif
 #endif
 
+  if (!_RegionsGen)
+    return false;
+
+  _RegionsGen--;
   if (hasChildren())
   {
-    for_each(aChildren.begin(), aChildren.end(), [Num](BoxedRegion &_R) { _R.split(); });
+    for_each(aChildren.begin(), aChildren.end(), [&](BoxedRegion &_R) { _R.split(_RegionsGen); });
+
+    return true; // To improve to collect responses - for now not used feature
   }
-  else
+  else if (getMinAxis().size() > getObjPerRegion()) // min Axis contains ~ 2 * objects (min,max)
   {
     aChildren.resize(Num);
     T_Regions::iterator I=aChildren.begin();
@@ -802,9 +854,9 @@ void BoxedRegion::split()
 
     // 
     // Split if any objects sorted
-    if (XSize || YSize)
+    if (XSize && YSize)
     {
-      if (XSize > YSize) {
+      if (checkXSplit(XSize, YSize)) {
         splitAxis(XSize, Devider,
             aXAxis, aYAxis,
             A.aXAxis, A.aYAxis,
@@ -832,11 +884,35 @@ void BoxedRegion::split()
 
     A.setBoundry(ABoundry);
     B.setBoundry(BBoundry);
+
+    A.split(_RegionsGen);
+    B.split(_RegionsGen);
+
+    return true;
+  }
+  else
+  {
+#ifndef NDEBUG
+#if MY_DEBUG > 1
+
+    cout << __FUNCTION__
+      << " Reached split limit for " << *this 
+      << ", with AxisNum=" << getMinAxis().size()
+      << endl;
+
+#endif
+#endif
+
+    return false;
   };
 }
 
 
 
+/**
+ * Splits axis for spawned children regions.
+ * Regions borders "touch", i.e. the split line belongs to both regions.
+ */
 void BoxedRegion::splitAxis(int _ASize, double &_Devider,
     T_AxisOrdered &_SplitSrcAxis, T_AxisOrdered &_KeepSrcAxis,
     T_AxisOrdered &_ASplitAxis, T_AxisOrdered &_AKeepAxis,
@@ -844,25 +920,33 @@ void BoxedRegion::splitAxis(int _ASize, double &_Devider,
 {
   int SplitMark = _ASize >> 1;
   vector<OrderedAxisElm> SplitAxis;
+  unordered_set<OrderedAxisElm, OrderedAxisElmHash> Active;
 
+  SplitAxis.resize(_SplitSrcAxis.size());
   copy(_KeepSrcAxis.begin(), _KeepSrcAxis.end(), inserter(_AKeepAxis, _AKeepAxis.begin()));
   copy(_KeepSrcAxis.begin(), _KeepSrcAxis.end(), inserter(_BKeepAxis, _BKeepAxis.begin()));
-  copy(_SplitSrcAxis.begin(), _SplitSrcAxis.begin(), SplitAxis.begin());
-  unordered_set<OrderedAxisElm, OrderedAxisElmHash> Active;
+  copy(_SplitSrcAxis.begin(), _SplitSrcAxis.end(), SplitAxis.begin());
+
 
   //copy_n(_SplitSrcAxis.begin(), SplitMark, inserter(_ASplitAxis, _ASplitAxis.begin()));
   //copy(advance(_SplitSrcAxis.begin(), SplitMark), _SplitSrcAxis.end(), inserter(_BSplitAxis, _BSplitAxis.begin()));
   vector<OrderedAxisElm>::iterator I = SplitAxis.begin();
-  for(int i; I != SplitAxis.end(); ++I, ++i) {
-    if (i <= SplitMark) {
+  for(int i=0; I != SplitAxis.end(); ++I, ++i)
+  {
+    // Regions borders "touch", i.e. the split line belongs to both regions
+    if (i < SplitMark) {
       if ((*I).isMaxSearch())
         Active.erase((*I));
       else
         Active.insert((*I));
+    };
 
+    // "left" region
+    if (i <= SplitMark) {
       _ASplitAxis.insert((*I));
     };
 
+    // "right" region init
     if (i == SplitMark) {
       // insert to second region all started not finished boxes
       copy(Active.begin(), Active.end(), inserter(_BSplitAxis, _BSplitAxis.begin()));
@@ -877,6 +961,20 @@ void BoxedRegion::splitAxis(int _ASize, double &_Devider,
       };
       _BSplitAxis.insert((*I));
     };
+
+#ifndef NDEBUG
+#if MY_DEBUG > 3
+    cout << __FUNCTION__
+      << "Split iteration:" << i
+      << ", SplitMark:" << SplitMark
+      << ", Val:" << (*I).getVal()
+      << ", SplitVectorSize:" << SplitAxis.size()
+      << ", ASize:" << _ASplitAxis.size()
+      << ", BSize:" << _BSplitAxis.size();
+    dumpContainer<>(g_MaxCoutNum, cout, NULL, ", Active:",
+        Active.size(), Active.begin(), Active.end()) << endl;
+#endif
+#endif
   };
 
 #ifndef NDEBUG
@@ -888,7 +986,7 @@ void BoxedRegion::splitAxis(int _ASize, double &_Devider,
     dumpContainer<>(g_MaxCoutNum, cout, __FUNCTION__, " **** Child SplitAxis:",
         _BSplitAxis.size(), _BSplitAxis.begin(), _BSplitAxis.end()) << endl;
     dumpContainer<>(g_MaxCoutNum, cout, __FUNCTION__, " **** Orig  KeepAxis:",
-        _SplitSrcAxis.size(), _SplitSrcAxis.begin(), _SplitSrcAxis.end()) << endl;
+        _KeepSrcAxis.size(), _KeepSrcAxis.begin(), _KeepSrcAxis.end()) << endl;
     dumpContainer<>(g_MaxCoutNum, cout, __FUNCTION__, " **** Child KeepAxis:",
         _AKeepAxis.size(), _AKeepAxis.begin(), _AKeepAxis.end()) << endl;
     dumpContainer<>(g_MaxCoutNum, cout, __FUNCTION__, " **** Child KeepAxis:",
@@ -908,16 +1006,16 @@ void BoxedRegion::merge()
 
 bool BoxedRegion::findAxisIntersectLoc(
     T_AxisOrdered &_Axis,
-    T_IntersSet &_PP,
-    T_IntersSet &_PE,
-    T_IntersSet &_PH)
+    T_IntersCntr &_PP,
+    T_IntersCntr &_PE,
+    T_IntersCntr &_PH)
 {
   bool bFound = false;
   set<Box::T_Key> Active;
 
   struct IntersectsInserter {
     IntersectsInserter(Box::T_Key _Key, 
-        T_IntersSet &_PP, T_IntersSet &_PE, T_IntersSet &_PH,
+        T_IntersCntr &_PP, T_IntersCntr &_PE, T_IntersCntr &_PH,
         T_BoxEdgeCntr const *_pEdgeCntr) : 
       aKey(_Key), 
       aPP(_PP),
@@ -927,7 +1025,7 @@ bool BoxedRegion::findAxisIntersectLoc(
       };
 
     void operator ()(Box::T_Key _Key) {
-      T_IntersSet *intersects = NULL;
+      T_IntersCntr *intersects = NULL;
       int Id1, Id2;
       switch((aKey.second | _Key.second)) {
         case E_VrtxBox: 
@@ -973,12 +1071,13 @@ bool BoxedRegion::findAxisIntersectLoc(
 #endif
 #endif
       if(intersects) {
-        intersects->insert(pair<int,int>(Id1, Id2));
+        // intersects->insert(pair<int,int>(Id1, Id2));
+        intersects->push_back(pair<int,int>(Id1, Id2));
       };
     };
 
     Box::T_Key aKey;
-    T_IntersSet &aPP, &aPE, &aPH;
+    T_IntersCntr &aPP, &aPE, &aPH;
     T_BoxEdgeCntr const *apEdgeCntr;
   };
 
@@ -1027,15 +1126,76 @@ bool BoxedRegion::findAxisIntersectLoc(
 
 
 bool BoxedRegion::findIntersectLoc(
-    T_IntersSet &_PP,
-    T_IntersSet &_PE,
-    T_IntersSet &_PH)
+    T_IntersCntr &_PP,
+    T_IntersCntr &_PE,
+    T_IntersCntr &_PH)
 {
   size_t PPSize = _PP.size();
   size_t PESize = _PE.size();
   size_t PHSize = _PH.size();
 
-  T_IntersSet XInterPP, XInterPE, XInterPH, YInterPP, YInterPE, YInterPH;
+  T_IntersCntr XInterPP, XInterPE, XInterPH, YInterPP, YInterPE, YInterPH;
+  if (findAxisIntersect(aXAxis, XInterPP, XInterPE, XInterPH)) {
+    // Improvement: only search found candidates !!!
+    if (findAxisIntersect(aYAxis, YInterPP, YInterPE, YInterPH)) {
+      if (XInterPP.size() && YInterPP.size()){
+        sort(XInterPP.begin(), XInterPP.end()); sort(YInterPP.begin(), YInterPP.end());
+        _PP.resize(min(XInterPP.size(), YInterPP.size()));
+        set_intersection(
+            XInterPP.begin(), XInterPP.end(),
+            YInterPP.begin(), YInterPP.end(),
+            _PP.begin());
+      };
+
+      if (XInterPE.size() && YInterPE.size()){
+        sort(XInterPE.begin(), XInterPE.end()); sort(YInterPE.begin(), YInterPE.end());
+        _PE.resize(min(XInterPE.size(), YInterPE.size()));
+        set_intersection(
+            XInterPE.begin(), XInterPE.end(),
+            YInterPE.begin(), YInterPE.end(),
+            _PE.begin());
+      };
+
+      if (XInterPH.size() && YInterPH.size()){
+        sort(XInterPH.begin(), XInterPH.end()); sort(YInterPH.begin(), YInterPH.end());
+        _PH.resize(min(XInterPH.size(), YInterPH.size()));
+        set_intersection(
+            XInterPH.begin(), XInterPH.end(),
+            YInterPH.begin(), YInterPH.end(),
+            _PH.begin());
+      };
+    };
+  };
+
+#ifndef NDEBUG
+#ifdef MY_DEBUG
+  cout << __FUNCTION__
+    << " PPx:" << XInterPP.size()
+    << " PEx:" << XInterPE.size()
+    << " PHx:" << XInterPH.size()
+    << " PPy:" << YInterPP.size()
+    << " PEy:" << YInterPE.size()
+    << " PHy:" << YInterPH.size()
+    << endl;
+#endif
+#endif
+
+  return _PP.size() > PPSize || _PE.size() > PESize || _PH.size() > PHSize;
+}
+
+
+
+/*
+bool BoxedRegion::findIntersectLoc(
+    T_IntersCntr &_PP,
+    T_IntersCntr &_PE,
+    T_IntersCntr &_PH)
+{
+  size_t PPSize = _PP.size();
+  size_t PESize = _PE.size();
+  size_t PHSize = _PH.size();
+
+  T_IntersCntr XInterPP, XInterPE, XInterPH, YInterPP, YInterPE, YInterPH;
   if (findAxisIntersect(aXAxis, XInterPP, XInterPE, XInterPH)) {
     // Improvement: only search found candidates !!!
     if (findAxisIntersect(aYAxis, YInterPP, YInterPE, YInterPH)) {
@@ -1077,6 +1237,7 @@ bool BoxedRegion::findIntersectLoc(
 
   return _PP.size() > PPSize || _PE.size() > PESize || _PH.size() > PHSize;
 }
+*/
 
 
 
@@ -1105,7 +1266,7 @@ class BoxedScene : Box
     };
     void update(TwoDScene const &);
 
-    inline bool findIntersect(T_IntersSet &_PP, T_IntersSet &_PE, T_IntersSet &_PH) {
+    inline bool findIntersect(T_IntersCntr &_PP, T_IntersCntr &_PE, T_IntersCntr &_PH) {
       return aRootRegion.findIntersect(_PP, _PE, _PH);
     };
 
@@ -1115,6 +1276,21 @@ class BoxedScene : Box
     inline void eraseFromRegion(Box &_Box) {
       aRootRegion.erase(_Box);
     };
+
+    inline int getObjNum() const {
+      return aVrtxsNum + aEdgesNum + aHalfPNum;
+    };
+    inline int getEstRegionsNum() const {
+      return getObjNum() >> BoxedRegion::getObjPerRegionPow2(); // ~256 per region
+    };
+    inline int getEstRegionsGen() const {
+      int Gens = log2(getEstRegionsNum());
+      return Gens > 0 ? Gens : 0;
+    };
+    inline size_t getRegionsNum() const {
+      return aRootRegion.countRegions();
+    };
+
 
     //friend ostream & operator << (ostream &_, BoxedObj const &_o);
 
@@ -1197,12 +1373,15 @@ void BoxedScene::boxObjs(TwoDScene const &_Scene)
 
   aAvgSize = 0.0;
 
+  aVrtxsNum = _Scene.getNumParticles();
+  aEdgesNum = _Scene.getNumEdges();
+  aHalfPNum = _Scene.getNumHalfplanes();
 
   boxVrtxs(_Scene);
   // Edges have to go after Vertexes!
   boxEdges(_Scene);
 
-  aRootRegion.split();
+  aRootRegion.split(getEstRegionsGen());
   aInitialized = true;
 
 
@@ -1211,7 +1390,11 @@ void BoxedScene::boxObjs(TwoDScene const &_Scene)
   cout << __FUNCTION__
     << ", Particles=" << ParticlesNum
     << ", PBoxSize=" << aBoxParts.size()
-    << ", AvgSize=" << aAvgSize;
+    << ", AvgSize=" << aAvgSize
+    << ", TotalSceneObj=" << getObjNum()
+    << ", EstObjPerReg=" << getEstRegionsNum()
+    << ", EstRegGen=" << getEstRegionsGen()
+    << ", RegionsNum=" << getRegionsNum();
 
   // crashes! copy_n(aBoxParts.begin(), g_MaxCoutNum, ostream_iterator<BoxedObj>(cout, ", "));
   dumpContainer<>(g_MaxCoutNum, cout, NULL, "\n **** VrtxBox:",
@@ -1343,7 +1526,23 @@ static void estimateEuler(
   if (!_First) {
     g_Scene.update(_Scene);
   };
-  g_Scene.findIntersect(_PP, _PE, _PH);
+  T_IntersCntr PP, PE, PH;
+  g_Scene.findIntersect(PP, PE, PH);
+
+  if (PP.size()) {
+    sort(PP.begin(), PP.end());
+    copy(PP.begin(), PP.end(), inserter(_PP, _PP.begin()));
+  };
+
+  if (PE.size()) {
+    sort(PE.begin(), PE.end());
+    copy(PE.begin(), PE.end(), inserter(_PE, _PE.begin()));
+  };
+
+  if (PH.size()) {
+    sort(PH.begin(), PH.end());
+    copy(PH.begin(), PH.end(), inserter(_PH, _PH.begin()));
+  };
 }
 
 
@@ -1432,7 +1631,7 @@ static ostream & operator << (ostream &_s, T_IntersIds const &_o) {
 };
 
 
-static ostream & operator << (ostream &_s, T_IntersSet const &_o) {
+static ostream & operator << (ostream &_s, T_IntersCntr const &_o) {
   // copy_n(_o.begin(), 10, ostream_iterator<T_IntersIds>(_s, ", "));
   return dumpContainer<>(g_MaxCoutNum, _s, NULL, NULL, _o.size(), _o.begin(), _o.end());
 };
