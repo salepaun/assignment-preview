@@ -44,7 +44,7 @@ using namespace std;
 
 
 // For now: 0,1,2,3,4
-#define MY_DEBUG 0
+#define MY_DEBUG 2
 
 
 /**********************************************************************************
@@ -117,8 +117,8 @@ class Box
       };
     };
 
-    Box() : aId(-1), aType(E_UnknownBox), aChanged(false), aInitialized(false) {};
-    Box(int _Id, BoxType _Type) : aId(_Id), aType(_Type), aChanged(false), aInitialized(false) {};
+    Box() : aId(-1), aType(E_UnknownBox), aChanged(false), aInitialized(false), aFixed(false) {};
+    Box(int _Id, BoxType _Type, bool _Fixed=false) : aId(_Id), aType(_Type), aChanged(false), aInitialized(false), aFixed(_Fixed) {};
 
     inline int getId() const { return aId; };
     inline BoxType getType() const { return aType; };
@@ -126,6 +126,9 @@ class Box
 
     inline bool isInitialized() const { return aInitialized; };
     inline void setInitialized() { aInitialized = true; };
+
+    inline bool isFixed() const { return aFixed; };
+    inline void setFixed(bool _Fixed=true) { aFixed = _Fixed; };
 
     inline double const & xmin() const { return aBorder[0]; };
     inline double const & xmax() const { return aBorder[1]; };
@@ -235,6 +238,7 @@ class Box
     BoxType aType;
     bool aChanged;
     bool aInitialized;
+    bool aFixed;
     T_Parent aParents;
     T_Boundry aBorder;
 };
@@ -282,19 +286,9 @@ class BoxedObj : public Box
     BoxedObj() : Box() {};
     BoxedObj(int _Id) : Box(_Id, E_VrtxBox) {};
     BoxedObj(int _Id, bool _Fixed, Vector2s const &_X, double const &_R) : 
-      Box(_Id, E_VrtxBox), aFixed(_Fixed), aX(_X[0]), aY(_X[1]) {
+      Box(_Id, E_VrtxBox, _Fixed), aX(_X[0]), aY(_X[1]) {
       // !!! aAvgSize += _R;
       updateR(_R);
-    };
-
-    /** 
-     * Returns true for fixed vertexes.
-     *
-     * Similar functionality for edges - no virtual methods in the box though -
-     * high performance penalty for virtual objects - to improve if otherwise.
-     */
-    inline bool isFixed() const {
-      return aFixed;
     };
 
     inline bool changedX(Vector2s const &_X) {
@@ -322,7 +316,6 @@ class BoxedObj : public Box
 
   private:
 
-    bool aFixed;
     double aX;
     double aY;
 };
@@ -357,9 +350,9 @@ class BoxedEdge : public Box
     typedef pair<BoxedObj *, BoxedObj *> T_VrtxPair;
 
     BoxedEdge() : Box(), aVrtx(NULL, NULL) {};
-    BoxedEdge(int _Id) : Box(_Id, E_EdgeBox), aVrtx(NULL, NULL) {};
+    BoxedEdge(int _Id) : Box(_Id, E_EdgeBox, false), aVrtx(NULL, NULL) {};
     BoxedEdge(int _Id, BoxedObj *_A, BoxedObj *_B, double const &_R) : 
-      Box(_Id, E_EdgeBox), aVrtx(_A, _B) {
+      Box(_Id, E_EdgeBox, false), aVrtx(_A, _B) {
         updateR(_R);
       };
 
@@ -376,13 +369,13 @@ class BoxedEdge : public Box
     };
 
     /** 
-     * Returns true for fixed vertexes.
+     * Updates it's fixed flag.
      *
      * Similar functionality for edges - no virtual methods in the box though -
      * high performance penalty for virtual objects - to improve if otherwise.
      */
-    inline bool isFixed() const {
-      return initialized() && (a()->isFixed() && b()->isFixed());
+    inline void setEdgeFixed() {
+      setFixed(initialized() && (a()->isFixed() && b()->isFixed()));
     };
 
     inline bool isMember(int _Id) const {
@@ -427,7 +420,6 @@ class BoxedEdge : public Box
 
   private:
 
-    bool aFixed;
     T_VrtxPair aVrtx;
 };
 
@@ -460,12 +452,13 @@ ostream & operator << (ostream &_s, BoxedEdge const &_o) {
  */
 struct OrderedAxisElm
 {
-  OrderedAxisElm() : aYAxisSearch(false), aMaxSearch(false), aBoxObjPtr(NULL)
+  OrderedAxisElm() : aYAxisSearch(false), aMaxSearch(false), aFixed(false), aBoxObjPtr(NULL)
   { };
 
-  OrderedAxisElm(bool _YAxis, bool _Max, Box *_ObjPtr) :
+  OrderedAxisElm(bool _YAxis, bool _Max, bool _Fixed, Box *_ObjPtr) :
     aYAxisSearch(_YAxis),
     aMaxSearch(_Max),
+    aFixed(_Fixed),
     aBoxObjPtr(_ObjPtr)
   { };
 
@@ -480,6 +473,9 @@ struct OrderedAxisElm
   };
   inline Box::T_Key getKey() const {
     return aBoxObjPtr ? aBoxObjPtr->getKey() : Box::T_Key(-1, E_UnknownBox);
+  };
+  inline bool isFixed() const {
+    return aFixed;
   };
   inline double const & getVal() const {
     return getVal(*this);
@@ -510,6 +506,7 @@ struct OrderedAxisElm
   double aDummyVal = 0;
   bool aYAxisSearch : 1;
   bool aMaxSearch : 1;
+  bool aFixed : 1;
   Box *aBoxObjPtr;
 
 
@@ -521,7 +518,9 @@ ostream & operator << (ostream &_s, OrderedAxisElm const &_o) {
   return _s
     << "{" << (_o.aYAxisSearch ? "Y" : "X")
     << ":" << (_o.aMaxSearch ? "Max" : "Min")
-    << ", Id:" << _o.getId() << ":" << Box::typeAsStr(_o.getType())
+    << ", Id:" << _o.getId()
+    << ":Fixed:" << _o.isFixed()
+    << ":" << Box::typeAsStr(_o.getType())
     << "}";
 }
 
@@ -729,17 +728,17 @@ class BoxedRegion : public Box
   private:
 
     inline void addToOrderedAxis(Box &_O) {
-      aXAxis.insert(OrderedAxisElm(false, false, &_O));
-      aXAxis.insert(OrderedAxisElm(false, true, &_O));
-      aYAxis.insert(OrderedAxisElm(true, false, &_O));
-      aYAxis.insert(OrderedAxisElm(true, true, &_O));
+      aXAxis.insert(OrderedAxisElm(false, false, _O.isFixed(), &_O));
+      aXAxis.insert(OrderedAxisElm(false, true, _O.isFixed(), &_O));
+      aYAxis.insert(OrderedAxisElm(true, false, _O.isFixed(), &_O));
+      aYAxis.insert(OrderedAxisElm(true, true, _O.isFixed(), &_O));
     };
 
     inline void eraseFromOrderedAxis(Box &_O) {
-      aXAxis.erase(OrderedAxisElm(false, false, &_O));
-      aXAxis.erase(OrderedAxisElm(false, true, &_O));
-      aYAxis.erase(OrderedAxisElm(true, false, &_O));
-      aYAxis.erase(OrderedAxisElm(true, true, &_O));
+      aXAxis.erase(OrderedAxisElm(false, false, _O.isFixed(), &_O));
+      aXAxis.erase(OrderedAxisElm(false, true, _O.isFixed(), &_O));
+      aYAxis.erase(OrderedAxisElm(true, false, _O.isFixed(), &_O));
+      aYAxis.erase(OrderedAxisElm(true, true, _O.isFixed(), &_O));
     };
 
     inline double checkAxisSpan(int _Size, T_AxisOrdered &_Axis) {
@@ -1010,73 +1009,77 @@ bool BoxedRegion::findAxisIntersectLoc(
     T_IntersCntr &_PE,
     T_IntersCntr &_PH)
 {
+  typedef pair<Box::T_Key, bool> T_ActiveCntrElm;
+  typedef map<Box::T_Key, bool> T_ActiveCntr;
+
   bool bFound = false;
-  set<Box::T_Key> Active;
+  T_ActiveCntr Active;
 
   struct IntersectsInserter {
-    IntersectsInserter(Box::T_Key _Key, 
-        T_IntersCntr &_PP, T_IntersCntr &_PE, T_IntersCntr &_PH,
+    IntersectsInserter(T_IntersCntr &_PP, T_IntersCntr &_PE, T_IntersCntr &_PH,
         T_BoxEdgeCntr const *_pEdgeCntr) : 
-      aKey(_Key), 
       aPP(_PP),
       aPE(_PE),
       aPH(_PH),
       apEdgeCntr(_pEdgeCntr) {
       };
 
-    void operator ()(Box::T_Key _Key) {
+    void operator ()(T_ActiveCntrElm _Elm)
+    {
       T_IntersCntr *intersects = NULL;
       int Id1, Id2;
-      switch((aKey.second | _Key.second)) {
-        case E_VrtxBox: 
-          {
-            if (aKey.first < _Key.first) {
-              Id1 = aKey.first; Id2 = _Key.first;
-            } else {
-              Id1 = _Key.first; Id2 = aKey.first;
+      if (!aElm.second && !_Elm.second) {
+        switch((aElm.first.second | _Elm.first.second)) {
+          case E_VrtxBox: 
+            {
+              if (aElm.first.first < _Elm.first.first) {
+                Id1 = aElm.first.first; Id2 = _Elm.first.first;
+              } else {
+                Id1 = _Elm.first.first; Id2 = aElm.first.first;
+              };
+              intersects = &aPP;
+            }; break;
+          case E_EdgeBox:
+          case 3:
+            {
+              if (aElm.first.second == E_EdgeBox) {
+                Id1 = _Elm.first.first; Id2 = aElm.first.first;
+              } else {
+                Id1 = aElm.first.first; Id2 = _Elm.first.first;
+              }
+              intersects = apEdgeCntr ? apEdgeCntr->at(Id2).isMember(Id1) ?  NULL : &aPE : &aPE;
+            }; break;
+          case E_HalfPBox:
+          case 5:
+            {
+              if (aElm.first.second == E_HalfPBox) {
+                Id1 = _Elm.first.first; Id2 = aElm.first.first;
+              } else {
+                Id1 = aElm.first.first; Id2 = _Elm.first.first;
+              }
+              // intersects = aEdgeCntr[Id2].isMember(Id1) ?  NULL : &aPE;
+              intersects = &aPH; break;
             };
-            intersects = &aPP;
-          }; break;
-        case E_EdgeBox:
-        case 3:
-          {
-            if (aKey.second == E_EdgeBox) {
-              Id1 = _Key.first; Id2 = aKey.first;
-            } else {
-              Id1 = aKey.first; Id2 = _Key.first;
-            }
-            intersects = apEdgeCntr ? apEdgeCntr->at(Id2).isMember(Id1) ?  NULL : &aPE : &aPE;
-          }; break;
-        case E_HalfPBox:
-        case 5:
-          {
-            if (aKey.second == E_HalfPBox) {
-              Id1 = _Key.first; Id2 = aKey.first;
-            } else {
-              Id1 = aKey.first; Id2 = _Key.first;
-            }
-            // intersects = aEdgeCntr[Id2].isMember(Id1) ?  NULL : &aPE;
-            intersects = &aPH; break;
-          };
-      };
+        };
 
 #ifndef NDEBUG
 #if MY_DEBUG > 2
-      cout << __FUNCTION__
-        << ", Akey:" << aKey
-        << ", Bkey:" << _Key
-        << ", Atype|Btype:" << (aKey.second|_Key.second)
-        << ", Intersecs:" << intersects
-        << endl;
+        cout << __FUNCTION__
+          << ", Akey:" << aKey
+          << ", Bkey:" << _Key
+          << ", Atype|Btype:" << (aKey.second|_Key.second)
+          << ", Intersecs:" << intersects
+          << endl;
 #endif
 #endif
-      if(intersects) {
-        // intersects->insert(pair<int,int>(Id1, Id2));
-        intersects->push_back(pair<int,int>(Id1, Id2));
+        if(intersects) {
+          // intersects->insert(pair<int,int>(Id1, Id2));
+          intersects->push_back(pair<int,int>(Id1, Id2));
+        };
       };
     };
 
-    Box::T_Key aKey;
+    T_ActiveCntrElm aElm;
     T_IntersCntr &aPP, &aPE, &aPH;
     T_BoxEdgeCntr const *apEdgeCntr;
   };
@@ -1092,6 +1095,7 @@ bool BoxedRegion::findAxisIntersectLoc(
 
   // 
   // Looping over axis to find intersections
+  IntersectsInserter Inserter(_PP, _PE, _PH, apBoxedEdges);
   for (T_AxisOrdered::const_iterator I=_Axis.begin(); I != _Axis.end(); ++I) {
     Box::T_Key key = (*I).getKey();
 
@@ -1108,14 +1112,16 @@ bool BoxedRegion::findAxisIntersectLoc(
     };
 
     if (Active.empty()) {
-      Active.insert(key);
+      Active.insert(T_ActiveCntrElm(key, (*I).isFixed()));
       continue;
     };
 
-    IntersectsInserter Inserter(key, _PP, _PE, _PH, apBoxedEdges);
+    T_ActiveCntrElm Elm(key, (*I).isFixed());
+
+    Inserter.aElm = Elm;
     for_each(Active.begin(), Active.end(), Inserter);
 
-    Active.insert(key);
+    Active.insert(Elm);
 
     bFound = true;
   };
@@ -1356,6 +1362,7 @@ void BoxedScene::boxEdges(TwoDScene const &_Scene)
     double R = _Scene.getEdgeRadii()[i];
     T_IntersIds Vrtxs = _Scene.getEdge(i);
     *pIter = BoxedEdge(i, aParticleMap[Vrtxs.first], aParticleMap[Vrtxs.second], R);
+    (*pIter).setEdgeFixed();
     addToRegion(*pIter);
     pIter++;
   };
@@ -1668,6 +1675,22 @@ static ostream & operator << (ostream &_s, T_IntersCntr const &_o) {
 void ContestDetector::findCollidingPairs(const TwoDScene &scene, const VectorXs &x, PPList &pppairs, PEList &pepairs, PHList &phpairs)
 {
   bool bFirst = false;
+
+#ifndef NDEBUG
+#if MY_DEBUG > 1
+
+  if (pppairs.size())
+    dumpContainer<>(g_MaxCoutNum, cout, __FUNCTION__, " **** got PP:",
+        pppairs.size(), pppairs.begin(), pppairs.end()) << endl;
+  if (pepairs.size())
+    dumpContainer<>(g_MaxCoutNum, cout, __FUNCTION__, " **** got PE:",
+        pepairs.size(), pepairs.begin(), pepairs.end()) << endl;
+  if (phpairs.size())
+    dumpContainer<>(g_MaxCoutNum, cout, __FUNCTION__, " **** got PH:",
+        phpairs.size(), phpairs.begin(), phpairs.end()) << endl;
+
+#endif
+#endif
 
   switch(evaluateScene(scene, bFirst)) {
     case EulerAlgo:

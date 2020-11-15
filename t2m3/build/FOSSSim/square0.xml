@@ -1,0 +1,240 @@
+<scene>
+  <description text="Timing collision estimation test"/>
+
+  <duration time="5.0"/>
+  <integrator type="forward-backward-euler" dt="0.01"/>
+  <collision type="penalty" thickness="0"/>
+  <collisiondetection type="contest"/>
+  <viewport cx="0" cy="0" size="25"/>
+ 
+  <!--
+  <halfplane px="10" py="0" nx="-1" ny="0"/>
+  <halfplanecolor i="0" r="0.5" g="0.3" b="0.3"/>
+ 
+  <halfplane px="0" py="-10" nx="0" ny="1"/>
+  <halfplanecolor i="1" r="0.49" g="0.99" b="0.0"/>
+  -->
+
+  <simplegravity fx="0" fy="-9.8"/>
+
+
+  <!-- box 1 -->
+  <particle m="1.000" px="-20" py="-20" vx="0.0" vy="0.0" fixed="1" radius="3.000"/>
+  <particlecolor i="0" r="0.500" g="0.100" b="0.500"/>
+  <particle m="1.000" px="-20" py=" 20" vx="0.0" vy="0.0" fixed="1" radius="3.000"/>
+  <particlecolor i="1" r="0.500" g="0.100" b="0.500"/>
+  <particle m="1.000" px=" 20" py=" 20" vx="0.0" vy="0.0" fixed="1" radius="3.000"/>
+  <particlecolor i="1" r="0.500" g="0.100" b="0.500"/>
+  <particle m="1.000" px=" 20" py="-20" vx="0.0" vy="0.0" fixed="1" radius="3.000"/>
+  <particlecolor i="1" r="0.500" g="0.100" b="0.500"/>
+  <edge i="0" j="1" radius="3.2"/>
+  <edgecolor i="0" r="0.5" g=" 0.1" b=" 0.5"/>
+  <edge i="1" j="2" radius="3.2"/>
+  <edgecolor i="0" r="0.5" g=" 0.1" b=" 0.5"/>
+  <edge i="2" j="3" radius="3.2"/>
+  <edgecolor i="0" r="0.5" g=" 0.1" b=" 0.5"/>
+  <edge i="3" j="0" radius="3.2"/>
+  <edgecolor i="0" r="0.5" g=" 0.1" b=" 0.5"/>
+
+  <!-- square content -->
+  <particle m=" 5.72" px=" 7.70" py=" 0.77" vx="-0.76" vy="-0.99" fixed="0" radius=" 0.84"/>
+  <particlecolor i="4" r="0.500" g=" 0.67" b=" 0.11"/>
+  <particle m=" 4.40" px=" 4.88" py="-2.00" vx="-0.45" vy=" 0.20" fixed="0" radius=" 0.64"/>
+  <particlecolor i="5" r="0.921" g=" 0.42" b=" 0.85"/>
+  <particle m=" 7.38" px="-3.63" py="-5.91" vx=" 0.21" vy=" 0.79" fixed="0" radius=" 0.48"/>
+  <particlecolor i="6" r="0.669" g=" 0.61" b=" 0.47"/>
+  <particle m=" 0.51" px="-9.39" py="-4.22" vx="-0.44" vy=" 0.44" fixed="0" radius=" 0.42"/>
+  <particlecolor i="7" r="0.297" g=" 0.21" b=" 0.52"/>
+  <particle m=" 1.86" px="-6.90" py=" 8.87" vx=" 0.50" vy=" 0.42" fixed="0" radius=" 0.91"/>
+  <particlecolor i="8" r="0.421" g=" 0.35" b=" 0.89"/>
+  <particle m=" 0.26" px="-6.03" py="-6.18" vx="-0.94" vy=" 0.60" fixed="0" radius=" 1.13"/>
+  <particlecolor i="9" r="0.270" g=" 0.13" b=" 0.99"/>
+  <particle m=" 2.41" px="-3.48" py="-1.13" vx=" 0.28" vy="-0.00" fixed="0" radius=" 0.58"/>
+  <particlecolor i="10" r="0.148" g=" 0.68" b=" 0.85"/>
+  <particle m=" 3.68" px=" 2.37" py="-9.03" vx="-0.69" vy="-0.94" fixed="0" radius=" 1.11"/>
+  <particlecolor i="11" r="0.370" g=" 0.37" b=" 0.66"/>
+  <particle m=" 6.73" px=" 0.13" py="-3.09" vx="-0.18" vy=" 0.05" fixed="0" radius=" 0.48"/>
+  <particlecolor i="12" r="0.786" g=" 0.34" b=" 0.59"/>
+  <particle m=" 1.93" px="-3.58" py="-3.93" vx="-0.89" vy=" 0.63" fixed="0" radius=" 0.80"/>
+  <particlecolor i="13" r="0.511" g=" 0.61" b=" 0.13"/>
+  <particle m=" 4.21" px=" 9.55" py="-1.59" vx="-0.54" vy="-0.89" fixed="0" radius=" 0.93"/>
+  <particlecolor i="14" r="0.209" g=" 0.19" b=" 0.48"/>
+  <particle m=" 7.93" px=" 0.33" py="-7.88" vx="-0.76" vy="-0.94" fixed="0" radius=" 0.83"/>
+  <particlecolor i="15" r="0.629" g=" 1.00" b=" 0.50"/>
+  <particle m=" 6.21" px=" 0.23" py="-6.15" vx=" 0.45" vy="-0.19" fixed="0" radius=" 0.99"/>
+  <particlecolor i="16" r="0.209" g=" 0.48" b=" 0.18"/>
+  <particle m=" 8.38" px=" 1.92" py="-9.52" vx="-0.47" vy="-0.46" fixed="0" radius=" 0.98"/>
+  <particlecolor i="17" r="0.250" g=" 0.54" b=" 0.84"/>
+  <particle m=" 5.91" px=" 6.20" py="-6.57" vx=" 0.37" vy=" 0.16" fixed="0" radius=" 1.09"/>
+  <particlecolor i="18" r="0.542" g=" 0.99" b=" 0.39"/>
+  <particle m=" 9.44" px=" 1.75" py="-0.26" vx=" 0.76" vy="-0.72" fixed="0" radius=" 0.49"/>
+  <particlecolor i="19" r="0.134" g=" 0.92" b=" 0.90"/>
+  <particle m=" 9.79" px=" 5.84" py=" 4.57" vx="-0.63" vy=" 0.44" fixed="0" radius=" 1.07"/>
+  <particlecolor i="20" r="0.830" g=" 0.39" b=" 0.95"/>
+  <particle m=" 3.65" px="-1.17" py=" 7.69" vx="-0.08" vy=" 0.84" fixed="0" radius=" 0.78"/>
+  <particlecolor i="21" r="0.927" g=" 0.87" b=" 0.77"/>
+  <particle m=" 6.92" px=" 4.85" py=" 0.46" vx="-0.97" vy="-0.85" fixed="0" radius=" 0.89"/>
+  <particlecolor i="22" r="0.425" g=" 0.21" b=" 0.98"/>
+  <particle m=" 0.77" px="-5.07" py=" 0.83" vx=" 0.41" vy=" 0.42" fixed="0" radius=" 0.34"/>
+  <particlecolor i="23" r="0.392" g=" 0.22" b=" 0.36"/>
+  <particle m=" 5.75" px="-8.58" py="-5.16" vx="-0.87" vy="-0.45" fixed="0" radius=" 0.36"/>
+  <particlecolor i="24" r="0.461" g=" 0.81" b=" 0.32"/>
+  <particle m=" 6.72" px="-4.43" py=" 4.35" vx=" 0.97" vy="-0.94" fixed="0" radius=" 0.62"/>
+  <particlecolor i="25" r="0.295" g=" 0.14" b=" 0.29"/>
+  <particle m=" 1.28" px=" 0.08" py="-6.95" vx="-0.36" vy="-0.70" fixed="0" radius=" 0.96"/>
+  <particlecolor i="26" r="0.393" g=" 0.64" b=" 0.29"/>
+  <particle m=" 3.56" px=" 5.58" py=" 1.35" vx="-0.61" vy=" 0.73" fixed="0" radius=" 0.86"/>
+  <particlecolor i="27" r="0.527" g=" 0.84" b=" 0.51"/>
+  <particle m=" 7.61" px="-6.37" py="-6.15" vx=" 0.74" vy=" 0.80" fixed="0" radius=" 0.62"/>
+  <particlecolor i="28" r="0.372" g=" 0.50" b=" 0.59"/>
+  <particle m=" 4.49" px=" 2.34" py=" 0.88" vx=" 0.97" vy="-0.91" fixed="0" radius=" 1.02"/>
+  <particlecolor i="29" r="0.818" g=" 0.90" b=" 0.71"/>
+  <particle m=" 6.45" px=" 8.74" py="-9.13" vx=" 0.37" vy="-0.29" fixed="0" radius=" 0.92"/>
+  <particlecolor i="30" r="0.362" g=" 0.30" b=" 0.75"/>
+  <particle m=" 9.90" px=" 0.55" py="-1.81" vx=" 0.33" vy=" 0.20" fixed="0" radius=" 0.34"/>
+  <particlecolor i="31" r="0.413" g=" 0.90" b=" 0.66"/>
+  <particle m=" 7.92" px=" 5.57" py=" 6.94" vx=" 0.67" vy=" 0.32" fixed="0" radius=" 0.56"/>
+  <particlecolor i="32" r="0.603" g=" 0.35" b=" 0.91"/>
+  <particle m=" 9.07" px="-3.72" py="-5.00" vx="-0.13" vy="-0.45" fixed="0" radius=" 0.70"/>
+  <particlecolor i="33" r="0.807" g=" 0.61" b=" 0.74"/>
+  <particle m=" 7.73" px="-0.68" py="-0.20" vx=" 0.20" vy=" 0.53" fixed="0" radius=" 0.96"/>
+  <particlecolor i="34" r="0.568" g=" 0.16" b=" 0.57"/>
+  <particle m=" 3.33" px=" 6.52" py="-4.70" vx=" 0.94" vy="-0.90" fixed="0" radius=" 0.82"/>
+  <particlecolor i="35" r="0.456" g=" 0.19" b=" 0.65"/>
+  <particle m=" 4.26" px=" 6.10" py="-4.11" vx=" 0.09" vy="-0.87" fixed="0" radius=" 0.39"/>
+  <particlecolor i="36" r="0.249" g=" 0.65" b=" 0.79"/>
+  <particle m=" 1.81" px=" 9.85" py=" 1.47" vx="-0.73" vy=" 0.90" fixed="0" radius=" 0.58"/>
+  <particlecolor i="37" r="0.487" g=" 0.22" b=" 0.69"/>
+  <particle m=" 1.10" px=" 5.41" py="-5.26" vx="-0.17" vy="-0.24" fixed="0" radius=" 0.64"/>
+  <particlecolor i="38" r="0.981" g=" 0.89" b=" 0.77"/>
+  <particle m=" 5.57" px="-2.09" py="-8.19" vx=" 0.15" vy=" 0.75" fixed="0" radius=" 1.11"/>
+  <particlecolor i="39" r="0.805" g=" 0.35" b=" 0.44"/>
+  <particle m=" 4.97" px=" 7.87" py="-2.07" vx="-0.21" vy=" 0.18" fixed="0" radius=" 0.52"/>
+  <particlecolor i="40" r="0.564" g=" 0.29" b=" 0.62"/>
+  <particle m=" 9.00" px="-5.06" py=" 1.07" vx="-0.87" vy="-0.53" fixed="0" radius=" 0.96"/>
+  <particlecolor i="41" r="0.872" g=" 0.93" b=" 0.43"/>
+  <particle m=" 6.07" px=" 3.28" py="-6.68" vx="-0.11" vy="-0.10" fixed="0" radius=" 0.72"/>
+  <particlecolor i="42" r="0.576" g=" 0.25" b=" 0.42"/>
+  <particle m=" 7.39" px="-1.27" py="-8.74" vx="-1.00" vy="-0.61" fixed="0" radius=" 0.39"/>
+  <particlecolor i="43" r="0.483" g=" 0.16" b=" 0.12"/>
+  <particle m=" 6.36" px=" 4.48" py="-7.05" vx="-0.20" vy="-0.96" fixed="0" radius=" 0.41"/>
+  <particlecolor i="44" r="0.400" g=" 0.93" b=" 0.12"/>
+  <particle m=" 2.21" px=" 9.06" py="-5.11" vx=" 0.09" vy="-0.98" fixed="0" radius=" 0.89"/>
+  <particlecolor i="45" r="0.341" g=" 0.82" b=" 0.63"/>
+  <particle m=" 3.98" px=" 0.83" py="-8.49" vx="-0.02" vy="-0.19" fixed="0" radius=" 0.65"/>
+  <particlecolor i="46" r="0.173" g=" 0.15" b=" 0.94"/>
+  <particle m=" 1.02" px="-9.01" py=" 7.52" vx="-0.51" vy=" 0.08" fixed="0" radius=" 0.93"/>
+  <particlecolor i="47" r="0.338" g=" 0.58" b=" 0.94"/>
+  <particle m=" 0.25" px=" 8.40" py=" 5.86" vx="-0.34" vy="-0.01" fixed="0" radius=" 1.10"/>
+  <particlecolor i="48" r="0.154" g=" 0.38" b=" 0.98"/>
+  <particle m=" 5.91" px=" 3.03" py="-4.98" vx=" 0.60" vy=" 0.40" fixed="0" radius=" 0.84"/>
+  <particlecolor i="49" r="0.176" g=" 0.15" b=" 0.76"/>
+  <particle m=" 0.66" px=" 4.91" py="-6.26" vx="-0.71" vy="-0.15" fixed="0" radius=" 0.44"/>
+  <particlecolor i="50" r="0.922" g=" 0.15" b=" 0.15"/>
+  <particle m=" 3.52" px=" 0.07" py=" 6.51" vx=" 0.12" vy=" 0.03" fixed="0" radius=" 0.83"/>
+  <particlecolor i="51" r="0.255" g=" 0.82" b=" 0.90"/>
+  <particle m=" 6.68" px="-5.89" py=" 6.74" vx="-0.71" vy=" 0.62" fixed="0" radius=" 0.58"/>
+  <particlecolor i="52" r="0.879" g=" 0.49" b=" 0.87"/>
+  <particle m=" 8.24" px="-3.23" py="-8.15" vx=" 0.35" vy=" 0.25" fixed="0" radius=" 0.81"/>
+  <particlecolor i="53" r="0.200" g=" 0.87" b=" 0.44"/>
+  <particle m=" 2.99" px=" 5.32" py="-9.46" vx=" 0.63" vy="-0.22" fixed="0" radius=" 0.62"/>
+  <particlecolor i="54" r="0.971" g=" 0.20" b=" 0.45"/>
+  <particle m=" 4.55" px=" 5.50" py=" 3.51" vx=" 0.25" vy="-0.48" fixed="0" radius=" 0.97"/>
+  <particlecolor i="55" r="0.390" g=" 0.56" b=" 0.28"/>
+  <particle m=" 3.29" px=" 5.05" py="-2.34" vx=" 0.57" vy=" 0.78" fixed="0" radius=" 1.14"/>
+  <particlecolor i="56" r="0.405" g=" 0.99" b=" 0.39"/>
+  <particle m=" 0.90" px=" 0.56" py="-2.37" vx=" 0.10" vy="-0.27" fixed="0" radius=" 0.89"/>
+  <particlecolor i="57" r="0.918" g=" 0.34" b=" 0.99"/>
+  <particle m=" 7.30" px=" 1.46" py=" 1.83" vx=" 0.90" vy=" 0.56" fixed="0" radius=" 0.50"/>
+  <particlecolor i="58" r="0.992" g=" 0.57" b=" 0.92"/>
+  <particle m=" 4.55" px=" 4.05" py=" 7.20" vx="-0.89" vy=" 0.59" fixed="0" radius=" 0.62"/>
+  <particlecolor i="59" r="0.670" g=" 0.83" b=" 0.87"/>
+  <particle m=" 1.69" px="-2.04" py="-2.07" vx="-0.14" vy=" 0.34" fixed="0" radius=" 0.91"/>
+  <particlecolor i="60" r="0.869" g=" 0.87" b=" 0.21"/>
+  <particle m=" 9.54" px="-6.11" py=" 1.39" vx="-0.53" vy=" 0.96" fixed="0" radius=" 1.03"/>
+  <particlecolor i="61" r="0.270" g=" 0.44" b=" 0.97"/>
+  <particle m=" 7.64" px=" 2.96" py="-0.13" vx="-0.60" vy=" 0.57" fixed="0" radius=" 0.44"/>
+  <particlecolor i="62" r="0.958" g=" 0.51" b=" 0.74"/>
+  <particle m=" 8.25" px=" 1.77" py="-2.54" vx="-0.62" vy=" 0.83" fixed="0" radius=" 0.71"/>
+  <particlecolor i="63" r="0.902" g=" 0.43" b=" 0.82"/>
+  <particle m=" 2.62" px="-0.65" py=" 6.32" vx=" 0.58" vy=" 0.62" fixed="0" radius=" 0.46"/>
+  <particlecolor i="64" r="0.721" g=" 0.15" b=" 0.44"/>
+  <particle m=" 0.90" px=" 3.45" py=" 7.26" vx="-0.35" vy="-0.88" fixed="0" radius=" 0.49"/>
+  <particlecolor i="65" r="0.700" g=" 0.67" b=" 0.20"/>
+  <particle m=" 2.40" px="-2.16" py=" 0.59" vx=" 0.92" vy=" 0.03" fixed="0" radius=" 0.87"/>
+  <particlecolor i="66" r="0.511" g=" 0.79" b=" 0.21"/>
+  <particle m=" 4.89" px=" 9.52" py=" 9.46" vx="-0.03" vy="-0.65" fixed="0" radius=" 0.94"/>
+  <particlecolor i="67" r="0.417" g=" 0.34" b=" 0.86"/>
+  <particle m=" 4.16" px=" 8.03" py="-0.58" vx="-0.78" vy=" 0.11" fixed="0" radius=" 0.71"/>
+  <particlecolor i="68" r="0.683" g=" 0.28" b=" 0.14"/>
+  <particle m=" 7.34" px=" 2.00" py=" 9.66" vx=" 0.98" vy="-0.01" fixed="0" radius=" 0.59"/>
+  <particlecolor i="69" r="0.616" g=" 0.69" b=" 0.57"/>
+  <particle m=" 4.59" px=" 6.67" py=" 8.30" vx="-0.79" vy="-0.67" fixed="0" radius=" 0.48"/>
+  <particlecolor i="70" r="0.312" g=" 0.57" b=" 0.63"/>
+  <particle m=" 1.94" px=" 0.90" py="-1.12" vx=" 0.23" vy="-0.11" fixed="0" radius=" 1.00"/>
+  <particlecolor i="71" r="0.177" g=" 0.35" b=" 0.39"/>
+  <particle m=" 4.12" px=" 0.25" py="-2.32" vx="-0.52" vy="-0.78" fixed="0" radius=" 0.82"/>
+  <particlecolor i="72" r="0.786" g=" 0.24" b=" 0.40"/>
+  <particle m=" 4.81" px=" 9.99" py=" 4.76" vx="-0.24" vy=" 0.65" fixed="0" radius=" 0.99"/>
+  <particlecolor i="73" r="0.849" g=" 0.58" b=" 0.87"/>
+  <particle m=" 4.59" px=" 0.69" py="-2.35" vx="-0.42" vy=" 0.18" fixed="0" radius=" 0.42"/>
+  <particlecolor i="74" r="0.552" g=" 0.51" b=" 0.43"/>
+  <particle m=" 9.93" px=" 0.28" py="-5.93" vx=" 0.34" vy=" 0.06" fixed="0" radius=" 0.56"/>
+  <particlecolor i="75" r="0.840" g=" 0.49" b=" 0.37"/>
+  <particle m=" 5.04" px="-7.54" py=" 1.51" vx=" 0.41" vy="-0.30" fixed="0" radius=" 0.42"/>
+  <particlecolor i="76" r="0.862" g=" 0.12" b=" 0.26"/>
+  <particle m=" 1.81" px="-8.68" py="-6.72" vx="-0.89" vy=" 0.67" fixed="0" radius=" 0.70"/>
+  <particlecolor i="77" r="0.352" g=" 0.62" b=" 0.30"/>
+  <particle m=" 1.33" px="-8.13" py=" 4.12" vx=" 0.90" vy=" 0.17" fixed="0" radius=" 0.53"/>
+  <particlecolor i="78" r="0.175" g=" 0.99" b=" 0.27"/>
+  <particle m=" 2.34" px=" 1.08" py="-0.72" vx=" 0.43" vy="-0.04" fixed="0" radius=" 1.05"/>
+  <particlecolor i="79" r="0.801" g=" 0.15" b=" 0.53"/>
+  <particle m=" 5.76" px=" 9.32" py=" 6.43" vx="-0.96" vy=" 0.12" fixed="0" radius=" 1.05"/>
+  <particlecolor i="80" r="0.106" g=" 0.26" b=" 0.86"/>
+  <particle m=" 9.37" px=" 8.45" py="-5.42" vx=" 0.41" vy=" 0.39" fixed="0" radius=" 0.83"/>
+  <particlecolor i="81" r="0.428" g=" 0.71" b=" 0.56"/>
+  <particle m=" 8.17" px="-5.07" py="-5.09" vx=" 0.92" vy=" 0.60" fixed="0" radius=" 0.63"/>
+  <particlecolor i="82" r="0.194" g=" 0.38" b=" 0.19"/>
+  <particle m=" 6.92" px=" 5.55" py=" 7.20" vx=" 0.80" vy="-0.99" fixed="0" radius=" 1.14"/>
+  <particlecolor i="83" r="0.690" g=" 0.27" b=" 0.33"/>
+  <particle m=" 1.21" px="-5.54" py=" 5.66" vx="-0.56" vy=" 0.87" fixed="0" radius=" 1.10"/>
+  <particlecolor i="84" r="0.273" g=" 0.99" b=" 0.82"/>
+  <particle m=" 5.78" px="-3.07" py="-9.79" vx=" 0.09" vy=" 0.54" fixed="0" radius=" 1.08"/>
+  <particlecolor i="85" r="0.446" g=" 0.60" b=" 0.24"/>
+  <particle m=" 6.79" px="-0.40" py=" 8.64" vx="-0.97" vy=" 0.06" fixed="0" radius=" 0.44"/>
+  <particlecolor i="86" r="0.471" g=" 0.29" b=" 0.98"/>
+  <particle m=" 5.98" px="-2.61" py="-3.47" vx=" 0.10" vy="-0.52" fixed="0" radius=" 0.31"/>
+  <particlecolor i="87" r="0.269" g=" 0.81" b=" 0.41"/>
+  <particle m=" 1.27" px=" 3.81" py="-2.37" vx=" 1.00" vy=" 0.00" fixed="0" radius=" 0.62"/>
+  <particlecolor i="88" r="0.657" g=" 0.79" b=" 0.61"/>
+  <particle m=" 4.84" px=" 9.50" py="-0.73" vx="-0.08" vy="-0.50" fixed="0" radius=" 0.36"/>
+  <particlecolor i="89" r="0.239" g=" 0.44" b=" 0.54"/>
+  <particle m=" 4.48" px=" 2.08" py="-4.05" vx=" 0.79" vy="-0.94" fixed="0" radius=" 0.74"/>
+  <particlecolor i="90" r="0.238" g=" 0.73" b=" 0.39"/>
+  <particle m=" 7.38" px=" 7.56" py="-1.97" vx="-0.38" vy=" 0.32" fixed="0" radius=" 0.48"/>
+  <particlecolor i="91" r="0.673" g=" 0.39" b=" 0.82"/>
+  <particle m=" 9.16" px=" 8.61" py=" 0.78" vx="-0.25" vy=" 0.53" fixed="0" radius=" 0.39"/>
+  <particlecolor i="92" r="0.890" g=" 0.80" b=" 0.14"/>
+  <particle m=" 6.92" px=" 6.88" py="-0.12" vx=" 0.13" vy="-0.93" fixed="0" radius=" 0.50"/>
+  <particlecolor i="93" r="0.818" g=" 0.64" b=" 0.56"/>
+  <particle m=" 0.24" px=" 1.68" py=" 8.39" vx="-0.68" vy="-0.37" fixed="0" radius=" 1.11"/>
+  <particlecolor i="94" r="0.699" g=" 0.32" b=" 0.19"/>
+  <particle m=" 1.20" px=" 0.87" py=" 1.33" vx=" 0.42" vy=" 0.43" fixed="0" radius=" 1.11"/>
+  <particlecolor i="95" r="0.669" g=" 0.45" b=" 0.51"/>
+  <particle m=" 6.32" px="-9.52" py="-9.92" vx="-0.29" vy="-0.25" fixed="0" radius=" 1.05"/>
+  <particlecolor i="96" r="0.273" g=" 0.95" b=" 0.18"/>
+  <particle m=" 5.57" px="-9.77" py="-7.09" vx=" 0.04" vy="-0.42" fixed="0" radius=" 0.67"/>
+  <particlecolor i="97" r="0.326" g=" 0.53" b=" 0.62"/>
+  <particle m=" 2.35" px="-4.93" py=" 6.38" vx=" 0.05" vy=" 0.58" fixed="0" radius=" 0.91"/>
+  <particlecolor i="98" r="0.215" g=" 0.60" b=" 0.65"/>
+  <particle m=" 5.90" px="-4.41" py="-1.28" vx=" 0.88" vy=" 0.27" fixed="0" radius=" 0.85"/>
+  <particlecolor i="99" r="0.260" g=" 0.82" b=" 0.36"/>
+  <particle m=" 8.68" px="-7.54" py=" 7.53" vx="-0.87" vy="-0.83" fixed="0" radius=" 1.01"/>
+  <particlecolor i="100" r="0.262" g=" 0.18" b=" 0.35"/>
+  <particle m=" 6.22" px="-8.59" py=" 1.18" vx=" 0.23" vy="-0.00" fixed="0" radius=" 0.61"/>
+  <particlecolor i="101" r="0.972" g=" 0.32" b=" 0.57"/>
+  <particle m=" 8.23" px="-1.73" py="-5.63" vx="-0.99" vy=" 0.84" fixed="0" radius=" 0.81"/>
+  <particlecolor i="102" r="0.489" g=" 0.91" b=" 0.43"/>
+  <particle m=" 7.43" px=" 1.29" py=" 2.55" vx="-0.02" vy="-0.45" fixed="0" radius=" 0.63"/>
+  <particlecolor i="103" r="0.138" g=" 0.55" b=" 0.97"/>
+</scene>
