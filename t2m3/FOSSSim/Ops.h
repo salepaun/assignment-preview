@@ -7,6 +7,7 @@
 #include <set>
 #include <utility>
 #include <iostream>
+#include <vector>
 
 
 #include <Eigen/Dense>
@@ -89,11 +90,68 @@ static void energyDumpEnd(scalar &_sTime, scalar const &_Dt, FILE *_Fd, scalar c
 
 
 /**********************************************************************************
+ * Local container helper functions
+ */
+
+/**
+ * Finds 2 vectors insersection.
+ * Vectors have to be sorted
+ * @param _A a smaller sized vector
+ * @param _B a bigger sized vector
+ * @param _C destination
+ */
+template<typename T>
+inline bool findSortedCntrIntersect(T const &_A, T const &_B, T &_C) {
+  typename T::const_iterator IA;
+  typename T::const_iterator IB1, IB2;
+  register int OrigSizeC = _C.size();
+  for (IA=_A.cbegin(), IB1=_B.cbegin(); IA!=_A.cend(); ++IA) {
+    IB2 = find(IB1, _B.cend(), (*IA));
+    if (IB2 != _B.cend()) {
+      _C.push_back((*IA));
+      IB1 = IB2;
+      cout << "##### found intersection:" << (*IA) << endl;
+    };
+  };
+
+  return _C.size() - OrigSizeC;
+}
+
+
+/**
+ * Finds 2 vectors insersection.
+ * Vectors will be sorted
+ * @param _A a vector
+ * @param _B a vector
+ * @param _C destination
+ */
+template<typename T>
+inline bool findCntrIntersect(T &_A, T &_B, T &_C) {
+  register int SizeA, SizeB;
+  SizeA = _A.size(); SizeB = _B.size();
+  if(SizeA && SizeB) {
+    sort(_A.begin(), _A.end());
+    sort(_B.begin(), _B.end());
+
+    if (SizeA < SizeB) {
+      _C.reserve(SizeA);
+      return findSortedCntrIntersect(_A, _B, _C);
+    } else {
+      _C.reserve(SizeB);
+      return findSortedCntrIntersect(_B, _A, _C);
+    };
+  };
+
+  return false;
+}
+
+
+/**********************************************************************************
  * Local stream helper functions
  */
 
 
-template<typename T_Iter>
+  template<typename T_Iter>
 ostream & dumpContainer(int _Limit, ostream &_s,
     char const * const _Function,
     char const * const _Name,
