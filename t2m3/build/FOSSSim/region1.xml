@@ -1,0 +1,28 @@
+<scene>
+  <description text="Timing collision estimation test"/>
+
+  <duration time="5.0"/>
+  <integrator type="forward-backward-euler" dt="0.01"/>
+  <collision type="penalty" thickness="0"/>
+  <collisiondetection type="contest"/>
+  <viewport cx="0" cy="0" size="25"/>
+ 
+  <!-- box 1 -->
+  <particle m="1.000" px="-20" py="-20" vx="0.0" vy="0.0" fixed="1" radius="3.000"/>
+  <particlecolor i="0" r="0.500" g="0.100" b="0.500"/>
+  <particle m="1.000" px="-20" py=" 20" vx="0.0" vy="0.0" fixed="1" radius="3.000"/>
+  <particlecolor i="1" r="0.500" g="0.100" b="0.500"/>
+  <particle m="1.000" px=" 20" py=" 20" vx="0.0" vy="0.0" fixed="1" radius="3.000"/>
+  <particlecolor i="1" r="0.500" g="0.100" b="0.500"/>
+  <particle m="1.000" px=" 20" py="-20" vx="0.0" vy="0.0" fixed="1" radius="3.000"/>
+  <particlecolor i="1" r="0.500" g="0.100" b="0.500"/>
+
+  <particle m="1.000" px="0" py="-20" vx="0.0" vy="0.0" fixed="1" radius="3.000"/>
+  <particlecolor i="4" r="0.500" g="0.100" b="0.500"/>
+  <particle m="1.000" px="-20" py=" 0" vx="0.0" vy="0.0" fixed="1" radius="3.000"/>
+  <particlecolor i="5" r="0.500" g="0.100" b="0.500"/>
+  <particle m="1.000" px=" 20" py=" 0" vx="0.0" vy="0.0" fixed="1" radius="3.000"/>
+  <particlecolor i="6" r="0.500" g="0.100" b="0.500"/>
+  <particle m="1.000" px=" 0" py=" 20" vx="0.0" vy="0.0" fixed="1" radius="3.000"/>
+  <particlecolor i="7" r="0.500" g="0.100" b="0.500"/>
+</scene>
