@@ -942,7 +942,7 @@ class BoxedRegion : public Box
 
 
 
-int BoxedRegion::cObjPerRegLimitPow2 = 4;
+int BoxedRegion::cObjPerRegLimitPow2 = 5;
 
 
 ostream & BoxedRegion::toStr(ostream &_s) const
@@ -1378,13 +1378,13 @@ bool BoxedRegion::findIntersectLoc(
 #endif
 #endif
         if (XInterPP.size() && YInterPP.size()){
-          /* set_intersection is Painfully slow!
-             sort(XInterPP.begin(), XInterPP.end()); sort(YInterPP.begin(), YInterPP.end());
-             set_intersection(
-             XInterPP.begin(), XInterPP.end(),
-             YInterPP.begin(), YInterPP.end(),
-             inserter(_PP, _PP.begin()));*/
-          findCntrIntersect<>(XInterPP, YInterPP, _PP);
+          sort(XInterPP.begin(), XInterPP.end()); sort(YInterPP.begin(), YInterPP.end());
+          set_intersection(
+              XInterPP.begin(), XInterPP.end(),
+              YInterPP.begin(), YInterPP.end(),
+              inserter(_PP, _PP.begin()));
+          // my slower!
+          // findCntrIntersect<>(XInterPP, YInterPP, _PP);
         };
 
 #ifndef NDEBUG
@@ -1394,7 +1394,11 @@ bool BoxedRegion::findIntersectLoc(
 #endif
 
         if (XInterPE.size() && YInterPE.size()){
-          findCntrIntersect<>(XInterPE, YInterPE, _PE);
+          sort(XInterPE.begin(), XInterPE.end()); sort(YInterPE.begin(), YInterPE.end());
+          set_intersection(
+              XInterPE.begin(), XInterPE.end(),
+              YInterPE.begin(), YInterPE.end(),
+              inserter(_PE, _PE.begin()));
         };
 
 #ifndef NDEBUG
@@ -1404,7 +1408,11 @@ bool BoxedRegion::findIntersectLoc(
 #endif
 
         if (XInterPH.size() && YInterPH.size()){
-          findCntrIntersect<>(XInterPH, YInterPH, _PH);
+          sort(XInterPH.begin(), XInterPH.end()); sort(YInterPH.begin(), YInterPH.end());
+          set_intersection(
+              XInterPH.begin(), XInterPH.end(),
+              YInterPH.begin(), YInterPH.end(),
+              inserter(_PH, _PH.begin()));
         };
 
 #ifndef NDEBUG
@@ -1826,14 +1834,14 @@ static void estimateEuler(
 
 #ifndef NDEBUG
 #ifdef MY_TIMING
-  D_TIME_SEC(time, "findIntersect")
+  D_TIME_SEC(time, "findIntersect");
 #endif
 #endif
 
-    if (PP.size()) {
-      sort(PP.begin(), PP.end());
-      copy(PP.begin(), PP.end(), inserter(_PP, _PP.begin()));
-    };
+  if (PP.size()) {
+    sort(PP.begin(), PP.end());
+    copy(PP.begin(), PP.end(), inserter(_PP, _PP.begin()));
+  };
 
   if (PE.size()) {
     sort(PE.begin(), PE.end());
@@ -1847,7 +1855,7 @@ static void estimateEuler(
 
 #ifndef NDEBUG
 #ifdef MY_TIMING
-  D_TIME_SEC(time, "findIntersect")
+  D_TIME_SEC(time, "copy with inserter");
 #endif
 #endif
 
