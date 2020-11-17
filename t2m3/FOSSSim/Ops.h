@@ -110,7 +110,6 @@ inline bool findSortedCntrIntersect(T const &_A, T const &_B, T &_C) {
     if (IB2 != _B.cend()) {
       _C.push_back((*IA));
       IB1 = IB2;
-      cout << "##### found intersection:" << (*IA) << endl;
     };
   };
 
