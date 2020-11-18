@@ -45,7 +45,7 @@ using namespace std;
 
 
 // For now: 0,1,2,3,4,5
-#define MY_DEBUG 0
+#define MY_DEBUG 4
 // 0,1,2
 #define MY_TIMING 2
 
@@ -916,11 +916,9 @@ class BoxedRegion : public Box
 
     inline bool findIntersect(T_IntersCntr &_PP, T_IntersCntr &_PE, T_IntersCntr &_PH) {
       if(checkAndSplit()) {
-        //IntersectFinder finder(_PP, _PE, _PH);
-        //for_each(aChildren.begin(), aChildren.end(), finder);
-        //return finder.Res;
-        bool R = aChildren[0].findIntersect(_PP, _PE, _PH);
-        return aChildren[1].findIntersect(_PP, _PE, _PH) || R;
+        IntersectFinder finder(_PP, _PE, _PH);
+        for_each(aChildren.begin(), aChildren.end(), finder);
+        return finder.Res;
       } else {
         return findIntersectLoc(_PP, _PE, _PH);
       };
@@ -1040,14 +1038,15 @@ class BoxedRegion : public Box
 
 
 
-int BoxedRegion::cObjPerRegLimitPow2 = 9;
+int BoxedRegion::cObjPerRegLimitPow2 = 20;
 
 
 ostream & BoxedRegion::toStr(ostream &_s) const
 {
   Box::toStr(_s)
     << ", Leaf:" << !hasChildren()
-    << ", DevidedYAxis:" << aDevidedYAxis;
+    << ", DevidedYAxis:" << aDevidedYAxis
+    << ", ChildrenNum:" << aChildren.size();
 
   dumpContainer<>(g_MaxCoutNum, _s, NULL, "\n ****  XAxis:",
       aXAxis.size(), aXAxis.begin(), aXAxis.end());
@@ -1256,11 +1255,13 @@ bool BoxedRegion::splitAxis(int _ASize, double &_Devider,
     move(BSplitAxis.begin(), BSplitAxis.end(), inserter(_BSplitAxis, _BSplitAxis.begin()));
 
     unordered_set<Box::T_Key, Box::KeyHash> AKeys, BKeys;
-    for_each(ASplitAxis.begin(), ASplitAxis.end(), [&](OrderedAxisElm const &_E) { AKeys.insert(_E.getKey()); });
-    for_each(BSplitAxis.begin(), BSplitAxis.end(), [&](OrderedAxisElm const &_E) { BKeys.insert(_E.getKey()); });
+    transform(ASplitAxis.begin(), ASplitAxis.end(), inserter(AKeys, AKeys.begin()), [](OrderedAxisElm const &_E) { return _E.getKey(); });
+    // for_each(BSplitAxis.begin(), BSplitAxis.end(), [&](OrderedAxisElm const &_E) { BKeys.insert(_E.getKey()); });
+    transform(BSplitAxis.begin(), BSplitAxis.end(), inserter(BKeys, BKeys.begin()), [](OrderedAxisElm const &_E) { return _E.getKey(); });
 
-    for_each(_KeepSrcAxis.begin(), _KeepSrcAxis.end(), [&](OrderedAxisElm const &_E) { if (AKeys.find(_E.getKey())!=AKeys.end()) _AKeepAxis.insert(_E);});
-    for_each(_KeepSrcAxis.begin(), _KeepSrcAxis.end(), [&](OrderedAxisElm const &_E) { if (BKeys.find(_E.getKey())!=BKeys.end()) _BKeepAxis.insert(_E);});
+    copy_if(_KeepSrcAxis.begin(), _KeepSrcAxis.end(), inserter(_AKeepAxis, _AKeepAxis.begin()), [&](OrderedAxisElm const &_E) { return AKeys.find(_E.getKey())!=AKeys.end(); });
+    // for_each(_KeepSrcAxis.begin(), _KeepSrcAxis.end(), [&](OrderedAxisElm const &_E) { if (BKeys.find(_E.getKey())!=BKeys.end()) _BKeepAxis.insert(_E); });
+    copy_if(_KeepSrcAxis.begin(), _KeepSrcAxis.end(), inserter(_BKeepAxis, _BKeepAxis.begin()), [&](OrderedAxisElm const &_E) { return BKeys.find(_E.getKey())!=BKeys.end(); });
 
     //for_each(ASplitAxis.begin(), ASplitAxis.end(), [&](OrderedAxisElm &_E) { if(_E.isMaxSearch()) _E.registerParent(_A); });
     //for_each(BSplitAxis.begin(), BSplitAxis.end(), [&](OrderedAxisElm &_E) { if(_E.isMaxSearch()) _E.registerParent(_B); });
@@ -1592,43 +1593,58 @@ bool BoxedRegion::findIntersectLoc(
   size_t PESize = _PE.size();
   size_t PHSize = _PH.size();
 
-  if (hasChanged())
+  if (hasChanged() && isInitialized())
   {
-    T_IntersCntr XInterPP, XInterPE, XInterPH, YInterPP, YInterPE, YInterPH;
-    aPP.clear();
-    aPE.clear();
-    aPH.clear();
+    // T_IntersCntr XInterPP, XInterPE, XInterPH, YInterPP, YInterPE, YInterPH;
 
-    if (findAxisIntersectLoc(aXAxis, XInterPP, XInterPE, XInterPH)) {
-      // Improvement: only search found candidates <- sucks
-      if (findAxisIntersectLoc(aYAxis, YInterPP, YInterPE, YInterPH)) {
+    T_AxisOrdered &SmallAxis = (aXAxis.size() < aYAxis.size()) ? aXAxis : aYAxis;
+    T_AxisOrdered &BigAxis = (aXAxis.size() > aYAxis.size()) ? aXAxis : aYAxis;
+    T_IntersCntr InterPP, InterPE, InterPH;
+
+    aPP.clear(); aPE.clear(); aPH.clear();
+
+    if (findAxisIntersectLoc(SmallAxis, InterPP, InterPE, InterPH)) {
+
 #ifndef NDEBUG
 #ifdef MY_TIMING
         clock_t time = clock();
 #endif
 #endif
+      aPP.reserve(InterPP.size());
+      copy_if(InterPP.begin(), InterPP.end(), back_inserter(aPP), [&](T_IntersIds const &_Ids) {
+          return apBoxedVrtxs->at(_Ids.first).intersects(apBoxedVrtxs->at(_Ids.second)); });
+      aPP.shrink_to_fit();
+
+      /*
+         if (findAxisIntersectLoc(aYAxis, YInterPP, YInterPE, YInterPH)) {
         if (XInterPP.size() && YInterPP.size()){
           sort(XInterPP.begin(), XInterPP.end()); sort(YInterPP.begin(), YInterPP.end());
           set_intersection(
               XInterPP.begin(), XInterPP.end(),
               YInterPP.begin(), YInterPP.end(),
-              inserter(aPP, aPP.begin()));
+              back_inserter(aPP));
           // my slower!
           // findCntrIntersect<>(XInterPP, YInterPP, _PP);
-        };
+        };*/
 
 #ifndef NDEBUG
 #ifdef MY_TIMING
-        D_TIME_SEC4(time, "intersection insert PP", XInterPP.size(), YInterPP.size(), aPP.size());
+        D_TIME_SEC4(time, "intersection insert PP", BigAxis.size(), InterPP.size(), aPP.size());
 #endif
 #endif
 
+      aPE.reserve(InterPE.size());
+      copy_if(InterPE.begin(), InterPE.end(), back_inserter(aPE), [&](T_IntersIds const &_Ids) {
+          return apBoxedVrtxs->at(_Ids.first).intersects(apBoxedEdges->at(_Ids.second)); });
+      aPE.shrink_to_fit();
+
+        /*
         if (XInterPE.size() && YInterPE.size()){
           sort(XInterPE.begin(), XInterPE.end()); sort(YInterPE.begin(), YInterPE.end());
           set_intersection(
               XInterPE.begin(), XInterPE.end(),
               YInterPE.begin(), YInterPE.end(),
-              inserter(aPE, aPE.begin()));
+              back_inserter(aPE));
         };
 
 #ifndef NDEBUG
@@ -1637,12 +1653,19 @@ bool BoxedRegion::findIntersectLoc(
 #endif
 #endif
 
+        */
+      aPE.reserve(InterPE.size());
+      copy_if(InterPE.begin(), InterPE.end(), back_inserter(aPE), [&](T_IntersIds const &_Ids) {
+          return apBoxedVrtxs->at(_Ids.first).intersects(apBoxedEdges->at(_Ids.second)); });
+      aPE.shrink_to_fit();
+
+      /*
         if (XInterPH.size() && YInterPH.size()){
           sort(XInterPH.begin(), XInterPH.end()); sort(YInterPH.begin(), YInterPH.end());
           set_intersection(
               XInterPH.begin(), XInterPH.end(),
               YInterPH.begin(), YInterPH.end(),
-              inserter(aPH, aPH.begin()));
+              back_inserter(aPH));
         };
 
 #ifndef NDEBUG
@@ -1651,6 +1674,7 @@ bool BoxedRegion::findIntersectLoc(
 #endif
 #endif
       };
+      */
     };
 
 #ifndef NDEBUG
@@ -1662,6 +1686,7 @@ bool BoxedRegion::findIntersectLoc(
 
 #ifndef NDEBUG
 #if MY_DEBUG > 0
+      /*
     cout << __FUNCTION__ 
       << " PPx:" << XInterPP.size()
       << " PEx:" << XInterPE.size()
@@ -1669,11 +1694,21 @@ bool BoxedRegion::findIntersectLoc(
       << " PPy:" << YInterPP.size()
       << " PEy:" << YInterPE.size()
       << " PHy:" << YInterPH.size()
+      */
+    cout << __FUNCTION__ 
+      << " PPx:" << InterPP.size()
+      << " PEx:" << InterPE.size()
+      << " PHx:" << InterPH.size()
       << " Region: " << getKey()
       << endl;
 #if MY_DEBUG > 3
     cout << __FUNCTION__ 
       << "\n** Intersections for Region:" << (*this);
+    dumpContainer<>(g_MaxCoutNum, cout, NULL, "\n **** iPP:",
+        InterPP.size(), InterPP.begin(), InterPP.end());
+    dumpContainer<>(g_MaxCoutNum, cout, NULL, "\n **** aPP:",
+        aPP.size(), aPP.begin(), aPP.end());
+    /*
     dumpContainer<>(g_MaxCoutNum, cout, NULL, "\n **** XPP:",
         XInterPP.size(), XInterPP.begin(), XInterPP.end());
     dumpContainer<>(g_MaxCoutNum, cout, NULL, "\n **** YPP:",
@@ -1686,6 +1721,7 @@ bool BoxedRegion::findIntersectLoc(
         YInterPE.size(), YInterPE.begin(), YInterPE.end());
     dumpContainer<>(g_MaxCoutNum, cout, NULL, "\n **** aPE:",
         aPE.size(), aPE.begin(), aPE.end()) << endl;
+        */
 #endif
 #endif
 #endif
@@ -1885,6 +1921,12 @@ void BoxedScene::boxHalfP(TwoDScene const &_Scene)
  */
 void BoxedScene::boxObjs(TwoDScene const &_Scene)
 {
+#ifndef NDEBUG
+#ifdef MY_TIMING
+  clock_t time = clock();
+#endif
+#endif
+
   int ParticlesNum = _Scene.getNumParticles();
   VectorXs const &X = _Scene.getX();
 
@@ -1896,11 +1938,36 @@ void BoxedScene::boxObjs(TwoDScene const &_Scene)
 
   boxVrtxs(_Scene);
   // Edges have to go after Vertexes!
+
+#ifndef NDEBUG
+#ifdef MY_TIMING
+  D_TIME_SEC2(time, "Boxing vertixes", ParticlesNum);
+#endif
+#endif
+
   boxEdges(_Scene);
+
+#ifndef NDEBUG
+#ifdef MY_TIMING
+  D_TIME_SEC2(time, "Boxing edges", ParticlesNum);
+#endif
+#endif
 
   boxHalfP(_Scene);
 
+#ifndef NDEBUG
+#ifdef MY_TIMING
+  D_TIME_SEC2(time, "Boxing halfplanes", ParticlesNum);
+#endif
+#endif
+
   aRootRegion.split(getEstRegionsGen());
+
+#ifndef NDEBUG
+#ifdef MY_TIMING
+  D_TIME_SEC2(time, "Spliting regions", ParticlesNum);
+#endif
+#endif
   aInitialized = true;
 
 
@@ -1926,6 +1993,9 @@ void BoxedScene::boxObjs(TwoDScene const &_Scene)
 
 #endif
 }
+
+
+
 
 
 void BoxedScene::updateVrtx(TwoDScene const &_Scene, VectorXs const &_X, BoxedVrtx &_O) {
