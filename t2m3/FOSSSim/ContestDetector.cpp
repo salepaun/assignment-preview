@@ -45,9 +45,9 @@ using namespace std;
 
 
 // For now: 0,1,2,3,4,5
-#define MY_DEBUG 0
+#define MY_DEBUG 4
 // 0,1,2
-#define MY_TIMING 2
+#define MY_TIMING 0
 
 
 #define D_TIME_SEC(a,b) cout << "= TIME:" << __FUNCTION__ \
@@ -1642,14 +1642,13 @@ bool BoxedRegion::findIntersectLoc(
     dumpContainer<>(g_MaxCoutNum, cout, NULL, "\n **** YPP:",
         YInterPP.size(), YInterPP.begin(), YInterPP.end());
     dumpContainer<>(g_MaxCoutNum, cout, NULL, "\n **** aPP:",
-        aPP.size(), aPP.begin(), aPP.end()) << endl;
+        aPP.size(), aPP.begin(), aPP.end());
     dumpContainer<>(g_MaxCoutNum, cout, NULL, "\n **** XPE:",
         XInterPE.size(), XInterPE.begin(), XInterPE.end());
     dumpContainer<>(g_MaxCoutNum, cout, NULL, "\n **** YPE:",
         YInterPE.size(), YInterPE.begin(), YInterPE.end());
     dumpContainer<>(g_MaxCoutNum, cout, NULL, "\n **** aPE:",
         aPE.size(), aPE.begin(), aPE.end()) << endl;
-
 #endif
 #endif
 #endif
@@ -1670,19 +1669,30 @@ bool BoxedRegion::findIntersectLoc(
 
   // restoring last frame collisions if no changes
   _PP.reserve(aPP.size());
-  copy(aPP.begin(), aPP.end(), _PP.begin());
+  copy(aPP.begin(), aPP.end(), back_inserter(_PP));
   _PE.reserve(aPE.size());
-  copy(aPE.begin(), aPE.end(), _PE.begin());
+  copy(aPE.begin(), aPE.end(), back_inserter(_PE));
   _PH.reserve(aPH.size());
-  copy(aPH.begin(), aPH.end(), _PH.begin());
+  copy(aPH.begin(), aPH.end(), back_inserter(_PH));
 
 #ifndef NDEBUG
 #if MY_TIMING > 0
-    D_TIME_SEC(time_total, "Copy containers")
+    D_TIME_SEC(time_total, "Copy containers");
 #endif
 #endif
 
-  return _PP.size() > PPSize || _PE.size() > PESize || _PH.size() > PHSize;
+#ifndef NDEBUG
+#if MY_DEBUG > 2
+    cout << __FUNCTION__ 
+      << " Region: " << getKey();
+    dumpContainer<>(g_MaxCoutNum, cout, NULL, "\n **** _PP:",
+        _PP.size(), _PP.begin(), _PP.end());
+    dumpContainer<>(g_MaxCoutNum, cout, NULL, "\n **** _PE:",
+        _PE.size(), _PE.begin(), _PE.end()) << endl;
+#endif
+#endif
+
+    return _PP.size() > PPSize || _PE.size() > PESize || _PH.size() > PHSize;
 }
 
 
