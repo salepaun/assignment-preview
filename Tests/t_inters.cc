@@ -9,8 +9,18 @@ using namespace std;
 
 
 ostream & operator << (ostream &_s, pair<int,int> const &_o) {
-  return _s << _o.first << "," << _o.second;
+  return _s << "{" << _o.first << "," << _o.second << "}";
 };
+
+ostream & operator << (ostream &_s, vector<pair<int,int> > const &_o) {
+  //copy(_o.begin(), _o.end(), ostream_iterator<pair<int,int> >(_s, ", "));
+  for(size_t i=0; i < _o.size(); ++i) {
+    _s << _o.at(i);
+  };
+
+  return _s;
+}
+
 ostream & operator << (ostream &_s, vector<int> const &_o) {
   copy(_o.begin(), _o.end(), ostream_iterator<int>(_s, ", "));
   return _s;
@@ -83,10 +93,11 @@ void t1() {
   T_V v2 = {{0,1},{2,3},{1,2},{1,1}};
   T_V v3;
 
-  // findCntrIntersect(v1,v2,v3);
+  findCntrIntersect(v1,v2,v3);
 
-  cout << "V3:";
-  // copy(v3.begin(), v3.end(), ostream_iterator<T_VE>(cout, ", "));
+  cout << "V3:" << v3;
+  sort(v2.begin(), v2.end());
+  cout << "\nsorted V2:" << v2 << endl;
 }
 
 void t2() {
@@ -108,6 +119,7 @@ void t2() {
 int main()
 {
 
+  t1();
   t2();
 
 
