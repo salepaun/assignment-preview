@@ -24,9 +24,9 @@
   <particle m="1.000" px="-20" py=" 20" vx="0.0" vy="0.0" fixed="1" radius="3.000"/>
   <particlecolor i="1" r="0.500" g="0.100" b="0.500"/>
   <particle m="1.000" px=" 20" py=" 20" vx="0.0" vy="0.0" fixed="1" radius="3.000"/>
-  <particlecolor i="1" r="0.500" g="0.100" b="0.500"/>
+  <particlecolor i="2" r="0.500" g="0.100" b="0.500"/>
   <particle m="1.000" px=" 20" py="-20" vx="0.0" vy="0.0" fixed="1" radius="3.000"/>
-  <particlecolor i="1" r="0.500" g="0.100" b="0.500"/>
+  <particlecolor i="3" r="0.500" g="0.100" b="0.500"/>
   <edge i="0" j="1" radius="3.2"/>
   <edgecolor i="0" r="0.5" g=" 0.1" b=" 0.5"/>
   <edge i="1" j="2" radius="3.2"/>

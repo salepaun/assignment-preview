@@ -1,5 +1,5 @@
 /**
- */
+*/
 
 #include <iostream>
 #include <set>
@@ -45,33 +45,33 @@ using namespace std;
 
 
 // For now: 0,1,2,3,4,5
-#define MY_DEBUG 4
+#define MY_DEBUG 0
 // 0,1,2
-#define MY_TIMING 0
+#define MY_TIMING 2
 
 
 #define D_TIME_SEC(a,b) cout << "= TIME:" << __FUNCTION__ \
   << ": " << (float)(clock()-a)/CLOCKS_PER_SEC << "[s]" \
-  << ": " << b \
-  << endl; a = clock();
+<< ": " << b \
+<< endl; a = clock();
 #define D_TIME_SEC2(a,b,c) cout << "= TIME:" << __FUNCTION__ \
   << ": " << (float)(clock()-a)/CLOCKS_PER_SEC << "[s]" \
-  << ": " << b \
-  << ": " << c \
-  << endl; a = clock();
+<< ": " << b \
+<< ": " << c \
+<< endl; a = clock();
 #define D_TIME_SEC3(a,b,c,d) cout << "= TIME:" << __FUNCTION__ \
   << ": " << (float)(clock()-a)/CLOCKS_PER_SEC << "[s]" \
-  << ": " << b \
-  << ": " << c \
-  << ": " << d \
-  << endl; a = clock();
+<< ": " << b \
+<< ": " << c \
+<< ": " << d \
+<< endl; a = clock();
 #define D_TIME_SEC4(a,b,c,d,e) cout << "= TIME:" << __FUNCTION__ \
   << ": " << (float)(clock()-a)/CLOCKS_PER_SEC << "[s]" \
-  << ": " << b \
-  << ": " << c \
-  << ": " << d \
-  << ": " << e \
-  << endl; a = clock();
+<< ": " << b \
+<< ": " << c \
+<< ": " << d \
+<< ": " << e \
+<< endl; a = clock();
 
 
 /**********************************************************************************
@@ -134,6 +134,17 @@ class Box
     typedef pair<T_Parent::key_type, T_Parent::mapped_type> T_ParentElm;
     typedef array<double, 4> T_Boundry;
     typedef vector<Box const *> T_BoxCntr;
+
+
+    /**
+     * Hasher.
+     * Needed for unordered_set.
+     */
+    struct KeyHash {
+      inline size_t operator ()(T_Key const &_K) const {
+        return hash<int>{}(_K.first) ^ hash<int>{}(_K.second);
+      };
+    };
 
     static char const * typeAsStr(BoxType _Type) {
       switch (_Type) {
@@ -314,19 +325,19 @@ ostream & operator << (ostream &_s, Box const &_o) {
 
 /**
 */
-class BoxedObj : public Box
+class BoxedVrtx : public Box
 {
 
   public:
 
-    BoxedObj() : Box() {};
-    BoxedObj(int _Id) : Box(_Id, E_VrtxBox) {};
-    BoxedObj(int _Id, bool _Fixed, Vector2s const &_X, double const &_R) : 
+    BoxedVrtx() : Box() {};
+    BoxedVrtx(int _Id) : Box(_Id, E_VrtxBox) {};
+    BoxedVrtx(int _Id, bool _Fixed, Vector2s const &_X, double const &_R) : 
       Box(_Id, E_VrtxBox, _Fixed), aX(_X[0]), aY(_X[1]) {
-      // !!! aAvgSize += _R;
-      updateR(_R);
-      changed();
-    };
+        // !!! aAvgSize += _R;
+        updateR(_R);
+        changed();
+      };
 
     inline bool changedX(Vector2s const &_X) {
       return _X[0] != aX || _X[1] != aY;
@@ -348,7 +359,7 @@ class BoxedObj : public Box
 
     ostream & toStr(ostream &) const;
 
-    friend ostream & operator << (ostream &, BoxedObj const &);
+    friend ostream & operator << (ostream &, BoxedVrtx const &);
 
 
   private:
@@ -359,14 +370,14 @@ class BoxedObj : public Box
 
 
 
-ostream & BoxedObj::toStr(ostream &_s) const {
+ostream & BoxedVrtx::toStr(ostream &_s) const {
   return Box::toStr(_s)
     << " (" << aX << "," << aY
     << ")";
 }
 
 
-ostream & operator << (ostream &_s, BoxedObj const &_o) {
+ostream & operator << (ostream &_s, BoxedVrtx const &_o) {
   return _o.toStr(_s);
 };
 
@@ -383,11 +394,11 @@ class BoxedEdge : public Box
 {
   public:
 
-    typedef pair<BoxedObj *, BoxedObj *> T_VrtxPair;
+    typedef pair<BoxedVrtx *, BoxedVrtx *> T_VrtxPair;
 
     BoxedEdge() : Box(), aVrtx(NULL, NULL) {};
     BoxedEdge(int _Id) : Box(_Id, E_EdgeBox, false), aVrtx(NULL, NULL) {};
-    BoxedEdge(int _Id, BoxedObj *_A, BoxedObj *_B, double const &_R) : 
+    BoxedEdge(int _Id, BoxedVrtx *_A, BoxedVrtx *_B, double const &_R) : 
       Box(_Id, E_EdgeBox, false), aVrtx(_A, _B) {
         updateR(_R);
         changed();
@@ -447,10 +458,10 @@ class BoxedEdge : public Box
 
   private:
 
-    inline BoxedObj const * a() const {
+    inline BoxedVrtx const * a() const {
       return aVrtx.first;
     };
-    inline BoxedObj const * b() const {
+    inline BoxedVrtx const * b() const {
       return aVrtx.second;
     };
 
@@ -506,7 +517,7 @@ class BoxedHalfP : public Box
 
     ostream & toStr(ostream &) const;
 
-    friend ostream & operator << (ostream &, BoxedObj const &);
+    friend ostream & operator << (ostream &, BoxedVrtx const &);
 
 
   private:
@@ -628,7 +639,7 @@ struct OrderedAxisElm
     aVal = _O.aVal;
 
     return *this;
-  };*/
+    };*/
 
   Box::T_Key aKey;
   bool aYAxisSearch : 1;
@@ -700,7 +711,8 @@ struct OrderedAxisElmCmp {
 struct OrderedAxisElmHash {
   inline size_t operator ()(OrderedAxisElm const &_A) const {
     Box::T_Key key = _A.getKey();
-    return key.first << key.second;
+    //return key.first << key.second;
+    return hash<int>{}(key.first) ^ hash<int>{}(key.second);
   };
 };
 
@@ -722,16 +734,16 @@ typedef set<OrderedAxisElm> T_AxisOrdered;
  */
 
 
-typedef map<int, BoxedObj *> T_BoxPartMap;
-typedef pair<int, BoxedObj *> T_MapPair;
+typedef map<int, BoxedVrtx *> T_BoxPartMap;
+typedef pair<int, BoxedVrtx *> T_MapPair;
 
 
-typedef vector<BoxedObj> T_BoxPartCntr;
+typedef vector<BoxedVrtx> T_BoxPartCntr;
 typedef vector<BoxedEdge> T_BoxEdgeCntr;
 typedef vector<BoxedHalfP> T_BoxHalfPCntr;
 
-typedef map<int, BoxedObj *> T_BoxPartMap;
-typedef pair<int, BoxedObj *> T_MapPair;
+typedef map<int, BoxedVrtx *> T_BoxPartMap;
+typedef pair<int, BoxedVrtx *> T_MapPair;
 
 
 
@@ -754,6 +766,12 @@ class BoxedRegion : public Box
       Box &aBox;
       BoxAdder(Box &_Box) : aBox(_Box) { };
       void operator ()(BoxedRegion &_R) { _R.add(aBox); };
+    };
+
+    struct BoxUpdater {
+      Box &aBox;
+      BoxUpdater(Box &_Box) : aBox(_Box) { };
+      void operator ()(BoxedRegion &_R) { _R.update(aBox); };
     };
 
     struct BoxEraser {
@@ -781,7 +799,7 @@ class BoxedRegion : public Box
       T_IntersCntr &PP, &PE, &PH;
       AxisIntersectFinder(T_AxisOrdered &_A, T_IntersCntr &_PP, T_IntersCntr &_PE, T_IntersCntr &_PH) : A(_A), PP(_PP), PE(_PE), PH(_PH) { };
       void operator ()(BoxedRegion &_R) { Res |= _R.findAxisIntersect(A, PP, PE, PH); };
-    };*/
+      };*/
 
     struct RegionsCounter {
       size_t Num;
@@ -837,10 +855,21 @@ class BoxedRegion : public Box
 
     inline void add(Box &_B) {
       if (!intersects(_B)) {
-        erasePermanently(_B);
+        return;
       } else if (hasChildren()) {
         BoxAdder adder(_B);
         for_each(aChildren.begin(), aChildren.end(), adder);
+      } else {
+        addToOrderedAxis(_B);
+        _B.registerParent(*this);
+      };
+    };
+    inline void update(Box &_B) {
+      if (!intersects(_B)) {
+        erasePermanently(_B);
+      } else if (hasChildren()) {
+        BoxUpdater updater(_B);
+        for_each(aChildren.begin(), aChildren.end(), updater);
       } else {
         addToOrderedAxis(_B);
         _B.registerParent(*this);
@@ -887,9 +916,11 @@ class BoxedRegion : public Box
 
     inline bool findIntersect(T_IntersCntr &_PP, T_IntersCntr &_PE, T_IntersCntr &_PH) {
       if(checkAndSplit()) {
-        IntersectFinder finder(_PP, _PE, _PH);
-        for_each(aChildren.begin(), aChildren.end(), finder);
-        return finder.Res;
+        //IntersectFinder finder(_PP, _PE, _PH);
+        //for_each(aChildren.begin(), aChildren.end(), finder);
+        //return finder.Res;
+        bool R = aChildren[0].findIntersect(_PP, _PE, _PH);
+        return aChildren[1].findIntersect(_PP, _PE, _PH) || R;
       } else {
         return findIntersectLoc(_PP, _PE, _PH);
       };
@@ -947,7 +978,7 @@ class BoxedRegion : public Box
     };
 
     inline int getEstObjs() const {
-        return getMinAxis().size()>>1;
+      return getMinAxis().size()>>1;
     };
 
     inline bool checkAndSplit() {
@@ -971,10 +1002,10 @@ class BoxedRegion : public Box
     };
 
     inline bool splitChildren(int _RegionsGen) {
-        //for_each(aChildren.begin(), aChildren.end(), [&](BoxedRegion &_R) { _R.split(_RegionsGen); });
-        RegionsSplitter splitter(_RegionsGen);
-        for_each(aChildren.begin(), aChildren.end(), splitter);
-        return true;
+      //for_each(aChildren.begin(), aChildren.end(), [&](BoxedRegion &_R) { _R.split(_RegionsGen); });
+      RegionsSplitter splitter(_RegionsGen);
+      for_each(aChildren.begin(), aChildren.end(), splitter);
+      return true;
     };
 
     bool splitAxis(int, double &_Devider,
@@ -1009,7 +1040,7 @@ class BoxedRegion : public Box
 
 
 
-int BoxedRegion::cObjPerRegLimitPow2 = 5;
+int BoxedRegion::cObjPerRegLimitPow2 = 9;
 
 
 ostream & BoxedRegion::toStr(ostream &_s) const
@@ -1103,19 +1134,19 @@ bool BoxedRegion::splitLoc(int _RegionsGen)
 
       if (checkXSplit(XSize, YSize)) {
         if(!splitAxis(XSize, Devider,
-            A, B,
-            aXAxis, aYAxis,
-            A.aXAxis, A.aYAxis,
-            B.aXAxis, B.aYAxis)) {
+              A, B,
+              aXAxis, aYAxis,
+              A.aXAxis, A.aYAxis,
+              B.aXAxis, B.aYAxis)) {
           return false;
         };
         aDevidedYAxis = false;
       } else {
         if(!splitAxis(YSize, Devider,
-            A, B,
-            aYAxis, aXAxis, 
-            A.aYAxis, A.aXAxis, 
-            B.aYAxis, B.aXAxis)) {
+              A, B,
+              aYAxis, aXAxis, 
+              A.aYAxis, A.aXAxis, 
+              B.aYAxis, B.aXAxis)) {
           return false;
         };
         aDevidedYAxis = true;
@@ -1138,7 +1169,7 @@ bool BoxedRegion::splitLoc(int _RegionsGen)
 
 #ifndef NDEBUG
 #ifdef MY_TIMING
-  D_TIME_SEC2(time, "split Region", getKey())
+    D_TIME_SEC2(time, "split Region", getKey());
 #endif
 #endif
 
@@ -1173,38 +1204,33 @@ bool BoxedRegion::splitAxis(int _ASize, double &_Devider,
   ASplitAxis.reserve(_SplitSrcAxis.size());
   BSplitAxis.clear();
   BSplitAxis.reserve(_SplitSrcAxis.size());
-  /* in case of changing to unordered_set 
-  _ASplitAxis.reserve(_SplitSrcAxis.size());
-  _BSplitAxis.reserve(_SplitSrcAxis.size());
-  _AKeepAxis.reserve(_KeepSrcAxis.size());
-  _BKeepAxis.reserve(_KeepSrcAxis.size());*/
-  copy(_KeepSrcAxis.begin(), _KeepSrcAxis.end(), inserter(_AKeepAxis, _AKeepAxis.begin()));
-  copy(_KeepSrcAxis.begin(), _KeepSrcAxis.end(), inserter(_BKeepAxis, _BKeepAxis.begin()));
-  copy(_SplitSrcAxis.begin(), _SplitSrcAxis.end(), inserter(SplitAxis, SplitAxis.begin()));
+
+  copy(_SplitSrcAxis.begin(), _SplitSrcAxis.end(), back_inserter(SplitAxis));
   SplitAxis.shrink_to_fit();
 
   // (SplitMark > 0) - checked earlier
   OrderedAxisElm &I = SplitAxis[SplitMark-1];
   OrderedAxisElm &J = SplitAxis[SplitMark];
-  _Devider = abs(J.getVal() - I.getVal())/2.0;
+  _Devider = (J.getVal() + I.getVal())/2.0;
+  //_Devider = ((*SplitAxis.begin()).getVal() + (*SplitAxis.rbegin()).getVal())/2.0;
 
   vector<OrderedAxisElm>::iterator Iter = SplitAxis.begin();
-  copy_n(Iter, SplitMark, inserter(ASplitAxis, ASplitAxis.begin()));
+  copy_n(Iter, SplitMark, back_inserter(ASplitAxis));
   Iter = SplitAxis.begin();
   advance(Iter, SplitMark);
-  copy(Iter, SplitAxis.end(), inserter(BSplitAxis, BSplitAxis.begin()));
+  copy(Iter, SplitAxis.end(), back_inserter(BSplitAxis));
 
   Active.clear();
   Iter = SplitAxis.begin();
   advance(Iter, SplitMark);
   for_each(SplitAxis.begin(), Iter, [&](OrderedAxisElm &_E) { 
-    if (_E.isMaxSearch())
+      if (_E.isMaxSearch())
       Active.erase(_E);
-    else
+      else
       Active.insert(_E);
-  });
+      });
   // add all openeded
-  move(Active.begin(), Active.end(), inserter(BSplitAxis, BSplitAxis.begin()));
+  move(Active.begin(), Active.end(), back_inserter(BSplitAxis));
 
   Active.clear();
   vector<OrderedAxisElm>::reverse_iterator RIterFrom = SplitAxis.rbegin();
@@ -1212,43 +1238,54 @@ bool BoxedRegion::splitAxis(int _ASize, double &_Devider,
   advance(RIterTo, SplitAxis.size() - SplitMark);
   for(;RIterFrom != RIterTo; ++RIterFrom) {
     if ((*RIterFrom).isMaxSearch())
-      Active.erase((*RIterFrom));
-    else
       Active.insert((*RIterFrom));
+    else
+      Active.erase((*RIterFrom));
   };
   // add all openeded
-  move(Active.begin(), Active.end(), inserter(ASplitAxis, ASplitAxis.begin()));
+  move(Active.begin(), Active.end(), back_inserter(ASplitAxis));
 
   ASplitAxis.shrink_to_fit();
   BSplitAxis.shrink_to_fit();
 
   if (ASplitAxis.size() < SplitAxis.size() && BSplitAxis.size() < SplitAxis.size())
   {
-    //for_each(ASplitAxis.begin(), ASplitAxis.end(), [&](OrderedAxisElm &_E) { if(_E.isMaxSearch()) _E.registerParent(_A); });
-    //for_each(BSplitAxis.begin(), BSplitAxis.end(), [&](OrderedAxisElm &_E) { if(_E.isMaxSearch()) _E.registerParent(_B); });
-    //for_each(SplitAxis.begin(), SplitAxis.end(), [&](OrderedAxisElm &_E) {_E.deregisterParent(*this); });
-
     sort(ASplitAxis.begin(), ASplitAxis.end());
     move(ASplitAxis.begin(), ASplitAxis.end(), inserter(_ASplitAxis, _ASplitAxis.begin()));
     sort(BSplitAxis.begin(), BSplitAxis.end());
     move(BSplitAxis.begin(), BSplitAxis.end(), inserter(_BSplitAxis, _BSplitAxis.begin()));
 
+    unordered_set<Box::T_Key, Box::KeyHash> AKeys, BKeys;
+    for_each(ASplitAxis.begin(), ASplitAxis.end(), [&](OrderedAxisElm const &_E) { AKeys.insert(_E.getKey()); });
+    for_each(BSplitAxis.begin(), BSplitAxis.end(), [&](OrderedAxisElm const &_E) { BKeys.insert(_E.getKey()); });
+
+    for_each(_KeepSrcAxis.begin(), _KeepSrcAxis.end(), [&](OrderedAxisElm const &_E) { if (AKeys.find(_E.getKey())!=AKeys.end()) _AKeepAxis.insert(_E);});
+    for_each(_KeepSrcAxis.begin(), _KeepSrcAxis.end(), [&](OrderedAxisElm const &_E) { if (BKeys.find(_E.getKey())!=BKeys.end()) _BKeepAxis.insert(_E);});
+
+    //for_each(ASplitAxis.begin(), ASplitAxis.end(), [&](OrderedAxisElm &_E) { if(_E.isMaxSearch()) _E.registerParent(_A); });
+    //for_each(BSplitAxis.begin(), BSplitAxis.end(), [&](OrderedAxisElm &_E) { if(_E.isMaxSearch()) _E.registerParent(_B); });
+    //for_each(SplitAxis.begin(), SplitAxis.end(), [&](OrderedAxisElm &_E) {_E.deregisterParent(*this); });
+
 #ifndef NDEBUG
-#if MY_DEBUG > 1
-  dumpContainer<>(g_MaxCoutNum, cout, __FUNCTION__, " **** Orig   SplitAxis:",
-      _SplitSrcAxis.size(), _SplitSrcAxis.begin(), _SplitSrcAxis.end()) << endl;
-  dumpContainer<>(g_MaxCoutNum, cout, __FUNCTION__, " **** Tmp    SplitAxis:",
-      SplitAxis.size(), SplitAxis.begin(), SplitAxis.end()) << endl;
-  dumpContainer<>(g_MaxCoutNum, cout, __FUNCTION__, " **** Child ASplitAxis:",
-      _ASplitAxis.size(), _ASplitAxis.begin(), _ASplitAxis.end()) << endl;
-  dumpContainer<>(g_MaxCoutNum, cout, __FUNCTION__, " **** Child BSplitAxis:",
-      _BSplitAxis.size(), _BSplitAxis.begin(), _BSplitAxis.end()) << endl;
-  dumpContainer<>(g_MaxCoutNum, cout, __FUNCTION__, " **** Orig   KeepAxis:",
-      _KeepSrcAxis.size(), _KeepSrcAxis.begin(), _KeepSrcAxis.end()) << endl;
-  dumpContainer<>(g_MaxCoutNum, cout, __FUNCTION__, " **** Child AKeepAxis:",
-      _AKeepAxis.size(), _AKeepAxis.begin(), _AKeepAxis.end()) << endl;
-  dumpContainer<>(g_MaxCoutNum, cout, __FUNCTION__, " **** Child BKeepAxis:",
-      _BKeepAxis.size(), _BKeepAxis.begin(), _BKeepAxis.end()) << endl;
+#if MY_DEBUG > 2
+    cout << __FUNCTION__
+      << " SplitSize=" << _ASize
+      << " SplitMark=" << SplitMark
+      << " Devider=" << _Devider << endl;
+    dumpContainer<>(g_MaxCoutNum, cout, __FUNCTION__, " **** Orig   SplitAxis:",
+        _SplitSrcAxis.size(), _SplitSrcAxis.begin(), _SplitSrcAxis.end()) << endl;
+    dumpContainer<>(g_MaxCoutNum, cout, __FUNCTION__, " **** Tmp    SplitAxis:",
+        SplitAxis.size(), SplitAxis.begin(), SplitAxis.end()) << endl;
+    dumpContainer<>(g_MaxCoutNum, cout, __FUNCTION__, " **** Child ASplitAxis:",
+        _ASplitAxis.size(), _ASplitAxis.begin(), _ASplitAxis.end()) << endl;
+    dumpContainer<>(g_MaxCoutNum, cout, __FUNCTION__, " **** Child BSplitAxis:",
+        _BSplitAxis.size(), _BSplitAxis.begin(), _BSplitAxis.end()) << endl;
+    dumpContainer<>(g_MaxCoutNum, cout, __FUNCTION__, " **** Orig   KeepAxis:",
+        _KeepSrcAxis.size(), _KeepSrcAxis.begin(), _KeepSrcAxis.end()) << endl;
+    dumpContainer<>(g_MaxCoutNum, cout, __FUNCTION__, " **** Child AKeepAxis:",
+        _AKeepAxis.size(), _AKeepAxis.begin(), _AKeepAxis.end()) << endl;
+    dumpContainer<>(g_MaxCoutNum, cout, __FUNCTION__, " **** Child BKeepAxis:",
+        _BKeepAxis.size(), _BKeepAxis.begin(), _BKeepAxis.end()) << endl;
 #endif
 #endif
     Ret = true;
@@ -1280,142 +1317,142 @@ void BoxedRegion::merge()
 
 
 /*
-bool BoxedRegion::findAxisIntersectLoc(
-    T_AxisOrdered &_Axis,
-    T_IntersCntr &_PP,
-    T_IntersCntr &_PE,
-    T_IntersCntr &_PH)
+   bool BoxedRegion::findAxisIntersectLoc(
+   T_AxisOrdered &_Axis,
+   T_IntersCntr &_PP,
+   T_IntersCntr &_PE,
+   T_IntersCntr &_PH)
+   {
+#ifndef NDEBUG
+#ifdef MY_TIMING
+clock_t time = clock();
+#endif
+#endif
+
+bool bFound = false;
+T_ActiveCntr Active;
+
+struct IntersectsInserter {
+IntersectsInserter(T_IntersCntr &_PP, T_IntersCntr &_PE, T_IntersCntr &_PH,
+T_BoxEdgeCntr const *_pEdgeCntr) : 
+aPP(_PP),
+aPE(_PE),
+aPH(_PH),
+apEdgeCntr(_pEdgeCntr) {
+};
+
+void operator ()(T_ActiveCntrElm _Elm)
 {
-#ifndef NDEBUG
-#ifdef MY_TIMING
-  clock_t time = clock();
-#endif
-#endif
-
-  bool bFound = false;
-  T_ActiveCntr Active;
-
-  struct IntersectsInserter {
-    IntersectsInserter(T_IntersCntr &_PP, T_IntersCntr &_PE, T_IntersCntr &_PH,
-        T_BoxEdgeCntr const *_pEdgeCntr) : 
-      aPP(_PP),
-      aPE(_PE),
-      aPH(_PH),
-      apEdgeCntr(_pEdgeCntr) {
-      };
-
-    void operator ()(T_ActiveCntrElm _Elm)
-    {
-      T_IntersCntr *intersects = NULL;
-      int Id1, Id2;
-      if (!aElm.second || !_Elm.second) {
-        switch((aElm.first.second | _Elm.first.second)) {
-          case E_VrtxBox: 
-            {
-              if (aElm.first.first < _Elm.first.first) {
-                Id1 = aElm.first.first; Id2 = _Elm.first.first;
-              } else {
-                Id1 = _Elm.first.first; Id2 = aElm.first.first;
-              };
-              intersects = &aPP;
-            }; break;
-          case E_EdgeBox:
-          case 3:
-            {
-              if (aElm.first.second == E_EdgeBox) {
-                Id1 = _Elm.first.first; Id2 = aElm.first.first;
-              } else {
-                Id1 = aElm.first.first; Id2 = _Elm.first.first;
-              }
-              intersects = apEdgeCntr ? apEdgeCntr->at(Id2).isMember(Id1) ?  NULL : &aPE : &aPE;
-            }; break;
-          case E_HalfPBox:
-          case 5:
-            {
-              if (aElm.first.second == E_HalfPBox) {
-                Id1 = _Elm.first.first; Id2 = aElm.first.first;
-              } else {
-                Id1 = aElm.first.first; Id2 = _Elm.first.first;
-              }
-              // intersects = aEdgeCntr[Id2].isMember(Id1) ?  NULL : &aPE;
-              intersects = &aPH; break;
-            };
-        };
+T_IntersCntr *intersects = NULL;
+int Id1, Id2;
+if (!aElm.second || !_Elm.second) {
+switch((aElm.first.second | _Elm.first.second)) {
+case E_VrtxBox: 
+{
+if (aElm.first.first < _Elm.first.first) {
+Id1 = aElm.first.first; Id2 = _Elm.first.first;
+} else {
+Id1 = _Elm.first.first; Id2 = aElm.first.first;
+};
+intersects = &aPP;
+}; break;
+case E_EdgeBox:
+case 3:
+{
+if (aElm.first.second == E_EdgeBox) {
+Id1 = _Elm.first.first; Id2 = aElm.first.first;
+} else {
+Id1 = aElm.first.first; Id2 = _Elm.first.first;
+}
+intersects = apEdgeCntr ? apEdgeCntr->at(Id2).isMember(Id1) ?  NULL : &aPE : &aPE;
+}; break;
+case E_HalfPBox:
+case 5:
+{
+if (aElm.first.second == E_HalfPBox) {
+Id1 = _Elm.first.first; Id2 = aElm.first.first;
+} else {
+Id1 = aElm.first.first; Id2 = _Elm.first.first;
+}
+// intersects = aEdgeCntr[Id2].isMember(Id1) ?  NULL : &aPE;
+intersects = &aPH; break;
+};
+};
 
 #ifndef NDEBUG
 #if MY_DEBUG > 2
-        cout << __FUNCTION__
-          << ", Akey:" << aElm
-          << ", Bkey:" << _Elm
-          << ", Atype|Btype:" << (aElm.first.second|_Elm.first.second)
-          << ", Intersecs:" << intersects
-          << endl;
+cout << __FUNCTION__
+<< ", Akey:" << aElm
+<< ", Bkey:" << _Elm
+<< ", Atype|Btype:" << (aElm.first.second|_Elm.first.second)
+<< ", Intersecs:" << intersects
+<< endl;
 #endif
 #endif
-        if(intersects) {
-          // intersects->insert(pair<int,int>(Id1, Id2));
-          intersects->push_back(pair<int,int>(Id1, Id2));
-        };
-      };
-    };
+if(intersects) {
+  // intersects->insert(pair<int,int>(Id1, Id2));
+  intersects->push_back(pair<int,int>(Id1, Id2));
+};
+};
+};
 
-    T_ActiveCntrElm aElm;
-    T_IntersCntr &aPP, &aPE, &aPH;
-    T_BoxEdgeCntr const *apEdgeCntr;
+T_ActiveCntrElm aElm;
+T_IntersCntr &aPP, &aPE, &aPH;
+T_BoxEdgeCntr const *apEdgeCntr;
+};
+
+
+#ifndef NDEBUG
+#if MY_DEBUG > 2
+dumpContainer<>(g_MaxCoutNum, cout, __FUNCTION__, " **** Axis:",
+    _Axis.size(), _Axis.begin(), _Axis.end()) << endl;
+#endif
+#endif
+
+
+// 
+// Looping over axis to find intersections
+IntersectsInserter Inserter(_PP, _PE, _PH, apBoxedEdges);
+for (T_AxisOrdered::const_iterator I=_Axis.begin(); I != _Axis.end(); ++I) {
+  Box::T_Key key = (*I).getKey();
+
+#ifndef NDEBUG
+#if MY_DEBUG > 2
+  cout << __FUNCTION__
+    << " **** Chiecking:" << (*I);
+  dumpContainer<>(g_MaxCoutNum, cout, __FUNCTION__, " **** Active:",
+      Active.size(), Active.begin(), Active.end()) << endl;
+#endif
+#endif
+
+  if ((*I).isMaxSearch()) {
+    Active.erase(key);
+    continue;
   };
 
-
-#ifndef NDEBUG
-#if MY_DEBUG > 2
-    dumpContainer<>(g_MaxCoutNum, cout, __FUNCTION__, " **** Axis:",
-        _Axis.size(), _Axis.begin(), _Axis.end()) << endl;
-#endif
-#endif
-
-
-  // 
-  // Looping over axis to find intersections
-  IntersectsInserter Inserter(_PP, _PE, _PH, apBoxedEdges);
-  for (T_AxisOrdered::const_iterator I=_Axis.begin(); I != _Axis.end(); ++I) {
-    Box::T_Key key = (*I).getKey();
-
-#ifndef NDEBUG
-#if MY_DEBUG > 2
-    cout << __FUNCTION__
-      << " **** Chiecking:" << (*I);
-    dumpContainer<>(g_MaxCoutNum, cout, __FUNCTION__, " **** Active:",
-        Active.size(), Active.begin(), Active.end()) << endl;
-#endif
-#endif
-
-    if ((*I).isMaxSearch()) {
-      Active.erase(key);
-      continue;
-    };
-
-    if (Active.empty()) {
-      Active.insert(T_ActiveCntrElm(key, (*I).isFixed()));
-      continue;
-    };
-
-    T_ActiveCntrElm Elm(key, (*I).isFixed());
-
-    Inserter.aElm = Elm;
-    for_each(Active.begin(), Active.end(), Inserter);
-
-    Active.insert(Elm);
-
-    bFound = true;
+  if (Active.empty()) {
+    Active.insert(T_ActiveCntrElm(key, (*I).isFixed()));
+    continue;
   };
+
+  T_ActiveCntrElm Elm(key, (*I).isFixed());
+
+  Inserter.aElm = Elm;
+  for_each(Active.begin(), Active.end(), Inserter);
+
+  Active.insert(Elm);
+
+  bFound = true;
+};
 
 #ifndef NDEBUG
 #ifdef MY_TIMING
-  D_TIME_SEC3(time, "findIntersect Axis", getKey(), _Axis.size())
+D_TIME_SEC3(time, "findIntersect Axis", getKey(), _Axis.size());
 #endif
 #endif
 
 
-  return bFound;
+return bFound;
 }
 */
 
@@ -1531,7 +1568,7 @@ bool BoxedRegion::findAxisIntersectLoc(
 
 #ifndef NDEBUG
 #ifdef MY_TIMING
-  D_TIME_SEC3(time, "findIntersect Axis", getKey(), _Axis.size())
+  D_TIME_SEC3(time, "findIntersect Axis", getKey(), _Axis.size());
 #endif
 #endif
 
@@ -1582,35 +1619,35 @@ bool BoxedRegion::findIntersectLoc(
 
 #ifndef NDEBUG
 #ifdef MY_TIMING
-        D_TIME_SEC4(time, "intersection insert PP", XInterPP.size(), YInterPP.size(), _PP.size())
+        D_TIME_SEC4(time, "intersection insert PP", XInterPP.size(), YInterPP.size(), aPP.size());
 #endif
 #endif
 
-          if (XInterPE.size() && YInterPE.size()){
-            sort(XInterPE.begin(), XInterPE.end()); sort(YInterPE.begin(), YInterPE.end());
-            set_intersection(
-                XInterPE.begin(), XInterPE.end(),
-                YInterPE.begin(), YInterPE.end(),
-                inserter(aPE, aPE.begin()));
-          };
-
-#ifndef NDEBUG
-#ifdef MY_TIMING
-        D_TIME_SEC4(time, "intersection insert PE", XInterPE.size(), YInterPE.size(), _PE.size())
-#endif
-#endif
-
-          if (XInterPH.size() && YInterPH.size()){
-            sort(XInterPH.begin(), XInterPH.end()); sort(YInterPH.begin(), YInterPH.end());
-            set_intersection(
-                XInterPH.begin(), XInterPH.end(),
-                YInterPH.begin(), YInterPH.end(),
-                inserter(aPH, aPH.begin()));
-          };
+        if (XInterPE.size() && YInterPE.size()){
+          sort(XInterPE.begin(), XInterPE.end()); sort(YInterPE.begin(), YInterPE.end());
+          set_intersection(
+              XInterPE.begin(), XInterPE.end(),
+              YInterPE.begin(), YInterPE.end(),
+              inserter(aPE, aPE.begin()));
+        };
 
 #ifndef NDEBUG
 #ifdef MY_TIMING
-        D_TIME_SEC4(time, "intersection insert PH", XInterPH.size(), YInterPH.size(), _PH.size())
+        D_TIME_SEC4(time, "intersection insert PE", XInterPE.size(), YInterPE.size(), aPE.size());
+#endif
+#endif
+
+        if (XInterPH.size() && YInterPH.size()){
+          sort(XInterPH.begin(), XInterPH.end()); sort(YInterPH.begin(), YInterPH.end());
+          set_intersection(
+              XInterPH.begin(), XInterPH.end(),
+              YInterPH.begin(), YInterPH.end(),
+              inserter(aPH, aPH.begin()));
+        };
+
+#ifndef NDEBUG
+#ifdef MY_TIMING
+        D_TIME_SEC4(time, "intersection insert PH", XInterPH.size(), YInterPH.size(), aPH.size());
 #endif
 #endif
       };
@@ -1618,14 +1655,14 @@ bool BoxedRegion::findIntersectLoc(
 
 #ifndef NDEBUG
 #if MY_TIMING > 0
-    D_TIME_SEC4(time_total, "findIntersect XY", getKey(), aXAxis.size(), aYAxis.size())
+    D_TIME_SEC4(time_total, "findIntersect XY", getKey(), aXAxis.size(), aYAxis.size());
 #endif
 #endif
 
 
 #ifndef NDEBUG
 #if MY_DEBUG > 0
-      cout << __FUNCTION__ 
+    cout << __FUNCTION__ 
       << " PPx:" << XInterPP.size()
       << " PEx:" << XInterPE.size()
       << " PHx:" << XInterPH.size()
@@ -1677,22 +1714,22 @@ bool BoxedRegion::findIntersectLoc(
 
 #ifndef NDEBUG
 #if MY_TIMING > 0
-    D_TIME_SEC(time_total, "Copy containers");
+  D_TIME_SEC(time_total, "Copy containers");
 #endif
 #endif
 
 #ifndef NDEBUG
 #if MY_DEBUG > 2
-    cout << __FUNCTION__ 
-      << " Region: " << getKey();
-    dumpContainer<>(g_MaxCoutNum, cout, NULL, "\n **** _PP:",
-        _PP.size(), _PP.begin(), _PP.end());
-    dumpContainer<>(g_MaxCoutNum, cout, NULL, "\n **** _PE:",
-        _PE.size(), _PE.begin(), _PE.end()) << endl;
+  cout << __FUNCTION__ 
+    << " Region: " << getKey();
+  dumpContainer<>(g_MaxCoutNum, cout, NULL, "\n **** _PP:",
+      _PP.size(), _PP.begin(), _PP.end());
+  dumpContainer<>(g_MaxCoutNum, cout, NULL, "\n **** _PE:",
+      _PE.size(), _PE.begin(), _PE.end()) << endl;
 #endif
 #endif
 
-    return _PP.size() > PPSize || _PE.size() > PESize || _PH.size() > PHSize;
+  return _PP.size() > PPSize || _PE.size() > PESize || _PH.size() > PHSize;
 }
 
 
@@ -1727,6 +1764,9 @@ class BoxedScene : Box
     inline void addToRegion(Box &_Box) {
       aRootRegion.add(_Box);
     };
+    inline void updateToRegion(Box &_Box) {
+      aRootRegion.update(_Box);
+    };
     inline void eraseFromRegion(Box &_Box) {
       aRootRegion.erase(_Box);
     };
@@ -1746,16 +1786,17 @@ class BoxedScene : Box
     };
 
 
-    //friend ostream & operator << (ostream &_, BoxedObj const &_o);
+    //friend ostream & operator << (ostream &_, BoxedVrtx const &_o);
 
 
   private:
 
     void boxVrtxs(TwoDScene const &);
     void boxEdges(TwoDScene const &);
+    void boxHalfP(TwoDScene const &);
     void boxObjs(TwoDScene const &);
 
-    void updateVrtx(TwoDScene const &, VectorXs const &, BoxedObj &);
+    void updateVrtx(TwoDScene const &, VectorXs const &, BoxedVrtx &);
     void updateEdge(TwoDScene const &, BoxedEdge &);
 
 
@@ -1789,7 +1830,7 @@ void BoxedScene::boxVrtxs(TwoDScene const &_Scene)
   aBoxVrtsx.clear();
   aBoxVrtsx.reserve(aVrtxsNum);
   for (int i=0; i < aVrtxsNum; ++i) {
-    BoxedObj V(i, _Scene.isFixed(i), X.segment<2>(i<<1), _Scene.getRadius(i));
+    BoxedVrtx V(i, _Scene.isFixed(i), X.segment<2>(i<<1), _Scene.getRadius(i));
     addToRegion(V);
     aBoxVrtsx.push_back(V);
   };
@@ -1822,6 +1863,26 @@ void BoxedScene::boxEdges(TwoDScene const &_Scene)
 /**
  * Boxes scene objects.
  */
+void BoxedScene::boxHalfP(TwoDScene const &_Scene)
+{
+  aHalfPNum = _Scene.getNumHalfplanes();
+
+  aBoxHalfP.clear();
+  aBoxHalfP.reserve(aHalfPNum);
+  for (int i=0; i < aHalfPNum; ++i) {
+    double R = _Scene.getEdgeRadii()[i];
+    pair<VectorXs,VectorXs> const &HP = _Scene.getHalfplane(i);
+    BoxedHalfP H(i, HP.first.segment<2>(0), HP.second.segment<2>(0));
+    addToRegion(H);
+    aBoxHalfP.push_back(H);
+  };
+}
+
+
+
+/**
+ * Boxes scene objects.
+ */
 void BoxedScene::boxObjs(TwoDScene const &_Scene)
 {
   int ParticlesNum = _Scene.getNumParticles();
@@ -1836,6 +1897,8 @@ void BoxedScene::boxObjs(TwoDScene const &_Scene)
   boxVrtxs(_Scene);
   // Edges have to go after Vertexes!
   boxEdges(_Scene);
+
+  boxHalfP(_Scene);
 
   aRootRegion.split(getEstRegionsGen());
   aInitialized = true;
@@ -1865,7 +1928,7 @@ void BoxedScene::boxObjs(TwoDScene const &_Scene)
 }
 
 
-void BoxedScene::updateVrtx(TwoDScene const &_Scene, VectorXs const &_X, BoxedObj &_O) {
+void BoxedScene::updateVrtx(TwoDScene const &_Scene, VectorXs const &_X, BoxedVrtx &_O) {
   Vector2s X = _X.segment<2>(_O.getId()<<1);
   if (_O.changedX(X)) {
 
@@ -1882,7 +1945,7 @@ void BoxedScene::updateVrtx(TwoDScene const &_Scene, VectorXs const &_X, BoxedOb
 
     eraseFromRegion(_O);
     _O.update(X, _Scene.getRadius(_O.getId()));
-    addToRegion(_O);
+    updateToRegion(_O);
     _O.changed();
   };
 };
@@ -1903,7 +1966,7 @@ void BoxedScene::updateEdge(TwoDScene const &_Scene, BoxedEdge &_O) {
 
     eraseFromRegion(_O);
     _O.update(_Scene.getEdgeRadii()[_O.getId()]);
-    addToRegion(_O);
+    updateToRegion(_O);
     _O.changed();
   };
 };
@@ -1924,18 +1987,18 @@ void BoxedScene::update(TwoDScene const &_Scene)
   int ParticlesNum = _Scene.getNumParticles();
   VectorXs const &X = _Scene.getX();
 
-  for_each(aBoxVrtsx.begin(), aBoxVrtsx.end(), [](BoxedObj &_o) { _o.resetChange(); });
+  for_each(aBoxVrtsx.begin(), aBoxVrtsx.end(), [](BoxedVrtx &_o) { _o.resetChange(); });
   for_each(aBoxEdges.begin(), aBoxEdges.end(), [](BoxedEdge &_o) { _o.resetChange(); });
   aRootRegion.propagateResetChange();
 
 #ifndef NDEBUG
 #ifdef MY_TIMING
-  D_TIME_SEC(time, "reset change")
+  D_TIME_SEC(time, "reset change");
 #endif
 #endif
 
 
-    T_BoxPartCntr::iterator pIter = aBoxVrtsx.begin();
+  T_BoxPartCntr::iterator pIter = aBoxVrtsx.begin();
   for (; pIter != aBoxVrtsx.end(); ++pIter) {
     if (!(*pIter).isFixed()) {
       updateVrtx(_Scene, X, *pIter);
@@ -1944,13 +2007,13 @@ void BoxedScene::update(TwoDScene const &_Scene)
 
 #ifndef NDEBUG
 #ifdef MY_TIMING
-  D_TIME_SEC(time, "update vrtxs")
+  D_TIME_SEC(time, "update vrtxs");
 #endif
 #endif
 
 
-    // Edges have to go after Vertexes!
-    T_BoxEdgeCntr::iterator pIterE = aBoxEdges.begin();
+  // Edges have to go after Vertexes!
+  T_BoxEdgeCntr::iterator pIterE = aBoxEdges.begin();
   for (; pIterE != aBoxEdges.end(); ++pIterE) {
     if (!(*pIter).isFixed()) {
       updateEdge(_Scene, *pIterE);
@@ -1959,7 +2022,7 @@ void BoxedScene::update(TwoDScene const &_Scene)
 
 #ifndef NDEBUG
 #ifdef MY_TIMING
-  D_TIME_SEC(time, "update edges")
+  D_TIME_SEC(time, "update edges");
 #endif
 #endif
 
@@ -1968,7 +2031,7 @@ void BoxedScene::update(TwoDScene const &_Scene)
 #ifdef MY_DEBUG
 #if MY_DEBUG > 1
 
-    cout << aRootRegion << endl;
+  cout << aRootRegion << endl;
 
 #endif
 #endif
@@ -1987,17 +2050,6 @@ static BoxedScene g_Scene;
  * Local module functions.
  */
 
-
-
-/*
-   inline void boxP(Vector2s const &_X, int _R, Box &_B)
-   {
-   _B.first.first(_X[0]-_R);
-   _B.first.second(_X[0]+_R);
-   _B.second.first(_X[1]-_R);
-   _B.second.second(_X[1]+_R);
-   }
-   */
 
 
 
@@ -2021,7 +2073,7 @@ static void estimateEuler(
 
 #ifndef NDEBUG
 #ifdef MY_TIMING
-  D_TIME_SEC(time, "update")
+  D_TIME_SEC(time, "update");
 #endif
 #endif
 
@@ -2129,11 +2181,11 @@ static AlgoEnum evaluateScene(TwoDScene const &_Scene, bool &_First)
 
 #ifndef NDEBUG
 #ifdef MY_TIMING
-    D_TIME_SEC(time, "Init scene")
+    D_TIME_SEC(time, "Init scene");
 #endif
 #endif
 
-      initEuler(_Scene);
+    initEuler(_Scene);
   };
 
   return EulerAlgo;
