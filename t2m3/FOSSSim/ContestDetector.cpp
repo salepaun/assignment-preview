@@ -45,9 +45,9 @@ using namespace std;
 
 
 // For now: 0,1,2,3,4,5
-#define MY_DEBUG 4
+#define MY_DEBUG 0
 // 0,1,2
-#define MY_TIMING 2
+#define MY_TIMING 1
 
 
 #define D_TIME_SEC(a,b) cout << "= TIME:" << __FUNCTION__ \
@@ -1503,6 +1503,7 @@ bool BoxedRegion::findAxisIntersectLoc(
               intersects = &aPP;
             }; break;
           case E_EdgeBox:
+            break;
           case 3:
             {
               if (aElm.first.second == E_EdgeBox) {
@@ -1513,6 +1514,7 @@ bool BoxedRegion::findAxisIntersectLoc(
               intersects = apEdgeCntr ? apEdgeCntr->at(Id2).isMember(Id1) ?  NULL : &aPE : &aPE;
             }; break;
           case E_HalfPBox:
+            break;
           case 5:
             {
               if (aElm.first.second == E_HalfPBox) {
@@ -1526,7 +1528,7 @@ bool BoxedRegion::findAxisIntersectLoc(
         };
 
 #ifndef NDEBUG
-#if MY_DEBUG > 2
+#if MY_DEBUG > 4
         cout << __FUNCTION__
           << ", Akey:" << aElm
           << ", Bkey:" << _Elm

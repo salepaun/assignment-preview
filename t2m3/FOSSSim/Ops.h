@@ -160,6 +160,7 @@ ostream & dumpContainer(int _Limit, ostream &_s,
 {
   if (_Function) _s.write(_Function, strlen(_Function));
   if (_Name) _s.write(_Name, strlen(_Name));
+  if (!_Limit) _Limit = _Size;
   _s << "Size=" << _Size;
   T_Iter I = _Begin;
   for(int i=0; i<_Limit && I!=_End; ++I, ++i) {
