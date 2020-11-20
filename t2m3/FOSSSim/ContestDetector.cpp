@@ -686,6 +686,8 @@ struct OrderedAxisElm
     return _B.aBorder[i];
   };
 
+  inline Box const * getBox() const { return apBox; };
+
   inline void changed() {
     if (apBox) apBox->changed();
   };
@@ -792,15 +794,14 @@ struct OrderedAxisElmHash {
 // typedef set<OrderedAxisElm, AxisCmp> T_AxisOrdered;
 // typedef map<double, Box*> T_AxisOrdered;
 // typedef vector<OrderedAxisElm> T_AxisOrdered;
-// typedef map<OrderedAxisElm, bool> T_AxisOrdered;
-// typedef pair<OrderedAxisElm, bool> T_AxisOrderedElm;
-/*ostream & operator << (ostream &_s, T_AxisOrderedElm const &_o) {
-  return _s << _o.first;
-};*/
-
+typedef map<OrderedAxisElm, bool> T_AxisOrdered;
 typedef unordered_set<OrderedAxisElm, OrderedAxisElmHash> T_AxisUnordered;
-typedef set<OrderedAxisElm> T_AxisOrdered;
-typedef OrderedAxisElm T_AxisOrderedElm;
+typedef T_AxisOrdered::value_type T_AxisOrderedElm;
+
+
+ostream & operator << (ostream &_s, T_AxisOrderedElm const &_o) {
+  return _s << _o.first;
+};
 
 
 
@@ -932,6 +933,8 @@ class BoxedRegion : public Box
 
     inline void propagateResetChange() {
       resetChange();
+      for_each(aXAxis.begin(), aXAxis.end(), [](T_AxisOrderedElm &_E) { _E.second = false; });
+      for_each(aXAxis.begin(), aXAxis.end(), [](T_AxisOrderedElm &_E) { _E.second = false; });
       for_each(aChildren.begin(), aChildren.end(), [](BoxedRegion &_R) { _R.propagateResetChange(); });
     };
 
@@ -946,14 +949,29 @@ class BoxedRegion : public Box
         _B.registerParent(*this);
       };
     };
+
+    inline void erase(Box &_B) {
+      if (hasChildren()) {
+        BoxEraser eraser(_B);
+        for_each(aChildren.begin(), aChildren.end(), eraser);
+      } else {
+        eraseFromOrderedAxis(_B);
+      };
+    };
+    inline void remove(Box &_B) {
+      if (hasChildren()) {
+        for_each(aChildren.begin(), aChildren.end(), [&](BoxedRegion &_R) { _R.remove(_B); });
+      } else {
+        removeOnUpdateFromOrderedAxis(_B);
+      };
+    };
     inline void update(Box &_B) {
       if (!intersects(_B)) {
         erasePermanently(_B);
       } else if (hasChildren()) {
-        BoxUpdater updater(_B);
-        for_each(aChildren.begin(), aChildren.end(), updater);
+        for_each(aChildren.begin(), aChildren.end(), [&](BoxedRegion &_R) { _R.update(_B); });
       } else {
-        addToOrderedAxis(_B);
+        updateOrderedAxis(_B);
         _B.registerParent(*this);
       };
     };
@@ -965,14 +983,6 @@ class BoxedRegion : public Box
       };
     }
 
-    inline void erase(Box &_B) {
-      if (hasChildren()) {
-        BoxEraser eraser(_B);
-        for_each(aChildren.begin(), aChildren.end(), eraser);
-      } else {
-        eraseFromOrderedAxis(_B);
-      };
-    };
     inline void erasePermanently(Box &_B) {
       if (hasChildren()) {
         BoxPEraser eraser(_B);
@@ -1031,10 +1041,11 @@ class BoxedRegion : public Box
   private:
 
     inline void addToOrderedAxis(Box &_O) {
-      aXAxis.insert(OrderedAxisElm(false, false, _O));
-      aXAxis.insert(OrderedAxisElm(false, true, _O));
-      aYAxis.insert(OrderedAxisElm(true, false, _O));
-      aYAxis.insert(OrderedAxisElm(true, true, _O));
+      // for 'add' both axis are maintained - needed for split
+      aXAxis.insert(T_AxisOrderedElm(OrderedAxisElm(false, false, _O),true));
+      aXAxis.insert(T_AxisOrderedElm(OrderedAxisElm(false, true, _O),true));
+      aYAxis.insert(T_AxisOrderedElm(OrderedAxisElm(true, false, _O),true));
+      aYAxis.insert(T_AxisOrderedElm(OrderedAxisElm(true, true, _O),true));
     };
 
     inline void eraseFromOrderedAxis(Box &_O) {
@@ -1043,6 +1054,18 @@ class BoxedRegion : public Box
       aYAxis.erase(OrderedAxisElm(true, false, _O));
       aYAxis.erase(OrderedAxisElm(true, true, _O));
     };
+
+    inline void updateOrderedAxis(Box &_O) {
+      // for update only one axis is maintained - no need for both
+      aXAxis.insert(T_AxisOrderedElm(OrderedAxisElm(false, false, _O),true));
+      aXAxis.insert(T_AxisOrderedElm(OrderedAxisElm(false, true, _O),true));
+    };
+
+    inline void removeOnUpdateFromOrderedAxis(Box &_O) {
+      aXAxis.erase(OrderedAxisElm(false, false, _O));
+      aXAxis.erase(OrderedAxisElm(false, true, _O));
+    };
+
     inline void finalizeUpdateLoc() {
       //aXAxis.clear(); aYAxis.clear();
       //copy(aXAxisHash.begin(), aXAxisHash.end(), inserter(aXAxis, aXAxis.begin()));
@@ -1051,7 +1074,7 @@ class BoxedRegion : public Box
 
     inline double checkAxisSpan(int _Size, T_AxisOrdered &_Axis) {
       // return (*_Axis.rbegin()).first - (*_Axis.begin()).first;
-      return (*_Axis.rbegin()).getVal() - (*_Axis.begin()).getVal();
+      return (*_Axis.rbegin()).first.getVal() - (*_Axis.begin()).first.getVal();
     };
 
     inline bool checkXSplit(int _XSize, int _YSize) {
@@ -1109,7 +1132,7 @@ class BoxedRegion : public Box
         T_AxisOrdered &_ASplitAxis, T_AxisOrdered &_AKeepAxis, 
         T_AxisOrdered &_BSplitAxis, T_AxisOrdered &_BKeepAxis);
 
-    bool findAxisIntersectLoc(bool, T_AxisOrdered &, T_IntersCntr &, T_IntersCntr &, T_IntersCntr &);
+    bool findAxisIntersectLoc(T_AxisOrdered &, T_IntersCntr &, T_IntersCntr &, T_IntersCntr &);
     bool findIntersectLoc(T_IntersCntr &, T_IntersCntr &, T_IntersCntr &);
     bool splitLoc(int );
 
@@ -1452,7 +1475,8 @@ bool BoxedRegion::splitAxis(int _ASize, double &_Devider,
   BSplitAxis.clear();
   BSplitAxis.reserve(_SplitSrcAxis.size());
 
-  copy(_SplitSrcAxis.begin(), _SplitSrcAxis.end(), back_inserter(SplitAxis));
+  transform(_SplitSrcAxis.begin(), _SplitSrcAxis.end(), back_inserter(SplitAxis), 
+      [](T_AxisOrderedElm const &_E){ return _E.first;});
   SplitAxis.shrink_to_fit();
 
   // (SplitMark > 0) - checked earlier
@@ -1498,9 +1522,11 @@ bool BoxedRegion::splitAxis(int _ASize, double &_Devider,
   if (ASplitAxis.size() < SplitAxis.size() && BSplitAxis.size() < SplitAxis.size())
   {
     sort(ASplitAxis.begin(), ASplitAxis.end());
-    copy(ASplitAxis.begin(), ASplitAxis.end(), inserter(_ASplitAxis, _ASplitAxis.begin()));
+    transform(ASplitAxis.begin(), ASplitAxis.end(), inserter(_ASplitAxis, _ASplitAxis.begin()),
+        [](OrderedAxisElm const &_E) { return T_AxisOrderedElm(_E, false);});
     sort(BSplitAxis.begin(), BSplitAxis.end());
-    copy(BSplitAxis.begin(), BSplitAxis.end(), inserter(_BSplitAxis, _BSplitAxis.begin()));
+    transform(BSplitAxis.begin(), BSplitAxis.end(), inserter(_BSplitAxis, _BSplitAxis.begin()),
+        [](OrderedAxisElm const &_E) { return T_AxisOrderedElm(_E, false);});
 
     unordered_set<Box::T_Key, Box::KeyHash> AKeys, BKeys;
     transform(ASplitAxis.begin(), ASplitAxis.end(),
@@ -1512,10 +1538,10 @@ bool BoxedRegion::splitAxis(int _ASize, double &_Devider,
 
     copy_if(_KeepSrcAxis.begin(), _KeepSrcAxis.end(),
         inserter(_AKeepAxis, _AKeepAxis.begin()),
-        [&](T_AxisOrderedElm const &_E) { return AKeys.find(_E.getKey())!=AKeys.end(); });
+        [&](T_AxisOrderedElm const &_E) { return AKeys.find(_E.first.getKey())!=AKeys.end(); });
     copy_if(_KeepSrcAxis.begin(), _KeepSrcAxis.end(),
         inserter(_BKeepAxis, _BKeepAxis.begin()),
-        [&](T_AxisOrderedElm const &_E) { return BKeys.find(_E.getKey())!=BKeys.end(); });
+        [&](T_AxisOrderedElm const &_E) { return BKeys.find(_E.first.getKey())!=BKeys.end(); });
 
     //for_each(ASplitAxis.begin(), ASplitAxis.end(), [&](OrderedAxisElm &_E) { if(_E.isMaxSearch()) _E.registerParent(_A); });
     //for_each(BSplitAxis.begin(), BSplitAxis.end(), [&](OrderedAxisElm &_E) { if(_E.isMaxSearch()) _E.registerParent(_B); });
@@ -1570,134 +1596,7 @@ void BoxedRegion::merge()
 
 
 
-/*
-bool BoxedRegion::findAxisIntersectLocOld(
-    T_AxisOrdered &_Axis,
-    T_IntersCntr &_PP,
-    T_IntersCntr &_PE,
-    T_IntersCntr &_PH)
-{
-#ifndef NDEBUG
-#ifdef MY_TIMING
-  clock_t time = clock();
-#endif
-#endif
-
-  bool bFound = false;
-  T_ActiveCntr Active;
-
-  struct IntersectsInserter {
-    IntersectsInserter(T_IntersCntr &_PP, T_IntersCntr &_PE, T_IntersCntr &_PH,
-        T_BoxEdgeCntr const *_pEdgeCntr) : 
-      aPP(_PP),
-      aPE(_PE),
-      aPH(_PH),
-      apEdgeCntr(_pEdgeCntr) {
-      };
-
-    void operator ()(T_ActiveCntrElm _Elm)
-    {
-      T_IntersCntr *intersects = NULL;
-      int Id1, Id2;
-      if (!aElm.second || !_Elm.second) {
-        switch((aElm.first.second | _Elm.first.second)) {
-          case E_VrtxBox: 
-            {
-              if (aElm.first.first < _Elm.first.first) {
-                Id1 = aElm.first.first; Id2 = _Elm.first.first;
-              } else {
-                Id1 = _Elm.first.first; Id2 = aElm.first.first;
-              };
-              intersects = &aPP;
-            }; break;
-          case E_EdgeBox:
-            break;
-          case 3:
-            {
-              if (aElm.first.second == E_EdgeBox) {
-                Id1 = _Elm.first.first; Id2 = aElm.first.first;
-              } else {
-                Id1 = aElm.first.first; Id2 = _Elm.first.first;
-              }
-              intersects = apEdgeCntr ? apEdgeCntr->at(Id2).isMember(Id1) ?  NULL : &aPE : &aPE;
-            }; break;
-          case E_HalfPBox:
-            break;
-          case 5:
-            {
-              if (aElm.first.second == E_HalfPBox) {
-                Id1 = _Elm.first.first; Id2 = aElm.first.first;
-              } else {
-                Id1 = aElm.first.first; Id2 = _Elm.first.first;
-              }
-              // intersects = aEdgeCntr[Id2].isMember(Id1) ?  NULL : &aPE;
-              intersects = &aPH; break;
-            };
-        };
-
-#ifndef NDEBUG
-#if MY_DEBUG > 4
-        cout << __FUNCTION__
-          << ", Akey:" << aElm
-          << ", Bkey:" << _Elm
-          << ", Atype|Btype:" << (aElm.first.second|_Elm.first.second)
-          << ", Intersecs:" << intersects
-          << endl;
-#endif
-#endif
-        if(intersects) {
-          // intersects->insert(pair<int,int>(Id1, Id2));
-          intersects->push_back(pair<int,int>(Id1, Id2));
-        };
-      };
-    };
-
-    T_ActiveCntrElm aElm;
-    T_IntersCntr &aPP, &aPE, &aPH;
-    T_BoxEdgeCntr const *apEdgeCntr;
-  };
-
-  // 
-  // Looping over axis to find intersections
-  IntersectsInserter Inserter(_PP, _PE, _PH, apBoxedEdges);
-  for (T_AxisOrdered::const_iterator I=_Axis.begin(); I != _Axis.end(); ++I) {
-    Box::T_Key key = (*I).getKey();
-
-    if ((*I).isMaxSearch()) {
-      Active.erase(key);
-      continue;
-    };
-
-    if (Active.empty()) {
-      Active.insert(T_ActiveCntrElm(key, (*I).isFixed()));
-      continue;
-    };
-
-    T_ActiveCntrElm Elm(key, (*I).isFixed());
-
-    Inserter.aElm = Elm;
-    for_each(Active.begin(), Active.end(), Inserter);
-
-    Active.insert(Elm);
-
-    bFound = true;
-  };
-
-#ifndef NDEBUG
-#ifdef MY_TIMING
-  D_TIME_SEC3(time, "findIntersect Axis", getKey(), _Axis.size());
-#endif
-#endif
-
-
-  return bFound;
-}
-*/
-
-
-
 bool BoxedRegion::findAxisIntersectLoc(
-    bool _DirectionY,
     T_AxisOrdered &_Axis,
     T_IntersCntr &_PP,
     T_IntersCntr &_PE,
@@ -1713,15 +1612,14 @@ bool BoxedRegion::findAxisIntersectLoc(
 
   struct IntersectsInserter {
     IntersectsInserter(
-        bool _DirectionY,
+        vector<OrderedAxisElm>::iterator _I,
         T_IntersCntr &_PP,
         T_IntersCntr &_PE,
         T_IntersCntr &_PH,
         T_BoxPartCntr const *_pVrtxCntr,
         T_BoxEdgeCntr const *_pEdgeCntr,
         T_BoxHalfPCntr const *_pHalfPCntr) : 
-      aDirectionY(_DirectionY),
-      apElm(NULL),
+      apElm(_I),
       aPP(_PP),
       aPE(_PE),
       aPH(_PH),
@@ -1735,6 +1633,7 @@ bool BoxedRegion::findAxisIntersectLoc(
     {
       if (_Elm.isMaxSearch()) return;
       if ((*apElm).isFixed() && _Elm.isFixed()) return;
+      if (!(apElm->getBox()->intersectsY(*_Elm.getBox()))) return;
 
       T_IntersCntr *intersects = NULL;
       int Id1, Id2;
@@ -1747,8 +1646,7 @@ bool BoxedRegion::findAxisIntersectLoc(
             } else {
               Id1 = _Elm.getId(); Id2 = (*apElm).getId();
             };
-            if(apVrtxCntr->at(Id1).intersects(apVrtxCntr->at(Id2)))
-              intersects = &aPP;
+            intersects = &aPP;
           }; break;
         case E_EdgeBox:
           break;
@@ -1759,7 +1657,7 @@ bool BoxedRegion::findAxisIntersectLoc(
             } else {
               Id1 = (*apElm).getId(); Id2 = _Elm.getId();
             }
-            if(!apEdgeCntr->at(Id2).isMember(Id1) && apVrtxCntr->at(Id1).intersects(apEdgeCntr->at(Id2))) {
+            if(!apEdgeCntr->at(Id2).isMember(Id1)) {
               intersects = &aPE;
             };
           }; break;
@@ -1772,8 +1670,7 @@ bool BoxedRegion::findAxisIntersectLoc(
             } else {
               Id1 = (*apElm).getId(); Id2 = _Elm.getId();
             }
-            if(apVrtxCntr->at(Id1).intersects(apHalfPCntr->at(Id2)))
-              intersects = &aPH;
+            intersects = &aPH;
           }; break;
       };
 
@@ -1793,7 +1690,6 @@ bool BoxedRegion::findAxisIntersectLoc(
       };
     };
 
-    bool aDirectionY;
     vector<OrderedAxisElm>::iterator apElm;
     T_IntersCntr &aPP, &aPE, &aPH;
     T_BoxPartCntr const *apVrtxCntr;
@@ -1802,13 +1698,19 @@ bool BoxedRegion::findAxisIntersectLoc(
   };
 
 
-  vector<OrderedAxisElm> WeededAxis; WeededAxis.reserve(_Axis.size());
+  vector<OrderedAxisElm> WeededAxis;
+  // WeededAxis.reserve(_Axis.size());
   /*copy_if(_Axis.begin(), _Axis.end(), back_inserter(WeededAxis), 
       [&](T_AxisOrdered::value_type const &_E) { 
         AxisMark += _E.isMaxSearch() ? -1 : 1;
         return AxisMark > 0 && (_E.getKey() != (*++I).getKey());
       });*/
-  copy(_Axis.begin(), _Axis.end(), back_inserter(WeededAxis));
+  transform(_Axis.begin(), _Axis.end(), back_inserter(WeededAxis),
+      [](T_AxisOrderedElm const &_E) { return _E.first; });
+  /*
+  for_each(_Axis.begin(), _Axis.end(),
+      [&](T_AxisOrderedElm const &_E) { if(_E.second) WeededAxis.push_back(_E.first); });
+      */
 
 
   // 
@@ -1816,21 +1718,37 @@ bool BoxedRegion::findAxisIntersectLoc(
   // T_AxisOrdered::iterator I;
   vector<OrderedAxisElm>::iterator I;
   OrderedAxisElm AxisKey;
-  OrderedAxisElmCmp Cmp;
-  IntersectsInserter Inserter(_DirectionY, _PP, _PE, _PH, apBoxedVrtxs, apBoxedEdges, apBoxedHalfP);
-  for (I=WeededAxis.begin(), Inserter.apElm=WeededAxis.end(); I != WeededAxis.end(); ++I) {
+  IntersectsInserter Inserter(WeededAxis.end(), _PP, _PE, _PH, apBoxedVrtxs, apBoxedEdges, apBoxedHalfP);
+  for (I=WeededAxis.begin(); I != WeededAxis.end(); ++I) {
     if (!(*I).isMaxSearch()) {
-      if (Inserter.apElm != WeededAxis.end())
-        for_each(I, find(I, WeededAxis.end(), AxisKey.initAxisPair((*Inserter.apElm))), Inserter);
+      if (Inserter.apElm != WeededAxis.end()) {
+        for_each(I, find(I, WeededAxis.end(), AxisKey.initAxisPair(*(Inserter.apElm))), Inserter);
+      };
       Inserter.apElm = I;
     } else if (Inserter.apElm != WeededAxis.end() && (*Inserter.apElm).getKey() == (*I).getKey()) {
       Inserter.apElm = WeededAxis.end();
     };
   };
 
+  /*
+  T_AxisOrdered::iterator AI = _Axis.begin();
+  T_AxisOrdered::iterator AI2 = _Axis.end();
+  vector< T_AxisOrdered::iterator > tmp;
+  for (;AI != _Axis.end(); AI++) {
+    AI2 = AI; AI++;
+    if (!(AI2->first.isMaxSearch())) {
+      if (AI->first.isMaxSearch() && AI2->first.getKey() == AI->first.getKey())
+        continue;
+      else
+        tmp.push_back(AI2);
+    } else {
+    };
+  };
+  */
+
 #ifndef NDEBUG
 #ifdef MY_TIMING
-  D_TIME_SEC3(time, "findIntersect Axis", getKey(), _Axis.size());
+  D_TIME_SEC4(time, "findIntersect Axis", getKey(), _Axis.size(), WeededAxis.size());
 #endif
 #endif
 
@@ -1855,15 +1773,9 @@ bool BoxedRegion::findIntersectLoc(
 
   if (hasChanged() && isInitialized())
   {
-    bool DirectionY = aXAxis.size() > aYAxis.size();
-
-    T_AxisOrdered &SmallAxis = !DirectionY ? aXAxis : aYAxis;
-    T_AxisOrdered &BigAxis = DirectionY ? aXAxis : aYAxis;
     T_IntersCntr InterPP, InterPE, InterPH;
-
     aPP.clear(); aPE.clear(); aPH.clear();
-    findAxisIntersectLoc(DirectionY, SmallAxis, aPP, aPE, aPH);
-
+    findAxisIntersectLoc(aXAxis, aPP, aPE, aPH);
 
 #ifndef NDEBUG
 #if MY_TIMING > 0
@@ -1973,11 +1885,14 @@ class BoxedScene : Box
     inline void addToRegion(Box &_Box) {
       aRootRegion.add(_Box);
     };
+    inline void eraseFromRegion(Box &_Box) {
+      aRootRegion.erase(_Box);
+    };
     inline void updateToRegion(Box &_Box) {
       aRootRegion.update(_Box);
     };
-    inline void eraseFromRegion(Box &_Box) {
-      aRootRegion.erase(_Box);
+    inline void removeFromRegion(Box &_Box) {
+      aRootRegion.remove(_Box);
     };
 
     inline int getObjNum() const {
@@ -2206,7 +2121,7 @@ void BoxedScene::updateVrtx(TwoDScene const &_Scene, VectorXs const &_X, BoxedVr
 #endif
 #endif
 
-    eraseFromRegion(_O);
+    removeFromRegion(_O);
     _O.update(X, _Scene.getRadius(_O.getId()));
     updateToRegion(_O);
     _O.changed();
@@ -2227,7 +2142,7 @@ void BoxedScene::updateEdge(TwoDScene const &_Scene, BoxedEdge &_O) {
 #endif
 #endif
 
-    eraseFromRegion(_O);
+    removeFromRegion(_O);
     _O.update(_Scene.getEdgeRadii()[_O.getId()]);
     updateToRegion(_O);
     _O.changed();
