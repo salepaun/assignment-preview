@@ -156,7 +156,8 @@ ostream & dumpContainer(int _Limit, ostream &_s,
     char const * const _Name,
     size_t _Size,
     T_Iter const &_Begin,
-    T_Iter const &_End)
+    T_Iter const &_End,
+    char const * const _Sep=", ")
 {
   if (_Function) _s.write(_Function, strlen(_Function));
   if (_Name) _s.write(_Name, strlen(_Name));
@@ -164,7 +165,7 @@ ostream & dumpContainer(int _Limit, ostream &_s,
   _s << "Size=" << _Size;
   T_Iter I = _Begin;
   for(int i=0; i<_Limit && I!=_End; ++I, ++i) {
-    _s << ", " << *I;
+    _s << _Sep << *I;
   };
 
   return _s;
