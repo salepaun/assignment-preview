@@ -792,14 +792,15 @@ struct OrderedAxisElmHash {
 // typedef set<OrderedAxisElm, AxisCmp> T_AxisOrdered;
 // typedef map<double, Box*> T_AxisOrdered;
 // typedef vector<OrderedAxisElm> T_AxisOrdered;
-typedef map<OrderedAxisElm, bool> T_AxisOrdered;
-typedef unordered_set<OrderedAxisElm, OrderedAxisElmHash> T_AxisUnordered;
-typedef pair<OrderedAxisElm, bool> T_AxisOrderedElm;
-
-
-ostream & operator << (ostream &_s, T_AxisOrderedElm const &_o) {
+// typedef map<OrderedAxisElm, bool> T_AxisOrdered;
+// typedef pair<OrderedAxisElm, bool> T_AxisOrderedElm;
+/*ostream & operator << (ostream &_s, T_AxisOrderedElm const &_o) {
   return _s << _o.first;
-};
+};*/
+
+typedef unordered_set<OrderedAxisElm, OrderedAxisElmHash> T_AxisUnordered;
+typedef set<OrderedAxisElm> T_AxisOrdered;
+typedef OrderedAxisElm T_AxisOrderedElm;
 
 
 
@@ -1030,10 +1031,10 @@ class BoxedRegion : public Box
   private:
 
     inline void addToOrderedAxis(Box &_O) {
-      aXAxis.insert(T_AxisOrderedElm(OrderedAxisElm(false, false, _O),false));
-      aXAxis.insert(T_AxisOrderedElm(OrderedAxisElm(false, true, _O),false));
-      aYAxis.insert(T_AxisOrderedElm(OrderedAxisElm(true, false, _O),false));
-      aYAxis.insert(T_AxisOrderedElm(OrderedAxisElm(true, true, _O),false));
+      aXAxis.insert(OrderedAxisElm(false, false, _O));
+      aXAxis.insert(OrderedAxisElm(false, true, _O));
+      aYAxis.insert(OrderedAxisElm(true, false, _O));
+      aYAxis.insert(OrderedAxisElm(true, true, _O));
     };
 
     inline void eraseFromOrderedAxis(Box &_O) {
@@ -1050,7 +1051,7 @@ class BoxedRegion : public Box
 
     inline double checkAxisSpan(int _Size, T_AxisOrdered &_Axis) {
       // return (*_Axis.rbegin()).first - (*_Axis.begin()).first;
-      return (*_Axis.rbegin()).first.getVal() - (*_Axis.begin()).first.getVal();
+      return (*_Axis.rbegin()).getVal() - (*_Axis.begin()).getVal();
     };
 
     inline bool checkXSplit(int _XSize, int _YSize) {
@@ -1451,8 +1452,7 @@ bool BoxedRegion::splitAxis(int _ASize, double &_Devider,
   BSplitAxis.clear();
   BSplitAxis.reserve(_SplitSrcAxis.size());
 
-  transform(_SplitSrcAxis.begin(), _SplitSrcAxis.end(), back_inserter(SplitAxis), 
-      [](T_AxisOrderedElm const &_E){ return _E.first;});
+  copy(_SplitSrcAxis.begin(), _SplitSrcAxis.end(), back_inserter(SplitAxis));
   SplitAxis.shrink_to_fit();
 
   // (SplitMark > 0) - checked earlier
@@ -1498,11 +1498,9 @@ bool BoxedRegion::splitAxis(int _ASize, double &_Devider,
   if (ASplitAxis.size() < SplitAxis.size() && BSplitAxis.size() < SplitAxis.size())
   {
     sort(ASplitAxis.begin(), ASplitAxis.end());
-    transform(ASplitAxis.begin(), ASplitAxis.end(), inserter(_ASplitAxis, _ASplitAxis.begin()),
-        [](OrderedAxisElm const &_E) { return T_AxisOrderedElm(_E, false);});
+    copy(ASplitAxis.begin(), ASplitAxis.end(), inserter(_ASplitAxis, _ASplitAxis.begin()));
     sort(BSplitAxis.begin(), BSplitAxis.end());
-    transform(BSplitAxis.begin(), BSplitAxis.end(), inserter(_BSplitAxis, _BSplitAxis.begin()),
-        [](OrderedAxisElm const &_E) { return T_AxisOrderedElm(_E, false);});
+    copy(BSplitAxis.begin(), BSplitAxis.end(), inserter(_BSplitAxis, _BSplitAxis.begin()));
 
     unordered_set<Box::T_Key, Box::KeyHash> AKeys, BKeys;
     transform(ASplitAxis.begin(), ASplitAxis.end(),
@@ -1514,10 +1512,10 @@ bool BoxedRegion::splitAxis(int _ASize, double &_Devider,
 
     copy_if(_KeepSrcAxis.begin(), _KeepSrcAxis.end(),
         inserter(_AKeepAxis, _AKeepAxis.begin()),
-        [&](T_AxisOrderedElm const &_E) { return AKeys.find(_E.first.getKey())!=AKeys.end(); });
+        [&](T_AxisOrderedElm const &_E) { return AKeys.find(_E.getKey())!=AKeys.end(); });
     copy_if(_KeepSrcAxis.begin(), _KeepSrcAxis.end(),
         inserter(_BKeepAxis, _BKeepAxis.begin()),
-        [&](T_AxisOrderedElm const &_E) { return BKeys.find(_E.first.getKey())!=BKeys.end(); });
+        [&](T_AxisOrderedElm const &_E) { return BKeys.find(_E.getKey())!=BKeys.end(); });
 
     //for_each(ASplitAxis.begin(), ASplitAxis.end(), [&](OrderedAxisElm &_E) { if(_E.isMaxSearch()) _E.registerParent(_A); });
     //for_each(BSplitAxis.begin(), BSplitAxis.end(), [&](OrderedAxisElm &_E) { if(_E.isMaxSearch()) _E.registerParent(_B); });
@@ -1810,8 +1808,7 @@ bool BoxedRegion::findAxisIntersectLoc(
         AxisMark += _E.isMaxSearch() ? -1 : 1;
         return AxisMark > 0 && (_E.getKey() != (*++I).getKey());
       });*/
-  transform(_Axis.begin(), _Axis.end(), back_inserter(WeededAxis),
-      [](T_AxisOrderedElm const &_E) { return _E.first; });
+  copy(_Axis.begin(), _Axis.end(), back_inserter(WeededAxis));
 
 
   // 
