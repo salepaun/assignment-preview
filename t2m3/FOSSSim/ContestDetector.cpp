@@ -175,9 +175,9 @@ class Box
     inline bool isFixed() const { return aFixed; };
     inline void setFixed(bool _Fixed=true) { aFixed = _Fixed; };
 
-    inline bool hasXInf() const { return isinf(aBorder[0]) || isinf(aBorder[1]); };
-    inline bool hasYInf() const { return isinf(aBorder[2]) || isinf(aBorder[3]); };
-    inline bool hasInf() const { return hasXInf() || hasYInf(); };
+    inline bool hasXInf() const { return (std::isinf(aBorder[0]) || std::isinf(aBorder[1])); };
+    inline bool hasYInf() const { return (std::isinf(aBorder[2]) || std::isinf(aBorder[3])); };
+    inline bool hasInf() const { return (hasXInf() || hasYInf()); };
 
     inline double const & xmin() const { return aBorder[0]; };
     inline double const & xmax() const { return aBorder[1]; };
@@ -263,10 +263,10 @@ class Box
       expandNoInf(_B.getBoundry());
     };
     inline void expandNoInf(T_Boundry const &_B) {
-      if (!isinf(_B[0]) && (_B[0] < aBorder[0] || isinf(aBorder[0]))) aBorder[0] = _B[0];
-      if (!isinf(_B[1]) && (_B[1] > aBorder[1] || isinf(aBorder[1]))) aBorder[1] = _B[1];
-      if (!isinf(_B[2]) && (_B[2] < aBorder[2] || isinf(aBorder[2]))) aBorder[2] = _B[2];
-      if (!isinf(_B[3]) && (_B[3] > aBorder[3] || isinf(aBorder[3]))) aBorder[3] = _B[3];
+      if (!std::isinf(_B[0]) && (_B[0] < aBorder[0] || std::isinf(aBorder[0]))) aBorder[0] = _B[0];
+      if (!std::isinf(_B[1]) && (_B[1] > aBorder[1] || std::isinf(aBorder[1]))) aBorder[1] = _B[1];
+      if (!std::isinf(_B[2]) && (_B[2] < aBorder[2] || std::isinf(aBorder[2]))) aBorder[2] = _B[2];
+      if (!std::isinf(_B[3]) && (_B[3] > aBorder[3] || std::isinf(aBorder[3]))) aBorder[3] = _B[3];
     };
     inline void expand(Box const &_B) {
       expand(_B.getBoundry());
@@ -871,14 +871,6 @@ class BoxedRegion : public Box
       void operator ()(BoxedRegion &_R) { Res |= _R.findIntersect(PP, PE, PH); };
     };
 
-    /*struct AxisIntersectFinder {
-      bool Res = false;
-      T_AxisOrdered &A;
-      T_IntersCntr &PP, &PE, &PH;
-      AxisIntersectFinder(T_AxisOrdered &_A, T_IntersCntr &_PP, T_IntersCntr &_PE, T_IntersCntr &_PH) : A(_A), PP(_PP), PE(_PE), PH(_PH) { };
-      void operator ()(BoxedRegion &_R) { Res |= _R.findAxisIntersect(A, PP, PE, PH); };
-      };*/
-
     struct RegionsCounter {
       size_t Num;
       RegionsCounter() : Num(0) {};
@@ -1027,10 +1019,11 @@ class BoxedRegion : public Box
     };
 
     inline size_t countRegions() const {
-      // RegionsCounter counter;
-      // for_each(aChildren.begin(), aChildren.end(), counter);
-      size_t Num=1;
-      return Num + (aChildren.size() ? aChildren.at(0).countRegions() + aChildren.at(1).countRegions() : 0);
+      //size_t Num=1;
+      //return Num + (aChildren.size() ? aChildren.at(0).countRegions() + aChildren.at(1).countRegions() : 0);
+      RegionsCounter counter;
+      for_each(aChildren.begin(), aChildren.end(), counter);
+      return counter.Num;
     };
 
     ostream & toStr(ostream &) const;
@@ -1067,6 +1060,7 @@ class BoxedRegion : public Box
     };
 
     inline void finalizeUpdateLoc() {
+      // negative performance affect!
       //aXAxis.clear(); aYAxis.clear();
       //copy(aXAxisHash.begin(), aXAxisHash.end(), inserter(aXAxis, aXAxis.begin()));
       //copy(aYAxisHash.begin(), aYAxisHash.end(), inserter(aYAxis, aYAxis.begin()));
@@ -1120,7 +1114,6 @@ class BoxedRegion : public Box
     };
 
     inline bool splitChildren(int _RegionsGen) {
-      //for_each(aChildren.begin(), aChildren.end(), [&](BoxedRegion &_R) { _R.split(_RegionsGen); });
       RegionsSplitter splitter(_RegionsGen);
       for_each(aChildren.begin(), aChildren.end(), splitter);
       return true;
@@ -1632,45 +1625,37 @@ bool BoxedRegion::findAxisIntersectLoc(
     void operator ()(OrderedAxisElm const &_Elm)
     {
       if (_Elm.isMaxSearch()) return;
-      if ((*apElm).isFixed() && _Elm.isFixed()) return;
       if (!(apElm->getBox()->intersectsY(*_Elm.getBox()))) return;
+      if ((*apElm).isFixed() && _Elm.isFixed()) return;
 
-      T_IntersCntr *intersects = NULL;
-      int Id1, Id2;
-
-      switch(((*apElm).getType() | _Elm.getType())) {
+      switch((apElm->getType() | _Elm.getType())) {
         case E_VrtxBox: 
           {
-            if ((*apElm).getId() < _Elm.getId()) {
-              Id1 = (*apElm).getId(); Id2 = _Elm.getId();
-            } else {
-              Id1 = _Elm.getId(); Id2 = (*apElm).getId();
-            };
-            intersects = &aPP;
+            aPP.push_back( (apElm->getId() < _Elm.getId() ?
+                  pair<int,int>(apElm->getId(), _Elm.getId()) :
+                  pair<int,int>(_Elm.getId(), apElm->getId())));
           }; break;
         case E_EdgeBox:
           break;
         case 3:
           {
-            if ((*apElm).getType() == E_EdgeBox) {
-              Id1 = _Elm.getId(); Id2 = (*apElm).getId();
+            int Id1, Id2;
+            if (apElm->getType() == E_EdgeBox) {
+              Id1 = _Elm.getId(); Id2 = apElm->getId();
             } else {
-              Id1 = (*apElm).getId(); Id2 = _Elm.getId();
+              Id1 = apElm->getId(); Id2 = _Elm.getId();
             }
             if(!apEdgeCntr->at(Id2).isMember(Id1)) {
-              intersects = &aPE;
+              aPE.push_back(pair<int,int>(Id1, Id2));
             };
           }; break;
         case E_HalfPBox:
           break;
         case 5:
           {
-            if ((*apElm).getType() == E_HalfPBox) {
-              Id1 = _Elm.getId(); Id2 = (*apElm).getId();
-            } else {
-              Id1 = (*apElm).getId(); Id2 = _Elm.getId();
-            }
-            intersects = &aPH;
+            aPH.push_back((apElm->getType() == E_HalfPBox ?
+                  pair<int,int>(_Elm.getId(), apElm->getId()) :
+                  pair<int,int>(apElm->getId(), _Elm.getId())));
           }; break;
       };
 
@@ -1684,10 +1669,6 @@ bool BoxedRegion::findAxisIntersectLoc(
         << endl;
 #endif
 #endif
-      if(intersects) {
-        // intersects->insert(pair<int,int>(Id1, Id2));
-        intersects->push_back(pair<int,int>(Id1, Id2));
-      };
     };
 
     vector<OrderedAxisElm>::iterator apElm;
@@ -1773,7 +1754,6 @@ bool BoxedRegion::findIntersectLoc(
 
   if (hasChanged() && isInitialized())
   {
-    T_IntersCntr InterPP, InterPE, InterPH;
     aPP.clear(); aPE.clear(); aPH.clear();
     findAxisIntersectLoc(aXAxis, aPP, aPE, aPH);
 
@@ -1787,24 +1767,18 @@ bool BoxedRegion::findIntersectLoc(
 #ifndef NDEBUG
 #if MY_DEBUG > 0
     cout << __FUNCTION__ 
-      << " PPx:" << InterPP.size()
-      << " PEx:" << InterPE.size()
-      << " PHx:" << InterPH.size()
+      << " PPx:" << aPP.size()
+      << " PEx:" << aPE.size()
+      << " PHx:" << aPH.size()
       << " Region: " << getKey()
       << endl;
 #if MY_DEBUG > 3
     cout << __FUNCTION__ 
       << "\n** Intersections for Region:" << (*this);
-    dumpContainer<>(g_MaxCoutNum, cout, NULL, "\n **** iPP:",
-        InterPP.size(), InterPP.begin(), InterPP.end());
     dumpContainer<>(g_MaxCoutNum, cout, NULL, "\n **** aPP:",
         aPP.size(), aPP.begin(), aPP.end());
-    dumpContainer<>(g_MaxCoutNum, cout, NULL, "\n **** iPE:",
-        InterPE.size(), InterPE.begin(), InterPE.end());
     dumpContainer<>(g_MaxCoutNum, cout, NULL, "\n **** aPE:",
         aPE.size(), aPE.begin(), aPE.end());
-    dumpContainer<>(g_MaxCoutNum, cout, NULL, "\n **** iPH:",
-        InterPH.size(), InterPH.begin(), InterPH.end());
     dumpContainer<>(g_MaxCoutNum, cout, NULL, "\n **** aPH:",
         aPH.size(), aPH.begin(), aPH.end()) << endl;
 #endif
