@@ -45,10 +45,15 @@ using namespace std;
  */
 
 
+#ifndef NDEBUG
 // For now: 0,1,2,3,4,5
 #define MY_DEBUG 0
 // 0,1,2
 #define MY_TIMING 1
+#else
+#undef MY_DEBUG
+#undef MY_TIMING
+#endif
 
 
 #define D_TIME_SEC(a,b) cout << "= TIME:" << __FUNCTION__ \
