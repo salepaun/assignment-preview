@@ -50,7 +50,8 @@ static void calculateForceTorque(
     RigidBody &_RB)
 {
   Vector2s F = _F.dot(_Xnij) * _Xnij;
-  scalar T = _F.dot(_N) * _R.norm();
+  // scalar T = _F.dot(_N) * _R.norm();
+  scalar T = cross2s(_F, _R);
 
 #if MY_DEBUG > 1
   D1(" F=" << _F.transpose() << ", |F|=" << _F.norm()

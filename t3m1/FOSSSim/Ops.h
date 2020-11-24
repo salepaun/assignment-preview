@@ -17,7 +17,7 @@
 
 
 #ifndef NDEBUG
-#define MY_DEBUG 2
+#define MY_DEBUG 0
 
 #define D1(a) cout << __FUNCTION__ << ":" << a << endl;
 
