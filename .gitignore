@@ -19,5 +19,5 @@ Tests/!*.*
 **/build/**/*assets*
 !**/build/**/*.xml
 **/ParticlesDump*.xml
-**/FOSSSim
 **/FOSSSim_*
+**/build/FOSSSIM/*
