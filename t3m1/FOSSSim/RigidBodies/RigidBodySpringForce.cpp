@@ -44,6 +44,7 @@ static Vector2s calculateForce(
 static void calculateForceTorque(
     Vector2s const &_F,
     Vector2s const &_R,
+    Vector2s const &_Rn,
     Vector2s const &_Xnij,
     Vector2s const &_N,
     RigidBody &_RB)
@@ -142,13 +143,13 @@ void RigidBodySpringForce::computeForceAndTorque( std::vector<RigidBody>& rbs )
       Ri = Xi - rbs[IdxRBi].getX();
       Vector2s Rn = Ri; Rn.normalize();
       N = R90 * Rn;
-      calculateForceTorque(Force, Ri, Xnij, N, rbs[IdxRBi]);
+      calculateForceTorque(Force, Ri, Rn, Xnij, N, rbs[IdxRBi]);
     };
     if (!secondEndpointIsFixed()) {
       Rj = Xj - rbs[IdxRBj].getX();
       Vector2s Rn = Rj; Rn.normalize();
       N = R90 * Rn;
-      calculateForceTorque(-Force, Rj, Xnij, N, rbs[IdxRBj]);
+      calculateForceTorque(-Force, Rj, Rn, Xnij, N, rbs[IdxRBj]);
     };
   };
 

@@ -1,0 +1,24 @@
+<scene>
+  <simtype type="rigid-body"/>
+  <description text="Test gravity"/>
+  <viewport cx="5.0" cy="1.0" size="7.6"/>
+  <maxsimfreq max="1000.0"/>
+  <duration time="4.0"/>
+
+  <rigidbodyintegrator type="symplectic-euler" dt="0.001"/>
+
+  <rigidbodyvertex x="-0.5" y="3.5" m="1"/>
+  <rigidbodyvertex x="-0.5" y="4.5" m="1"/>
+  <rigidbodyvertex x=" 0.5" y="4.5" m="1"/>
+  <rigidbodyvertex x=" 0.5" y="3.5" m="1"/>
+  <rigidbody p="0" p="1" p="2" p="3" vx="2.5" vy="2.0" omega="1.5707963267948966" r="0.1"/>
+
+  <rigidbodyvertex x="-2.0" y="-2.0" m="2"/>
+  <rigidbodyvertex x="-2.0" y="-1.0" m="2"/>
+  <rigidbodyvertex x="-1.0" y="-1.0" m="2"/>
+  <rigidbodyvertex x="-1.0" y="-2.0" m="2"/>
+  <rigidbody p="4" p="5" p="6" p="7" vx="1.0" vy="1.0" omega="0.6" r="0.1"/>
+
+  <rigidbodygravityforce fx="1.0" fy="-2.0"/>
+
+</scene>
