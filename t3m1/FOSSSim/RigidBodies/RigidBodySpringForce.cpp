@@ -21,7 +21,16 @@ static Vector2s calculateForce(
     scalar const &_L0,
     scalar const &_K)
 {
-  return - _K * ((_Xi - _Xj).norm() - _L0) * _N;
+  scalar L = (_Xi - _Xj).norm();
+  Vector2s F = - _K * (L - _L0) * _N;
+
+#if MY_DEBUG > 1
+  D1(" F=" << F.transpose() << ", |F|=" << F.norm()
+      << ", L=" << L << ", L0=" << _L0
+      << ", N=" << _N.transpose());
+#endif
+
+  return F;
 }
 
 
@@ -35,17 +44,18 @@ static Vector2s calculateForce(
 static void calculateForceTorque(
     Vector2s const &_F,
     Vector2s const &_R,
-    Vector2s const &_Rn,
+    Vector2s const &_Xnij,
     Vector2s const &_N,
     RigidBody &_RB)
 {
-  Vector2s F = _F.dot(_Rn) * _Rn;
+  Vector2s F = _F.dot(_Xnij) * _Xnij;
   scalar T = _F.dot(_N) * _R.norm();
 
 #if MY_DEBUG > 1
   D1(" F=" << _F.transpose() << ", |F|=" << _F.norm()
       << ", Fl=" << F.transpose() << ", |Fl|=" << F.norm()
-      << ", Rn=" << _Rn.transpose() << ", |R|=" << _R.norm()
+      << ", Xnij=" << _Xnij.transpose() << ", |Xnij|=" << _Xnij.norm()
+      << ", R=" << _R.transpose() << ", |R|=" << _R.norm()
       << ", Torque=" << T);
 #endif
 
@@ -132,13 +142,13 @@ void RigidBodySpringForce::computeForceAndTorque( std::vector<RigidBody>& rbs )
       Ri = Xi - rbs[IdxRBi].getX();
       Vector2s Rn = Ri; Rn.normalize();
       N = R90 * Rn;
-      calculateForceTorque(Force, Ri, Rn, N, rbs[IdxRBi]);
+      calculateForceTorque(Force, Ri, Xnij, N, rbs[IdxRBi]);
     };
     if (!secondEndpointIsFixed()) {
       Rj = Xj - rbs[IdxRBj].getX();
       Vector2s Rn = Rj; Rn.normalize();
       N = R90 * Rn;
-      calculateForceTorque(-Force, Rj, Rn, N, rbs[IdxRBj]);
+      calculateForceTorque(-Force, Rj, Xnij, N, rbs[IdxRBj]);
     };
   };
 
