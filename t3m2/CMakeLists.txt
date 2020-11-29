@@ -4,6 +4,7 @@ cmake_minimum_required (VERSION 2.6.2)
 project (FOSSSim)
 set (FOSSSIM_VERSION "Fall 2010 v.A")
 add_definitions (-DFOSSSIM_VERSION="${FOSSSIM_VERSION}")
+add_definitions (-D_GLIBCXX_USE_CXX11_ABI=0)
 
 set(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/install")
 
