@@ -60,4 +60,3 @@ void RigidBodyVelocityProjectionCollisionResolver::resolveCollisions( std::vecto
 
   solve_quadprog(G, g0, CE, ce0, CI, ci0, x);
 }
-

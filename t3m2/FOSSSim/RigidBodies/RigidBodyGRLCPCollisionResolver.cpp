@@ -17,3 +17,4 @@ void RigidBodyGRLCPCollisionResolver::resolveCollisions( std::vector<RigidBody>&
   VectorXs lambda(4);
   lcputils::solveLCPwithODE( A, b, lambda );
 }
+
