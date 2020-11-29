@@ -76,7 +76,7 @@ void RigidBodyLCPCollisionResolver::resolveCollisions( std::vector<RigidBody>& r
       int i1 = I->i1;
       RigidBody &A = rbs[i0];
       RigidBody &B = rbs[i1];
-      Vector2s par1 = lambda(i) * I->nhat;
+      Vector2s par1 = -2 *lambda(i) * I->nhat;
       dVs[i0] += par1;
       dVs[i1] -= par1;
     };
