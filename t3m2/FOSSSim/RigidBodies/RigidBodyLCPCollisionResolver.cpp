@@ -50,9 +50,13 @@ void RigidBodyLCPCollisionResolver::resolveCollisions( std::vector<RigidBody>& r
 
   I = rbcs.begin();
   for (int i=0; I != rbcs.end(); ++I, ++i) {
-    J = I;
+    J = rbcs.begin();
     for (int j=0; J != rbcs.end(); ++J, ++j) {
-      A(i,j) = I->nhat.dot(J->nhat) / rbs[I->i0].getM() + I->nhat.dot(J->r0) * cross2s(J->nhat, (I->r0 / rbs[I->i0].getI()));
+      int i0 = I->i0;
+      int i1 = I->i1;
+      RigidBody &Arb = rbs[i0];
+      RigidBody &Brb = rbs[i1];
+      A(i,j) = I->nhat.dot(J->nhat / Arb.getM()) + I->nhat.dot(J->r0) * cross2s(J->nhat, (I->r0 / Arb.getI()));
     };
   };
 
@@ -76,7 +80,7 @@ void RigidBodyLCPCollisionResolver::resolveCollisions( std::vector<RigidBody>& r
       int i1 = I->i1;
       RigidBody &A = rbs[i0];
       RigidBody &B = rbs[i1];
-      Vector2s par1 = -2 *lambda(i) * I->nhat;
+      Vector2s par1 = lambda(i) * I->nhat;
       dVs[i0] += par1;
       dVs[i1] -= par1;
     };
