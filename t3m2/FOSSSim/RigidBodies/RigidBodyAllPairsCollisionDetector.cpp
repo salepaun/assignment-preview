@@ -1976,8 +1976,8 @@ static bool detectParticleEdge(
     Vector2s const &_X2,
     Vector2s const &_X3,
     Vector2s const &_E,
+    Vector2s &_R0,
     Vector2s &_R1,
-    Vector2s &_R2,
     Vector2s &_N,
     scalar &_D)
 {
@@ -1986,33 +1986,32 @@ static bool detectParticleEdge(
     Vector2s N, Xn;
     Xn = N = Vector2s::Zero();
 
-    scalar R1 = _A.getRadius();
-    scalar R2 = _B.getRadius();
+    scalar R0 = _A.getRadius();
+    scalar R1 = _B.getRadius();
 
     // alpha parameter (edge drop point absolute distance)
     Vector2s Vx;
     scalar sAlpha;
 
-    findAlpha(_X1, _X2, _X3, _X1, _X2, _X3, _N, Xn, sAlpha);
+    findAlpha(_X1, _X2, _X3, _X1, _X2, _X3, N, Xn, sAlpha);
 
     scalar D = N.norm();
 
-    bTouch = D < R1 + R2;
+    bTouch = D < R0 + R1;
 
     if (bTouch) {
-      _N = N;
+      _N = -N;
       _N.normalize();
-      _R1 = _X1 - _A.getX();
-      _R2 = Xn - _B.getX();
+      _R0 = _X1 - _A.getX();
+      _R1 = Xn - _B.getX();
       _D = D;
     };
 
-#if MY_DEBUG > 2
-    D1(setprecision(10)
-        << "\n  X1:" << X1.transpose() << ", X2:" << X2.transpose() << ", X3:" << X3.transpose()
+#if MY_DEBUG > 3
+    D1(" X1:" << _X1.transpose() << ", X2:" << _X2.transpose() << ", X3:" << _X3.transpose()
         << ", D:" << D << ", R1:" << R1 << ", R2:" << R2
-        << ", Alpha:" << sAlpha << ", Xx:" << n.transpose()
-        << ": T:" << bTouch << ", _N=(" << n.transpose() << ")");
+        << ", Alpha:" << sAlpha << ", N:" << N.transpose()
+        << ": T:" << bTouch << ", _N=(" << _N.transpose() << ")");
 #endif
 
     return bTouch;
@@ -2033,9 +2032,9 @@ void checkCollision(
 {
   int BVNum = _B.getNumVertices();
   double Dist = 0.0;
-  Vector2s R1, R2, N;
+  Vector2s R0, R1, N;
 
-  R1 = R2 = N = Vector2s::Zero();
+  R0 = R1 = N = Vector2s::Zero();
 
   T_IntersSet::const_iterator I = _VEPairs.begin();
   for (; I != _VEPairs.end(); ++I) {
@@ -2044,8 +2043,8 @@ void checkCollision(
     Vector2s X3 = _B.getWorldSpaceVertex((I->second + 1) % BVNum);
     Vector2s E = _B.computeWorldSpaceEdge(I->second);
 
-    if (detectParticleEdge(_A, _B, X1, X2, X3, E, R1, R2, N, Dist)) {
-      _Collisions.insert(RigidBodyCollision(_Ia, _Ib, R1, R2, N));
+    if (detectParticleEdge(_A, _B, X1, X2, X3, E, R0, R1, N, Dist)) {
+      _Collisions.insert(RigidBodyCollision(_Ia, _Ib, R0, R1, N));
     };
   };
 }
@@ -2159,6 +2158,8 @@ static ostream & operator << (ostream &_s, T_IntersCntr const &_o) {
 static ostream & operator << (ostream &_s, RigidBodyCollision const &_o) {
   return _s << "{" << _o.i0 << ":" << _o.i1
     << ", N=" << _o.nhat.transpose()
+    << ", R0=" << _o.r0.transpose()
+    << ", R1=" << _o.r1.transpose()
     << ", Eps=" << _o.m_eps << "}";
 };
 
@@ -2183,15 +2184,6 @@ void RigidBodyAllPairsCollisionDetector::detectCollisions( const std::vector<Rig
   // Compute all vertex-edge collisions between all pairs of rigid bodies.
   bool bFirst = false;
 
-#ifndef NDEBUG
-#if MY_DEBUG > 3
-
-  dumpContainer<>(g_MaxCoutNum, cout, __FUNCTION__, " **** got RBs:",
-      pppairs.size(), rbs.begin(), rbs.end()) << endl;
-
-#endif
-#endif
-
   switch(evaluateScene(rbs, bFirst)) {
     case EulerAlgo:
       estimateEuler(bFirst, rbs, collisions);
@@ -2206,13 +2198,9 @@ void RigidBodyAllPairsCollisionDetector::detectCollisions( const std::vector<Rig
       allIn(bFirst, rbs, collisions);
   };
 
-#ifndef NDEBUG
 #ifdef MY_DEBUG
-
   dumpContainer<>(g_MaxCoutNum, cout, __FUNCTION__, " **** Collisions:",
       collisions.size(), collisions.begin(), collisions.end()) << endl;
-
-#endif
 #endif
 }
 
