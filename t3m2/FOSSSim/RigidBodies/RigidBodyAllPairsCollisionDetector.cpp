@@ -2004,6 +2004,8 @@ static bool detectParticleEdge(
       _N.normalize();
       _R0 = _X1 - _A.getX();
       _R1 = Xn - _B.getX();
+      //_R0 = rotate((_X1-_N*R0) - _A.getX(), -_A.getTheta());
+      //_R1 = rotate((Xn+_N*R1) - _B.getX(), -_B.getTheta());
       _D = D;
     };
 
