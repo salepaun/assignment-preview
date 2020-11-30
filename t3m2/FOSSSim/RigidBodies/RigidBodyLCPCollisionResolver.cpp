@@ -17,11 +17,11 @@ typedef map<int, T_RBCntr::iterator> T_FreeRBs;
 
 
 
-int g_DebugCntrLimit = 10;
+static int g_DebugCntrLimit = 10;
 
 
 
-ostream & operator << (ostream &_s, T_FreeRBs::value_type const &_o) {
+static ostream & operator << (ostream &_s, T_FreeRBs::value_type const &_o) {
   return _s << _o.first;
 };
 
@@ -36,7 +36,7 @@ ostream & operator << (ostream &_s, T_FreeRBs::value_type const &_o) {
  * @param _I index of this contact point first RB
  * @param _J index of this contact point second RB
  */
-void buildGamma(int _K,
+static void buildGamma(int _K,
     int _Ii, int _Ij,
     T_FreeRBs const &_FreeRBs,
     Vector2s const &_Ri,
@@ -78,7 +78,7 @@ void buildGamma(int _K,
 /**
  * Builds matrix N for all collision points.
  */
-void buildN(
+static void buildN(
     int _K,
     T_FreeRBs const &_FreeRBs,
     T_Collisions const &_Colls,
@@ -108,7 +108,7 @@ void buildN(
 /**
  * Builds M matrix.
  */
-void buildM(
+static void buildM(
     int _K,
     T_FreeRBs const &_FreeRBs,
     MatrixXs &_M)
@@ -132,7 +132,7 @@ void buildM(
 /**
  * Builds Qdot vector.
  */
-void buildQdot(
+static void buildQdot(
     int _K,
     T_FreeRBs const &_FreeRBs,
     VectorXs &_Qdot)
@@ -156,7 +156,7 @@ void buildQdot(
 /**
  * Builds container with free RigidBodies.
  */
-void buildFreeRBs(
+static void buildFreeRBs(
     T_RBCntr &_RBs,
     T_FreeRBs &_FreeRBs,
     int &_K)
@@ -307,8 +307,8 @@ void RigidBodyLCPCollisionResolver::resolveCollisions( std::vector<RigidBody>& r
 
     T_FreeRBs::iterator I = FreeRBs.begin();
     for (int i=0; I != FreeRBs.end(); ++I, i+=3) {
-      I->second->getV() += dV.segment<2>(i);
-      I->second->getOmega() += dV(i+2);
+      I->second->getV() -= dV.segment<2>(i);
+      I->second->getOmega() -= dV(i+2);
     };
   };
 }
