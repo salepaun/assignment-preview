@@ -29,14 +29,33 @@ static ostream & operator << (ostream &_s, T_FreeRBs::value_type const &_o) {
 
 
 
+/**
+ * Builds Gamma matrix section for omega.
+ */
+static MatrixXs buildGammaSec(
+    int _Factor,
+    scalar const &_Theta,
+    Vector2s const &_R)
+{
+  MatrixXs GammaSec(2,3);
+  GammaSec <<
+    1, 0, -sin(_Theta)*_R.x() - cos(_Theta)*_R.y(),
+    0, 1,  cos(_Theta)*_R.x() - sin(_Theta)*_R.y();
+
+  return GammaSec * _Factor;
+}
+
+
+
 
 /**
- * Bulds Gamma matrix per contact point.
+ * Builds Gamma matrix per contact point.
  * @param _K number of not fixed rigid bodies
  * @param _I index of this contact point first RB
  * @param _J index of this contact point second RB
  */
-static void buildGamma(int _K,
+static void buildGamma(
+    int _K,
     int _Ii, int _Ij,
     T_FreeRBs const &_FreeRBs,
     Vector2s const &_Ri,
@@ -56,13 +75,9 @@ static void buildGamma(int _K,
   T_FreeRBs::const_iterator I = _FreeRBs.begin();
   for (int i=0; I != _FreeRBs.end(); ++I, i+=3) {
     if (I->first == _Ii) {
-      _Gamma.block<2,3>(0, i) << 
-        1, 0, -sin(ThetaI)*_Ri.x() - cos(ThetaI)*_Ri.y(),
-        0, 1,  cos(ThetaI)*_Ri.x() - sin(ThetaI)*_Ri.y();
+      _Gamma.block<2,3>(0, i) << buildGammaSec(1, ThetaI, _Ri);
     } else if (I->first == _Ij) {
-      _Gamma.block<2,3>( 0, i) << 
-        -1, 0, sin(ThetaJ)*_Rj.x() + cos(ThetaJ)*_Rj.y(),
-        0, -1,-cos(ThetaJ)*_Rj.x() - sin(ThetaJ)*_Rj.y();
+      _Gamma.block<2,3>( 0, i) << buildGammaSec(-1, ThetaJ, _Rj);
     };
   };
 
@@ -307,8 +322,8 @@ void RigidBodyLCPCollisionResolver::resolveCollisions( std::vector<RigidBody>& r
 
     T_FreeRBs::iterator I = FreeRBs.begin();
     for (int i=0; I != FreeRBs.end(); ++I, i+=3) {
-      I->second->getV() -= dV.segment<2>(i);
-      I->second->getOmega() -= dV(i+2);
+      I->second->getV() += dV.segment<2>(i);
+      I->second->getOmega() += dV(i+2);
     };
   };
 }

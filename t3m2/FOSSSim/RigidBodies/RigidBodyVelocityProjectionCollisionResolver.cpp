@@ -64,7 +64,7 @@ static void buildGamma(int _K,
     } else if (I->first == _Ij) {
       _Gamma.block<2,3>( 0, i) << 
         -1, 0, sin(ThetaJ)*_Rj.x() + cos(ThetaJ)*_Rj.y(),
-        0, -1,-cos(ThetaJ)*_Rj.x() - sin(ThetaJ)*_Rj.y();
+        0, -1,-cos(ThetaJ)*_Rj.x() + sin(ThetaJ)*_Rj.y();
     };
   };
 
