@@ -1,7 +1,10 @@
 #include "RigidBodyLCPCollisionResolver.h"
 
-#include "../Ops.h"
+#include <vector>
+#include <map>
+#include <algorithm>
 
+#include "../Ops.h"
 
 
 using namespace std;
@@ -9,6 +12,171 @@ using namespace std;
 
 typedef set<RigidBodyCollision> T_Collisions;
 typedef vector<RigidBody> T_RBCntr;
+typedef map<int, T_RBCntr::const_iterator> T_FreeRBs;
+
+
+
+
+int g_DebugCntrLimit = 10;
+
+
+
+ostream & operator << (ostream &_s, T_FreeRBs::value_type const &_o) {
+  return _s << _o.first;
+};
+
+
+
+
+
+
+/**
+ * Bulds Gamma matrix per contact point.
+ * @param _K number of not fixed rigid bodies
+ * @param _I index of this contact point first RB
+ * @param _J index of this contact point second RB
+ */
+void buildGamma(int _K,
+    int _Ii, int _Ij,
+    T_FreeRBs const &_FreeRBs,
+    Vector2s const &_Ri,
+    Vector2s const &_Rj,
+    MatrixXs &_Gamma)
+{
+  T_FreeRBs::const_iterator RBiI, RBjI;
+
+  _Gamma.resize(2, 3*_K);
+  _Gamma.setZero();
+
+  RBiI = _FreeRBs.find(_Ii);
+  RBjI = _FreeRBs.find(_Ij);
+  scalar ThetaI = RBiI != _FreeRBs.end() ? RBiI->second->getTheta() : 0.0;
+  scalar ThetaJ = RBjI != _FreeRBs.end() ? RBjI->second->getTheta() : 0.0;
+
+  T_FreeRBs::const_iterator I = _FreeRBs.begin();
+  for (int i=0; I != _FreeRBs.end(); ++I, i+=3) {
+    if (I->first == _Ii) {
+      _Gamma.block<2,3>(0, i) << 
+        1, 0, -sin(ThetaI)*_Ri.x() - cos(ThetaI)*_Ri.y(),
+        0, 1,  cos(ThetaI)*_Ri.y() - sin(ThetaI)*_Ri.y();
+    } else if (I->first == _Ij) {
+      _Gamma.block<2,3>( 0, i) << 
+        -1, 0, sin(ThetaJ)*_Rj.x() + cos(ThetaJ)*_Rj.y(),
+        0, -1,-cos(ThetaJ)*_Rj.y() - sin(ThetaJ)*_Rj.y();
+    };
+  };
+
+#if MY_DEBUG > 1
+  D1(" ** Gamma=\n" << _Gamma);
+#endif
+}
+
+
+
+
+/**
+ * Builds matrix N for all collision points.
+ */
+void buildN(
+    int _K,
+    T_FreeRBs const &_FreeRBs,
+    T_Collisions const &_Colls,
+    MatrixXs &_N)
+{
+  _N.resize(3*_K, _Colls.size());
+  _N.setZero();
+
+  T_Collisions::const_iterator I = _Colls.begin();
+  for (int i=0; I != _Colls.end(); ++I, ++i) {
+      int Ii = I->i0;
+      int Ij = I->i1;
+      MatrixXs Gamma;
+      buildGamma(_K, Ii, Ij, _FreeRBs, I->r0, I->r1, Gamma);
+      _N.col(i) = Gamma.transpose() * I->nhat;
+  }
+
+#if MY_DEBUG > 1
+  D1(" ** N=\n" << _N);
+#endif
+}
+
+
+
+
+
+/**
+ * Builds M matrix.
+ */
+void buildM(
+    int _K,
+    T_FreeRBs const &_FreeRBs,
+    MatrixXs &_M)
+{
+  _M.resize(3*_K, 3*_K);
+  _M.setZero();
+
+  T_FreeRBs::const_iterator I = _FreeRBs.begin();
+  for (int i=0; I != _FreeRBs.end(); ++I, i+=3) {
+    _M.block<3,3>(i,i).diagonal() << I->second->getM(), I->second->getM(), I->second->getI();
+  };
+
+#if MY_DEBUG > 1
+  D1(" ** M=\n" << _M);
+#endif
+}
+
+
+
+
+/**
+ * Builds Qdot vector.
+ */
+void buildQdot(
+    int _K,
+    T_FreeRBs const &_FreeRBs,
+    VectorXs &_Qdot)
+{
+  _Qdot.resize(3*_K);
+  _Qdot.setZero();
+
+  T_FreeRBs::const_iterator I = _FreeRBs.begin();
+  for (int j=0; I != _FreeRBs.end(); ++I, j+=3) {
+    _Qdot.segment<3>(j) << I->second->getV()(0), I->second->getV()(1), I->second->getOmega();
+  }
+
+#if MY_DEBUG > 1
+  D1(" ** Qdot=\n" << _Qdot.transpose());
+#endif
+}
+
+
+
+
+/**
+ * Builds container with free RigidBodies.
+ */
+void buildFreeRBs(
+    T_RBCntr const &_RBs,
+    T_FreeRBs &_FreeRBs,
+    int &_K)
+{
+  _FreeRBs.clear();
+
+  T_RBCntr::const_iterator I = _RBs.begin();
+  for (int i=0; I != _RBs.end(); ++I, i++) {
+    if (!I->isFixed()) {
+      _FreeRBs.insert(T_FreeRBs::value_type(i, I));
+    };
+  };
+
+  _K = _FreeRBs.size();
+
+#if MY_DEBUG > 1
+  dumpContainer(g_DebugCntrLimit, cout,
+      __FUNCTION__, ": FreeRBs:",
+      _FreeRBs.size(), _FreeRBs.begin(), _FreeRBs.end()) << endl;
+#endif
+}
 
 
 
@@ -34,7 +202,8 @@ void RigidBodyLCPCollisionResolver::resolveCollisions( std::vector<RigidBody>& r
   lcputils::solveLCPwithODE( A, b, lambda );
   */
 
-  int D = rbcs.size();
+  /*
+  int D = rbcs.size() << 1;
   MatrixXs A(D, D);
   VectorXs b(D);
   VectorXs lambda(D);
@@ -42,6 +211,7 @@ void RigidBodyLCPCollisionResolver::resolveCollisions( std::vector<RigidBody>& r
   vector<scalar> dOmegas;
 
   T_Collisions::const_iterator I,J;
+
 
   I = rbcs.begin();
   for (int i=0; I != rbcs.end(); ++I, ++i) {
@@ -72,7 +242,10 @@ void RigidBodyLCPCollisionResolver::resolveCollisions( std::vector<RigidBody>& r
 #endif
 
   dVs.resize(rbs.size());
+  fill(dVs.begin(), dVs.end(), Vector2s::Zero());
   dOmegas.resize(rbs.size());
+  fill(dOmegas.begin(), dOmegas.end(), 0.0);
+
   I = rbcs.begin();
   for (int i=0; I != rbcs.end(); ++I, ++i) {
     if (lambda(i) > 0) {
@@ -89,6 +262,66 @@ void RigidBodyLCPCollisionResolver::resolveCollisions( std::vector<RigidBody>& r
   vector<Vector2s>::iterator dVsIter = dVs.begin();
   for (int i=0; dVsIter != dVs.end(); ++dVsIter, ++i) {
     rbs[i].getV() += *dVsIter / rbs[i].getM();
+  };
+  */
+
+  if (rbcs.size())
+  {
+    MatrixXs M;
+    MatrixXs N;
+    VectorXs Qdot;
+    T_FreeRBs FreeRBs;
+    int K = 0;
+
+
+    buildFreeRBs(rbs, FreeRBs, K);
+    buildQdot(K, FreeRBs, Qdot); 
+    buildM(K, FreeRBs, M);
+    buildN(K, FreeRBs, rbcs, N);
+
+    MatrixXs A(N.cols(), N.cols());
+    VectorXs b(N.cols());
+    VectorXs lambda(N.cols());
+    vector<Vector2s> dVs;
+    vector<scalar> dOmegas;
+
+    A = N.transpose() * M.inverse() * N;
+    b = N.transpose() * Qdot;
+
+    lcputils::solveLCPwithODE( A, b, lambda );
+
+#if MY_DEBUG > 0
+    if (rbcs.size()) {
+      D1("** Collisions=" << rbcs.size()
+          << "\n** B=" << b.transpose()
+          << "\n** L=" << lambda.transpose()
+          << "\n** A=\n" << A);
+    }
+#endif
+
+
+    dVs.resize(rbs.size());
+    fill(dVs.begin(), dVs.end(), Vector2s::Zero());
+    dOmegas.resize(rbs.size());
+    fill(dOmegas.begin(), dOmegas.end(), 0.0);
+
+    T_Collisions::const_iterator I = rbcs.begin();
+    for (int i=0; I != rbcs.end(); ++I, ++i) {
+      if (lambda(i) > 0) {
+        int i0 = I->i0;
+        int i1 = I->i1;
+        RigidBody &A = rbs[i0];
+        RigidBody &B = rbs[i1];
+        Vector2s par1 = lambda(i) * I->nhat;
+        if (!A.isFixed()) dVs[i0] += par1;
+        if (!B.isFixed()) dVs[i1] -= par1;
+      };
+    };
+
+    vector<Vector2s>::iterator dVsIter = dVs.begin();
+    for (int i=0; dVsIter != dVs.end(); ++dVsIter, ++i) {
+      rbs[i].getV() += *dVsIter / rbs[i].getM();
+    };
   };
 }
 
