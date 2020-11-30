@@ -12,7 +12,7 @@ using namespace std;
 
 typedef set<RigidBodyCollision> T_Collisions;
 typedef vector<RigidBody> T_RBCntr;
-typedef map<int, T_RBCntr::const_iterator> T_FreeRBs;
+typedef map<int, T_RBCntr::iterator> T_FreeRBs;
 
 
 
@@ -58,15 +58,16 @@ void buildGamma(int _K,
     if (I->first == _Ii) {
       _Gamma.block<2,3>(0, i) << 
         1, 0, -sin(ThetaI)*_Ri.x() - cos(ThetaI)*_Ri.y(),
-        0, 1,  cos(ThetaI)*_Ri.y() - sin(ThetaI)*_Ri.y();
+        0, 1,  cos(ThetaI)*_Ri.x() - sin(ThetaI)*_Ri.y();
     } else if (I->first == _Ij) {
       _Gamma.block<2,3>( 0, i) << 
         -1, 0, sin(ThetaJ)*_Rj.x() + cos(ThetaJ)*_Rj.y(),
-        0, -1,-cos(ThetaJ)*_Rj.y() - sin(ThetaJ)*_Rj.y();
+        0, -1,-cos(ThetaJ)*_Rj.x() - sin(ThetaJ)*_Rj.y();
     };
   };
 
 #if MY_DEBUG > 1
+  D1(" ** ThetaI=" << ThetaI << ", ThetaJ=" << ThetaJ);
   D1(" ** Gamma=\n" << _Gamma);
 #endif
 }
@@ -156,13 +157,13 @@ void buildQdot(
  * Builds container with free RigidBodies.
  */
 void buildFreeRBs(
-    T_RBCntr const &_RBs,
+    T_RBCntr &_RBs,
     T_FreeRBs &_FreeRBs,
     int &_K)
 {
   _FreeRBs.clear();
 
-  T_RBCntr::const_iterator I = _RBs.begin();
+  T_RBCntr::iterator I = _RBs.begin();
   for (int i=0; I != _RBs.end(); ++I, i++) {
     if (!I->isFixed()) {
       _FreeRBs.insert(T_FreeRBs::value_type(i, I));
@@ -285,42 +286,29 @@ void RigidBodyLCPCollisionResolver::resolveCollisions( std::vector<RigidBody>& r
     vector<Vector2s> dVs;
     vector<scalar> dOmegas;
 
-    A = N.transpose() * M.inverse() * N;
+    MatrixXs Minv = M.inverse();
+
+    A = N.transpose() * Minv * N;
     b = N.transpose() * Qdot;
 
     lcputils::solveLCPwithODE( A, b, lambda );
+
+    VectorXs dV = Minv * N * lambda;
 
 #if MY_DEBUG > 0
     if (rbcs.size()) {
       D1("** Collisions=" << rbcs.size()
           << "\n** B=" << b.transpose()
           << "\n** L=" << lambda.transpose()
+          << "\n** dV=" << dV.transpose()
           << "\n** A=\n" << A);
     }
 #endif
 
-
-    dVs.resize(rbs.size());
-    fill(dVs.begin(), dVs.end(), Vector2s::Zero());
-    dOmegas.resize(rbs.size());
-    fill(dOmegas.begin(), dOmegas.end(), 0.0);
-
-    T_Collisions::const_iterator I = rbcs.begin();
-    for (int i=0; I != rbcs.end(); ++I, ++i) {
-      if (lambda(i) > 0) {
-        int i0 = I->i0;
-        int i1 = I->i1;
-        RigidBody &A = rbs[i0];
-        RigidBody &B = rbs[i1];
-        Vector2s par1 = lambda(i) * I->nhat;
-        if (!A.isFixed()) dVs[i0] += par1;
-        if (!B.isFixed()) dVs[i1] -= par1;
-      };
-    };
-
-    vector<Vector2s>::iterator dVsIter = dVs.begin();
-    for (int i=0; dVsIter != dVs.end(); ++dVsIter, ++i) {
-      rbs[i].getV() += *dVsIter / rbs[i].getM();
+    T_FreeRBs::iterator I = FreeRBs.begin();
+    for (int i=0; I != FreeRBs.end(); ++I, i+=3) {
+      I->second->getV() += dV.segment<2>(i);
+      I->second->getOmega() += dV(i+2);
     };
   };
 }
