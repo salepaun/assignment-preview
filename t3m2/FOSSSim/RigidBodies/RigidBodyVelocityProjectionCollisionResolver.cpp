@@ -292,12 +292,13 @@ void RigidBodyVelocityProjectionCollisionResolver::resolveCollisions( std::vecto
     for(int i=0; i < N.cols(); ++i) ci0[i] = 0;
     for(int i=0; i < D; ++i) for(int j=0; j < N.cols(); ++j) CI[i][j] = N(i,j);
 
-    solve_quadprog(G, g0, CE, ce0, CI, ci0, x);
+    double res = solve_quadprog(G, g0, CE, ce0, CI, ci0, x);
 
 
 #if MY_DEBUG > 0
     if (rbcs.size()) {
       D1("** Collisions=" << rbcs.size()
+          << ", solve_quadprog res=" << res
           << "\n** g0=" << b.transpose()
           << "\n** G=\n" << M
           << "\n** ci0=" << ci0
@@ -306,11 +307,13 @@ void RigidBodyVelocityProjectionCollisionResolver::resolveCollisions( std::vecto
     }
 #endif
 
-    T_FreeRBs::iterator I = FreeRBs.begin();
-    for (int i=0; I != FreeRBs.end(); ++I, i+=3) {
-      I->second->getV()[0] = x[i+0];
-      I->second->getV()[1] = x[i+1];
-      I->second->getOmega() = x[i+2];
+    if (!isinf(res)) {
+      T_FreeRBs::iterator I = FreeRBs.begin();
+      for (int i=0; I != FreeRBs.end(); ++I, i+=3) {
+        I->second->getV()[0] = x[i];
+        I->second->getV()[1] = x[i+1];
+        I->second->getOmega() = x[i+2];
+      };
     };
   };
 }
