@@ -21,3 +21,4 @@ Tests/!*.*
 **/ParticlesDump*.xml
 **/FOSSSim_*
 **/build/FOSSSIM/*
+*.zip
