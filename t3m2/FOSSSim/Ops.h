@@ -33,30 +33,30 @@
 
 #ifndef NDEBUG
 
-#define D1(a) cout << __FUNCTION__ << ":" << a << endl;
+#define D1(a) std::cout << __FUNCTION__ << ":" << a << std::endl;
 
-#define D_TIME_SEC(a,b) cout << "= TIME:" << __FUNCTION__ \
+#define D_TIME_SEC(a,b) std::cout << "= TIME:" << __FUNCTION__ \
   << ": " << (float)(clock()-a)/CLOCKS_PER_SEC << "[s]" \
 << ": " << b \
-<< endl; a = clock();
-#define D_TIME_SEC2(a,b,c) cout << "= TIME:" << __FUNCTION__ \
+<< std::endl; a = clock();
+#define D_TIME_SEC2(a,b,c) std::cout << "= TIME:" << __FUNCTION__ \
   << ": " << (float)(clock()-a)/CLOCKS_PER_SEC << "[s]" \
 << ": " << b \
 << ": " << c \
-<< endl; a = clock();
-#define D_TIME_SEC3(a,b,c,d) cout << "= TIME:" << __FUNCTION__ \
+<< std::endl; a = clock();
+#define D_TIME_SEC3(a,b,c,d) std::cout << "= TIME:" << __FUNCTION__ \
   << ": " << (float)(clock()-a)/CLOCKS_PER_SEC << "[s]" \
 << ": " << b \
 << ": " << c \
 << ": " << d \
-<< endl; a = clock();
-#define D_TIME_SEC4(a,b,c,d,e) cout << "= TIME:" << __FUNCTION__ \
+<< std::endl; a = clock();
+#define D_TIME_SEC4(a,b,c,d,e) std::cout << "= TIME:" << __FUNCTION__ \
   << ": " << (float)(clock()-a)/CLOCKS_PER_SEC << "[s]" \
 << ": " << b \
 << ": " << c \
 << ": " << d \
 << ": " << e \
-<< endl; a = clock();
+<< std::endl; a = clock();
 
 #endif
 
@@ -66,14 +66,12 @@
 
 
 
-using namespace std;
-
 
 /**
  * Type definitions.
  */
 
-typedef pair<Vector2s, Vector2s> T_VecPair;
+typedef std::pair<Vector2s, Vector2s> T_VecPair;
 
 
 typedef std::vector<RigidBody> T_RBodyCntr;
@@ -263,7 +261,7 @@ inline bool findCntrIntersect(T &_A, T &_B, T &_C) {
 
 
   template<typename T_Iter>
-ostream & dumpContainer(int _Limit, ostream &_s,
+std::ostream & dumpContainer(int _Limit, std::ostream &_s,
     char const * const _Function,
     char const * const _Name,
     size_t _Size,
@@ -324,14 +322,14 @@ unsigned int inline nCk(int n, int k)
  * @param _nA - the size of set A
  * @param _nB - the size of set B
  */
-static void combination2(int _nA, int _nB, set<pair<int, int> > &_Set)
+static void combination2(int _nA, int _nB, std::set<std::pair<int, int> > &_Set)
 {
   //unsigned int PairsNum = nCk(n, 2);
   //_Set.resize(PairsNum);
   _Set.clear();
   for(int i=0; i < _nA; ++i)
     for(int j=0; j < _nB; ++j)
-      _Set.insert(pair<int,int>(i,j));
+      _Set.insert(std::pair<int,int>(i,j));
 }
 
 
@@ -341,14 +339,14 @@ static void combination2(int _nA, int _nB, set<pair<int, int> > &_Set)
  * Creates combination '2' of n elements.
  * Clears the set.
  */
-static void combination(int n, set<pair<int, int> > &_Set)
+static void combination(int n, std::set<std::pair<int, int> > &_Set)
 {
   //unsigned int PairsNum = nCk(n, 2);
   //_Set.resize(PairsNum);
   _Set.clear();
   for(int i=0; i < n; ++i)
     for(int j=i+1; j < n; ++j)
-      _Set.insert(pair<int,int>(i,j));
+      _Set.insert(std::pair<int,int>(i,j));
 }
 
 
@@ -358,14 +356,14 @@ static void combination(int n, set<pair<int, int> > &_Set)
  * Creates combination '2' of n elements.
  * Clears the set.
  */
-static void combinationAll(int n, set<pair<int, int> > &_Set)
+static void combinationAll(int n, std::set<std::pair<int, int> > &_Set)
 {
   //unsigned int PairsNum = nCk(n, 2);
   //_Set.resize(PairsNum);
   _Set.clear();
   for(int i=0; i < n; ++i)
     for(int j=i; j < n; ++j)
-      _Set.insert(pair<int,int>(i,j));
+      _Set.insert(std::pair<int,int>(i,j));
 }
 
 

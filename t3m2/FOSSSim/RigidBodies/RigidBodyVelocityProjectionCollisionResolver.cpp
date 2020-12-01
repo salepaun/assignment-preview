@@ -3,18 +3,17 @@
 #include <vector>
 #include <map>
 #include <algorithm>
+#include <iostream>
 
 #include "../Ops.h"
 
 
-using namespace std;
 
 
 
-
-typedef set<RigidBodyCollision> T_Collisions;
-typedef vector<RigidBody> T_RBCntr;
-typedef map<int, T_RBCntr::iterator> T_FreeRBs;
+typedef std::set<RigidBodyCollision> T_Collisions;
+typedef std::vector<RigidBody> T_RBCntr;
+typedef std::map<int, T_RBCntr::iterator> T_FreeRBs;
 
 
 
@@ -23,7 +22,7 @@ static int g_DebugCntrLimit = 10;
 
 
 
-static ostream & operator << (ostream &_s, T_FreeRBs::value_type const &_o) {
+static std::ostream & operator << (std::ostream &_s, T_FreeRBs::value_type const &_o) {
   return _s << _o.first;
 };
 
@@ -52,7 +51,7 @@ static void buildGamma(int _K,
 
   RBiI = _FreeRBs.find(_Ii);
   RBjI = _FreeRBs.find(_Ij);
-  scalar ThetaI = RBiI != _FreeRBs.end() ? RBiI->second->getTheta() : 0.0;
+  scalar ThetaI = RBiI != _FreeRBs.end() ? RBiI->second->getTheta() : 1.0;
   scalar ThetaJ = RBjI != _FreeRBs.end() ? RBjI->second->getTheta() : 0.0;
 
   T_FreeRBs::const_iterator I = _FreeRBs.begin();
@@ -175,9 +174,9 @@ static void buildFreeRBs(
   _K = _FreeRBs.size();
 
 #if MY_DEBUG > 1
-  dumpContainer(g_DebugCntrLimit, cout,
+  dumpContainer(g_DebugCntrLimit, std::cout,
       __FUNCTION__, ": FreeRBs:",
-      _FreeRBs.size(), _FreeRBs.begin(), _FreeRBs.end()) << endl;
+      _FreeRBs.size(), _FreeRBs.begin(), _FreeRBs.end()) << std::endl;
 #endif
 }
 
@@ -292,6 +291,17 @@ void RigidBodyVelocityProjectionCollisionResolver::resolveCollisions( std::vecto
     for(int i=0; i < N.cols(); ++i) ci0[i] = 0;
     for(int i=0; i < D; ++i) for(int j=0; j < N.cols(); ++j) CI[i][j] = N(i,j);
 
+
+#if MY_DEBUG > 0
+    if (rbcs.size()) {
+      D1("** Collisions=" << rbcs.size()
+          << "\n** g0=" << b.transpose()
+          << "\n** G=\n" << M
+          << "\n** ci0=" << ci0
+          << "\n** CI=\n" << CI);
+    }
+#endif
+
     double res = solve_quadprog(G, g0, CE, ce0, CI, ci0, x);
 
 
@@ -299,10 +309,6 @@ void RigidBodyVelocityProjectionCollisionResolver::resolveCollisions( std::vecto
     if (rbcs.size()) {
       D1("** Collisions=" << rbcs.size()
           << ", solve_quadprog res=" << res
-          << "\n** g0=" << b.transpose()
-          << "\n** G=\n" << M
-          << "\n** ci0=" << ci0
-          << "\n** CI=\n" << CI
           << "\n** v=\n" << x);
     }
 #endif
