@@ -1,16 +1,27 @@
+#! /bin/python
+
 import os
 import subprocess
 import sys
+import argparse
 
+from os import path
 
-def find_tests(theme):
+def find_tests(args):
     """Find all of the test files in the assets directory."""
     test_files = []
-
-    for dirpath, dirnames, filenames in os.walk("/home/codio/workspace/assets/{}/" .format(theme)):
+    exclude = set()
+    if args.omit:
+        exclude = set(args.omit)
+    
+    assets_path = path.join(args.workpath, 'assets/{}/')
+    for dirpath, dirnames, filenames in os.walk(assets_path.format(args.dir)):
+        dirnames[:] = [d for d in dirnames if d not in exclude] 
         for filename in filenames:
-            if filename.endswith('.xml'):
-                test_files.append(os.path.join(dirpath, filename))
+            fullname = dirpath.split('/')[-1] + '/' + filename
+            if filename.endswith('.xml') and fullname not in exclude:
+                if args.specific is None or dirpath.split('/')[-1] in args.specific or fullname in args.specific:
+                    test_files.append(os.path.join(dirpath, filename))
 
     return test_files
 
@@ -21,6 +32,10 @@ def main():
     If there are extra credit tests, they can be run independently of the other tests
     by using the --extra or -e flags. To run specific tests, one can use the --specific
     or -s flags with the name of the test directory:
+    
+    --specific -s
+    --extra -e
+    --omit -o
 
     Examples
     --------
@@ -28,25 +43,35 @@ def main():
         $  python3 run_tests.py t4m1 -e
     $  python3 run_tests.py t4m1 -s SpringTests
     """
-    theme = sys.argv[1]
-    specific_tests = theme
-    if len(sys.argv) > 2:
-        if sys.argv[2] == "--extra" or sys.argv[2] == '-e':
-            specific_tests += "_optional"
-        if sys.argv[2] == "--specific" or sys.argv[2] == '-s':
-            specific_tests += "/{}" .format(sys.argv[3])
-
-    tests = find_tests(specific_tests)
+    
+    work_path = "/home/codio/workspace";
+    parser = argparse.ArgumentParser(description='Run Oracle tests')
+    parser.add_argument('-s', '--specific', nargs='*')
+    parser.add_argument('-e', '--extra', action='store_true')
+    parser.add_argument('-o', '--omit', nargs='*')
+    parser.add_argument('-p', '--workpath', default=work_path, type=str, help='Workspace path')
+    parser.add_argument('dir', type=str, help='Name of the theme')
+    args = parser.parse_args();
+    
+    theme = args.dir
+    
+    if args.extra:
+        args.dir += "_extracredit" 
+        
+    tests = find_tests(args)
     successful_tests = 0
     failed_tests = 0
 
     for test in sorted(tests):
         print('Running test {}: ' .format(test), end='')
-        subprocess.check_output(['/home/codio/workspace/build/FOSSSim/FOSSSim', '-s', '{}' .format(test),
-                                 '-d', '0', '-o', '/home/codio/workspace/test_output.bin'])
+        test_proc = path.join(args.workpath, 'build/FOSSSim/FOSSSim')
+        outfile = path.join(args.workpath, 'test_output.bin')
+        oracle_proc = path.join(args.workpath, 'oracle/FOSSSimOracle{}')
+        subprocess.check_output([test_proc, '-s', '{}' .format(test),
+                                 '-d', '0', '-o', outfile])
 
-        oracle = subprocess.check_output(['/home/codio/workspace/oracle/FOSSSimOracle{}' .format(theme.upper()),
-                                          '-s', '{}' .format(test), '-d', '0', '-i', '/home/codio/workspace/test_output.bin'],
+        oracle = subprocess.check_output([oracle_proc.format(theme.upper()),
+                                          '-s', '{}' .format(test), '-d', '0', '-i', outfile],
                                           universal_newlines=True)
 
         if 'Overall success: Passed.' in oracle:

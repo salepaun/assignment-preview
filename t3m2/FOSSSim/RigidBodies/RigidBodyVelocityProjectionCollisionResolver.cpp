@@ -190,14 +190,14 @@ void RigidBodyVelocityProjectionCollisionResolver::resolveCollisions( std::vecto
   /*
   // Example of using QuadProg++
   // For detailed documentation, please see FOSSSim/quadprog/QuadProg++.hh
- 
+
   // Matrix in quadratic form of objective
   QuadProgPP::Matrix<scalar> G;
   // Equality constraints
   QuadProgPP::Matrix<scalar> CE;
   // Inequality constraints
   QuadProgPP::Matrix<scalar> CI;
-  
+
   QuadProgPP::Vector<scalar> g0;
   QuadProgPP::Vector<scalar> ce0;
   QuadProgPP::Vector<scalar> ci0;
@@ -229,8 +229,8 @@ void RigidBodyVelocityProjectionCollisionResolver::resolveCollisions( std::vecto
 
   MatrixXs tempN(3,24);
   tempN << 0,  0,  0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-           1,  1,  1,  1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-          -5, -4, -3, -2, 2, 3, 4, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
+  1,  1,  1,  1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  -5, -4, -3, -2, 2, 3, 4, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
 
   for( int i = 0; i < 3; ++i ) for( int j = 0; j < 24; ++j ) CI[i][j] = tempN(i,j);
 
@@ -274,22 +274,24 @@ void RigidBodyVelocityProjectionCollisionResolver::resolveCollisions( std::vecto
 
     int D = 3*K;
 
-    G.resize(D,D);
-    g0.resize(D);
+    G.resize(0.0, D,D);
+    g0.resize(0.0, D);
 
     CE.resize(D,0);
     ce0.resize(0);
 
-    CI.resize(D, N.cols());
-    ci0.resize(N.cols());
+    CI.resize(0.0, D, N.cols());
+    ci0.resize(0.0, N.cols());
 
-    x.resize(D);
+    x.resize(0.0, D);
 
-    for(int i=0; i < M.rows(); ++i) G[i][i] = M(i,i);
+    for(int i=0; i < M.rows(); ++i) for(int j=0; j < M.cols(); ++j) G[i][j] = M(i,j);
     for(int i=0; i < b.size(); ++i) g0[i] = b[i];
 
-    for(int i=0; i < N.cols(); ++i) ci0[i] = 0;
     for(int i=0; i < D; ++i) for(int j=0; j < N.cols(); ++j) CI[i][j] = N(i,j);
+    //for(int i=0; i < N.cols(); ++i) ci0[i] = 0.0;
+
+    //for(int i=0; i < D; ++i) x[i] = 0.0;
 
 
 #if MY_DEBUG > 0
