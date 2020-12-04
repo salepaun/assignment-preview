@@ -48,6 +48,12 @@ void ElasticBodySpringForce::addGradEToTotal( const VectorXs& x, const VectorXs&
     Vector2s E = compParF(m_alpha, m_l0) * ((Xi-Xj).norm() - m_l0) * N;
     gradE.segment<2>(Idxi) += E;
     gradE.segment<2>(Idxj) += -E;
+
+#if MY_DEBUG > 0
+    D1("\n ** E = " << E.transpose()
+            << " ** GradEiT= " << gradE.segment<2>(Idxi).transpose()
+            << " ** GradEjT= " << gradE.segment<2>(Idxj).transpose());
+#endif 
 }
 
 void ElasticBodySpringForce::addHessXToTotal( const VectorXs& x, const VectorXs& v, const VectorXs& m, MatrixXs& hessE )
@@ -74,6 +80,10 @@ void ElasticBodySpringForce::addHessXToTotal( const VectorXs& x, const VectorXs&
     // Contribution from elastic component
     K = - compParF(m_alpha, m_l0) * (NNt + (L-m_l0)/L * (Id - NNt));
     updateHessianWithBlock(Idxi, Idxj, hessE, K);
+
+#if MY_DEBUG > 0
+    D1("\n ** K = " << K);
+#endif
 }
 
 void ElasticBodySpringForce::addHessVToTotal( const VectorXs& x, const VectorXs& v, const VectorXs& m, MatrixXs& hessE )

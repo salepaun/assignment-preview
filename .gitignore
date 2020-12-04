@@ -8,7 +8,7 @@ Tests/!*.*
 **/*.mp4
 **/*.core
 **/core
-**/build/*/*.txt
+**/build/**/*.txt
 **/build/CMakeFiles
 **/residual.txt
 **/ParticlesDump.xml
@@ -22,3 +22,4 @@ Tests/!*.*
 **/FOSSSim_*
 **/build/FOSSSIM/*
 *.zip
+**/build/**/*.log

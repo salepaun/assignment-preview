@@ -406,4 +406,28 @@ static Vector2s rotate(Vector2s const &_V, scalar _Theta)
 
 
 
+
+/**********************************************************************************
+ * Local geometry helper functions
+ */
+
+
+static inline scalar areaE(
+    Vector2s const &_Xb1,
+    Vector2s const &_Xb2)
+{
+  return 0.5 * (cross2s(_Xb1, _Xb2));
+}
+
+
+static inline scalar areaV(
+    Vector2s const &_X1,
+    Vector2s const &_X2,
+    Vector2s const &_X3)
+{
+  return areaE((_X3-_X1), (_X2-_X1));
+}
+
+
+
 #endif // OPS_H
