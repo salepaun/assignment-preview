@@ -16,6 +16,7 @@ void StableFluidsSim::diffuseD(int N, ArrayXs * x, ArrayXs * x0, scalar diff, sc
       {
         // Your code goes here!
         // Do diffuse for ([1, N], [1, N])
+        x(i,j) = x0(i,j) + a * (x(i-1,j)+x(i+1,j)+x(i,j-1)+x(i,j+1)) / (1+4*a);
       }
     }
   }
@@ -80,18 +81,35 @@ void StableFluidsSim::advectD(int N, ArrayXs * x, ArrayXs * x0, ArrayXs * u, Arr
   
   // Your code goes here!
   // Advect for ([1, N], [1, N])
+  float dt0, px, py;
+
+  dt0 = dt*N;
+
   for (int i = 1; i <= N; i++)
   {
     for (int j = 1; j <= N; j++)
     {
+      px = i - dt0 * u(i,j);
+      py = j - dt0 * v(i,j);
+      x(i,j) = interpolateD(x0, px, py);
     }
   }
 }
 
 scalar StableFluidsSim::interpolateD(ArrayXs * d, scalar i, scalar j)
 {
-    // Your code goes here!
-    // Note the indices should be CLAMP-ed to [0, m_N], since we have to use (i + 1) and (j + 1)
+  // Your code goes here!
+  // Note the indices should be CLAMP-ed to [0, m_N], since we have to use (i + 1) and (j + 1)
+  int i0, j0, i1, j1;
+  float s0, s1, t0, t1;
+
+  i0 = CLAMP(int(i), 0, m_N);
+  i1 = int(i) + 1;
+  j0 = CLAMP(int(j), 0, m_N);
+  j1 = int(j) + 1;
+
+  s1 = i-i0; s0 = 1-s1; t1 = j-j0; t0=1-t1;
+  return s0 * (t0*d(i0,j0) + t1*d(i0,j1)) + s1 * (t0*d(i1,j0) + t1*d(i1,j1));
 }
 
 scalar StableFluidsSim::interpolateU(ArrayXs * u, scalar i, scalar j)
