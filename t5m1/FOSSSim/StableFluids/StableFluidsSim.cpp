@@ -1,10 +1,13 @@
  #include "StableFluidsSim.h"
 #include <Eigen/LU>
 
+#include <iostream>
 
 #define LERP(a,b,x) (1-x)*a + x*b;
 
 
+//using namespace Eigen;
+//using Eigen::last;
 
 
 void StableFluidsSim::diffuseD(int N, ArrayXs * x, ArrayXs * x0, scalar diff, scalar dt)
@@ -22,7 +25,7 @@ void StableFluidsSim::diffuseD(int N, ArrayXs * x, ArrayXs * x0, scalar diff, sc
       {
         // Your code goes here!
         // Do diffuse for ([1, N], [1, N])
-        (*x)(i,j) = (*x0)(i,j) + a * ((*x)(i-1,j)+(*x)(i+1,j)+(*x)(i,j-1)+(*x)(i,j+1)) / (1+4*a);
+        (*x)(i,j) = ((*x0)(i,j) + a * ((*x)(i-1,j)+(*x)(i+1,j)+(*x)(i,j-1)+(*x)(i,j+1))) / (1+4*a);
       }
     }
   }
@@ -44,11 +47,11 @@ void StableFluidsSim::diffuseU(int N, ArrayXs * x, ArrayXs * x0, scalar diff, sc
         // Your code goes here! 
         // Do diffuse for ([1, N], [0, N]), note the case when (j == 0) or (j == N) need special treatment
         if (j == 0)
-          (*x)(i,j) = (*x0)(i,j) + a * ((*x)(i-1,j)+(*x)(i+1,j)+(*x)(i,j+1)) / (1+3*a);
+          (*x)(i,j) = ((*x0)(i,j) + a * ((*x)(i-1,j)+(*x)(i+1,j)+(*x)(i,j+1))) / (1+3*a);
         else if (j == N)
-          (*x)(i,j) = (*x0)(i,j) + a * ((*x)(i-1,j)+(*x)(i+1,j)+(*x)(i,j-1)) / (1+3*a);
+          (*x)(i,j) = ((*x0)(i,j) + a * ((*x)(i-1,j)+(*x)(i+1,j)+(*x)(i,j-1))) / (1+3*a);
         else
-          (*x)(i,j) = (*x0)(i,j) + a * ((*x)(i-1,j)+(*x)(i+1,j)+(*x)(i,j-1)+(*x)(i,j+1)) / (1+4*a);
+          (*x)(i,j) = ((*x0)(i,j) + a * ((*x)(i-1,j)+(*x)(i+1,j)+(*x)(i,j-1)+(*x)(i,j+1))) / (1+4*a);
       }
     }
   }
@@ -69,11 +72,11 @@ void StableFluidsSim::diffuseV(int N, ArrayXs * x, ArrayXs * x0, scalar diff, sc
       {
         // Your code goes here!
         if (i == 0)
-          (*x)(i,j) = (*x0)(i,j) + a * ((*x)(i+1,j)+(*x)(i,j-1)+(*x)(i,j+1)) / (1+3*a);
+          (*x)(i,j) = ((*x0)(i,j) + a * ((*x)(i+1,j)+(*x)(i,j-1)+(*x)(i,j+1))) / (1+3*a);
         else if (i == N)
-          (*x)(i,j) = (*x0)(i,j) + a * ((*x)(i-1,j)+(*x)(i,j-1)+(*x)(i,j+1)) / (1+3*a);
+          (*x)(i,j) = ((*x0)(i,j) + a * ((*x)(i-1,j)+(*x)(i,j-1)+(*x)(i,j+1))) / (1+3*a);
         else
-          (*x)(i,j) = (*x0)(i,j) + a * ((*x)(i-1,j)+(*x)(i+1,j)+(*x)(i,j-1)+(*x)(i,j+1)) / (1+4*a);
+          (*x)(i,j) = ((*x0)(i,j) + a * ((*x)(i-1,j)+(*x)(i+1,j)+(*x)(i,j-1)+(*x)(i,j+1))) / (1+4*a);
       }
     }
   }
@@ -87,17 +90,17 @@ void StableFluidsSim::advectD(int N, ArrayXs * x, ArrayXs * x0, ArrayXs * u, Arr
   
   // Your code goes here!
   // Advect for ([1, N], [1, N])
-  double dt0, px, py;
+  double dt0, pi, pj;
 
-  dt0 = dt*N;
+  dt0 = dt * N;
 
   for (int i = 1; i <= N; i++)
   {
     for (int j = 1; j <= N; j++)
     {
-      px = i - dt0 * (*u)(i,j);
-      py = j - dt0 * (*v)(i,j);
-      (*x)(i,j) = interpolateD(x0, px, py);
+      pi = i - dt0 * interpolateV(v, i, j);
+      pj = j - dt0 * interpolateU(u, i, j);
+      (*x)(i,j) = interpolateD(x0, pi, pj);
     }
   }
 }
@@ -164,6 +167,8 @@ scalar StableFluidsSim::interpolateV(ArrayXs * v, scalar i, scalar j)
   j1 = j0 + 1;
   s = CLAMP(i-i0-0.5, 0, 1);
   t = CLAMP(j-j0, 0, 1);
+  //v0 = LERP((*v)(i0,j0), (*v)(i0,j1), s);
+  //v1 = LERP((*v)(i1,j0), (*v)(i1,j1), s);
   v0 = LERP((*v)(i0,j0), (*v)(i1,j0), s);
   v1 = LERP((*v)(i0,j1), (*v)(i1,j1), s);
 
@@ -176,36 +181,42 @@ void StableFluidsSim::advectU(int N, ArrayXs * x, ArrayXs * x0, ArrayXs * u, Arr
   assert((*u == *u).all());
   assert((*v == *v).all());
   
-  double ux, uy, dt0;
-  dt0 = dt*N;
+  double ui, uj, dt0;
+
+  dt0 = dt * N;
 
   for (int i = 1; i <= N; i++)
   {
     for (int j = 0; j <= N; j++)
     {
       // Your code goes here!
-      
       // Add the origin of U grid to the coordinate before sampling, for example, sample at (i + 0, j + 0.5) when you need backtracing the old velocity at (i, j)
-      ux = i - dt0 * (*u)(i,j);
-      uy = j - dt0 * (*v)(i,j);
-      (*x)(i,j) = interpolateU(x0, ux, uy);
-      
+      ui = i - dt0 * interpolateV(v, i, j+0.5);
+      uj = j + 0.5 - dt0 * interpolateU(u, i, j+0.5);
       // Now you have the backward-traced velocity, minus it from the current position (i + 0, j + 0.5), then sample the velocity again.
+      (*x)(i,j) = interpolateU(x0, ui, uj);
     }
   }
 }
 
 void StableFluidsSim::advectV(int N, ArrayXs * x, ArrayXs * x0, ArrayXs * u, ArrayXs * v, scalar dt)
 {
-    assert((*x0 == *x0).all());
-    assert((*u == *u).all());
-    assert((*v == *v).all());
-  
+  assert((*x0 == *x0).all());
+  assert((*u == *u).all());
+  assert((*v == *v).all());
+
+  double v0, vi, vj, dt0;
+
+  dt0 = dt * N;
+
   for (int i = 0; i <= N; i++)
   {
     for (int j = 1; j <= N; j++)
     {
       // Your code goes here!
+      vi = i + 0.5 - dt0 * interpolateV(v, i+0.5, j);
+      vj = j - dt0 * interpolateU(u, i+0.5, j);
+      (*x)(i,j) = interpolateV(x0, vi, vj);
     }
   }
 }
@@ -224,15 +235,20 @@ void StableFluidsSim::project(int N, ArrayXs * u, ArrayXs * v, ArrayXs * u0, Arr
   // Your code goes here!
   
   // set solid boundary conditions, 0 the most top and bottom row / left and right column of u0, v0
-  
+  v0->row(0).setZero(); v0->row(v->rows()-1).setZero(); // u->row(last).setZero();
+  u0->col(0).setZero(); u0->col(u->cols()-1).setZero(); // v->col(last).setZero();
+  v->row(0).setZero(); v->row(v->rows()-1).setZero(); // v->row(last).setZero();
+  u->col(0).setZero(); u->col(u->cols()-1).setZero(); // u->col(last).setZero();
+
   for (int i = 1; i <= N; i++)
   {
     for (int j = 1; j <= N; j++)
     {
       // compute divergence of the velocity field, note the divergence field is available from ([1, N], [1, N])
+      div(i,j) =  -0.5 * h * ((*u)(i,j) - (*u)(i,j-1) + (*v)(i,j) - (*v)(i-1,j));
     }
   }
-  
+
   for (int k = 0; k < 20; k++)
   {
     for (int i = 1; i <= N; i++)
@@ -240,18 +256,32 @@ void StableFluidsSim::project(int N, ArrayXs * u, ArrayXs * v, ArrayXs * u0, Arr
       for (int j = 1; j <= N; j++) // IMPORTANT: DO NOT MODIFY THE LOOP ORDER
       {
         // solve for pressure inside the region ([1, N], [1, N])
+        // p(i,j) = (div(i,j)*h*h - p(i-1,j)+p(i+1,j)+p(i,j-1)+p(i,j+1)) / 4;
+        if (i==N) {
+          p(i,j) = (div(i,j) + p(i-1,j)+p(i,j-1)+p(i,j+1)) / 3;
+        } else if (j==N) {
+          p(i,j) = (div(i,j) + p(i-1,j)+p(i+1,j)+p(i,j-1)) / 3;
+        } else if (i==1) {
+          p(i,j) = (div(i,j) + p(i+1,j)+p(i,j-1)+p(i,j+1)) / 3;
+        } else if (j==1) {
+          p(i,j) = (div(i,j) + p(i-1,j)+p(i+1,j)+p(i,j+1)) / 3;
+        } else {
+          p(i,j) = (div(i,j) + p(i-1,j)+p(i+1,j)+p(i,j-1)+p(i,j+1)) / 4;
+        };
       }
     }
   }
-  
+
   (*u) = (*u0);
   (*v) = (*v0);
-  
+
   for (int i = 1; i <= N; i++)
   {
     for (int j = 1; j < N; j++)
     {
       // apply pressure to correct velocities ([1, N], [1, N)) for u, ([1, N), [1, N]) for v
+      (*u)(i,j) -= 0.5 * (p(i,j+1) - p(i,j)) / h;
+      (*v)(i,j) -= 0.5 * (p(i+1,j) - p(i,j)) / h;
     }
   }
 }
