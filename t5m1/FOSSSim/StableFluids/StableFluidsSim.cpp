@@ -167,8 +167,6 @@ scalar StableFluidsSim::interpolateV(ArrayXs * v, scalar i, scalar j)
   j1 = j0 + 1;
   s = CLAMP(i-i0-0.5, 0, 1);
   t = CLAMP(j-j0, 0, 1);
-  //v0 = LERP((*v)(i0,j0), (*v)(i0,j1), s);
-  //v1 = LERP((*v)(i1,j0), (*v)(i1,j1), s);
   v0 = LERP((*v)(i0,j0), (*v)(i1,j0), s);
   v1 = LERP((*v)(i0,j1), (*v)(i1,j1), s);
 
@@ -231,21 +229,25 @@ void StableFluidsSim::project(int N, ArrayXs * u, ArrayXs * v, ArrayXs * u0, Arr
   div.setZero();
   p.setZero();
   scalar h = 1.0 / N;
+  scalar a = 1.0;
   
   // Your code goes here!
   
   // set solid boundary conditions, 0 the most top and bottom row / left and right column of u0, v0
-  v0->row(0).setZero(); v0->row(v->rows()-1).setZero(); // u->row(last).setZero();
-  u0->col(0).setZero(); u0->col(u->cols()-1).setZero(); // v->col(last).setZero();
-  v->row(0).setZero(); v->row(v->rows()-1).setZero(); // v->row(last).setZero();
-  u->col(0).setZero(); u->col(u->cols()-1).setZero(); // u->col(last).setZero();
+  u0->col(0).setZero(); u0->col(N).setZero(); // u->col(last).setZero();
+  u0->row(0).setZero(); u0->row(N+1).setZero(); // u->row(last).setZero();
+  v0->row(0).setZero(); v0->row(N).setZero(); // v->row(last).setZero();
+  v0->col(0).setZero(); v0->col(N+1).setZero(); // v->col(last).setZero();
+
+  //std::cout << "u0: " << std::endl << *u0 << std::endl << std::endl;
+  //std::cout << "v0: " << std::endl << *v0 << std::endl << std::endl;
 
   for (int i = 1; i <= N; i++)
   {
     for (int j = 1; j <= N; j++)
     {
       // compute divergence of the velocity field, note the divergence field is available from ([1, N], [1, N])
-      div(i,j) =  -0.5 * h * ((*u)(i,j) - (*u)(i,j-1) + (*v)(i,j) - (*v)(i-1,j));
+      div(i,j) =  - h * ((*u0)(i,j) - (*u0)(i,j-1) + (*v0)(i,j) - (*v0)(i-1,j));
     }
   }
 
@@ -257,16 +259,24 @@ void StableFluidsSim::project(int N, ArrayXs * u, ArrayXs * v, ArrayXs * u0, Arr
       {
         // solve for pressure inside the region ([1, N], [1, N])
         // p(i,j) = (div(i,j)*h*h - p(i-1,j)+p(i+1,j)+p(i,j-1)+p(i,j+1)) / 4;
-        if (i==N) {
-          p(i,j) = (div(i,j) + p(i-1,j)+p(i,j-1)+p(i,j+1)) / 3;
+        if (i==1 && j==1) {
+          p(i,j) = (div(i,j)*a + p(i+1,j)+p(i,j+1)) / 2;
+        } else if (i==N && j==N) {
+          p(i,j) = (div(i,j)*a + p(i-1,j)+p(i,j-1)) / 2;
+        } else if (i==1 && j==N) {
+          p(i,j) = (div(i,j)*a + p(i+1,j)+p(i,j-1)) / 2;
+        } else if (i==N && j==1) {
+          p(i,j) = (div(i,j)*a + p(i-1,j)+p(i,j+1)) / 2;
+        } else if (i==N) {
+          p(i,j) = (div(i,j)*a + p(i-1,j)+p(i,j-1)+p(i,j+1)) / 3;
         } else if (j==N) {
-          p(i,j) = (div(i,j) + p(i-1,j)+p(i+1,j)+p(i,j-1)) / 3;
+          p(i,j) = (div(i,j)*a + p(i-1,j)+p(i+1,j)+p(i,j-1)) / 3;
         } else if (i==1) {
-          p(i,j) = (div(i,j) + p(i+1,j)+p(i,j-1)+p(i,j+1)) / 3;
+          p(i,j) = (div(i,j)*a + p(i+1,j)+p(i,j-1)+p(i,j+1)) / 3;
         } else if (j==1) {
-          p(i,j) = (div(i,j) + p(i-1,j)+p(i+1,j)+p(i,j+1)) / 3;
+          p(i,j) = (div(i,j)*a + p(i-1,j)+p(i+1,j)+p(i,j+1)) / 3;
         } else {
-          p(i,j) = (div(i,j) + p(i-1,j)+p(i+1,j)+p(i,j-1)+p(i,j+1)) / 4;
+          p(i,j) = (div(i,j)*a + p(i-1,j)+p(i+1,j)+p(i,j-1)+p(i,j+1)) / 4;
         };
       }
     }
@@ -277,11 +287,11 @@ void StableFluidsSim::project(int N, ArrayXs * u, ArrayXs * v, ArrayXs * u0, Arr
 
   for (int i = 1; i <= N; i++)
   {
-    for (int j = 1; j < N; j++)
+    for (int j = 1; j <= N; j++)
     {
       // apply pressure to correct velocities ([1, N], [1, N)) for u, ([1, N), [1, N]) for v
-      (*u)(i,j) -= 0.5 * (p(i,j+1) - p(i,j)) / h;
-      (*v)(i,j) -= 0.5 * (p(i+1,j) - p(i,j)) / h;
+      if (j < N) (*u)(i,j) -= (p(i,j+1) - p(i,j)) / h;
+      if (i < N) (*v)(i,j) -= (p(i+1,j) - p(i,j)) / h;
     }
   }
 }
