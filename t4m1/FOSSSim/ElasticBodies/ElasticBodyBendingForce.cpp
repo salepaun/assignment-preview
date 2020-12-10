@@ -110,9 +110,11 @@ void ElasticBodyBendingForce::addGradEToTotal( const VectorXs& x, const VectorXs
     // Your code goes here!
 
     int Ii, Ij, Ik;
-    Vector2s Xi, Xj, Xk, Eij, Ejk, Eik;
+    Vector2s Xi, Xj, Xk, Eij, Ejk, Eik, Nij, Njk, Nik;
     Matrix2s I = Matrix2s::Identity();
     Matrix2s R90; R90 << 0,-1,1,0;
+    Matrix2s R270; R270 << 0,1,-1,0;
+    Matrix2s Id = Matrix2s::Identity();
     Vector2s GradEPar, GradEiPar, GradEjPar, GradEkPar, GradEi, GradEj, GradEk;
 
     Ii = m_idx1 << 1; Ij = m_idx2 << 1; Ik = m_idx3 << 1;
@@ -122,6 +124,12 @@ void ElasticBodyBendingForce::addGradEToTotal( const VectorXs& x, const VectorXs
     Eij = Xi - Xj;
     Ejk = Xj - Xk;
     Eik = Xi - Xk;
+    Nij = Eij;
+    Njk = Ejk;
+    Nik = Eik;
+    Nij.normalize();
+    Njk.normalize();
+    Nik.normalize();
 
     scalar A = compGradEPar(m_alpha, m_theta0, m_eb1n, m_eb2n, Eij, Ejk);
 
@@ -143,6 +151,7 @@ void ElasticBodyBendingForce::addGradEToTotal( const VectorXs& x, const VectorXs
     GradEk[0] *= Xkx; GradEk[1] *= Xky;
     */
 
+    /*
     GradEiPar = GradEPar.x() * Ejk + GradEPar.y() * R90 * Ejk;
     GradEi = A * GradEiPar;
 
@@ -150,6 +159,27 @@ void ElasticBodyBendingForce::addGradEToTotal( const VectorXs& x, const VectorXs
     GradEj = A * GradEjPar;
 
     GradEkPar = GradEPar.x() * (-Eij) + GradEPar.y() * R90 * (Eij);
+    GradEk = A * GradEkPar;
+    */
+
+    /*
+    GradEiPar = Vector2s(GradEPar.x() * Nij.dot(Ejk), GradEPar.y() * cross2s(Nij, Ejk));
+    GradEi = A * GradEiPar;
+
+    GradEjPar = Vector2s(GradEPar.x() * (Njk.dot(Eij) - Nij.dot(Ejk)), GradEPar.y() * (-cross2s(Nij,Ejk) - cross2s(Njk, Eij)));
+    GradEj = A * GradEjPar;
+
+    GradEkPar = Vector2s(GradEPar.x() * -Njk.dot(Eij), GradEPar.y() * -cross2s(Njk, Eij));
+    GradEk = A * GradEkPar;
+    */
+
+    GradEiPar = GradEPar.x() * Ejk + GradEPar.y() * R270 * Ejk;
+    GradEi = A * GradEiPar;
+
+    GradEjPar = GradEPar.x() * (Eij - Ejk) + GradEPar.y() * R270 *(-Ejk - Eij);
+    GradEj = A * GradEjPar;
+
+    GradEkPar = GradEPar.x() * (-Eij) + GradEPar.y() * R270 * (Eij);
     GradEk = A * GradEkPar;
 
 
