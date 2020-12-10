@@ -70,6 +70,34 @@ static inline void compGradAtan2(
 
 
 
+static inline void compGradX(
+        Vector2s const &_Eij,
+        Vector2s const &_Ejk,
+        Matrix2s const &_R,
+        MatrixXs &_GradX)
+{
+    _GradX.resize(3,2);
+    _GradX.row(0) = _Ejk;
+    _GradX.row(1) = _Eij - _Ejk;
+    _GradX.row(2) = -_Eij;
+}
+
+
+
+static inline void compGradY(
+        Vector2s const &_Eij,
+        Vector2s const &_Ejk,
+        Matrix2s const &_R,
+        MatrixXs &_GradY)
+{
+    _GradY.resize(3,2);
+    _GradY.row(0) = _R * _Ejk;
+    _GradY.row(1) = _R * (-_Eij - _Ejk);
+    _GradY.row(2) = _R * _Eij;
+}
+
+
+
 void ElasticBodyBendingForce::addEnergyToTotal( const VectorXs& x, const VectorXs& v, const VectorXs& m, scalar& E )
 {
     assert( x.size() == v.size() );
@@ -135,22 +163,6 @@ void ElasticBodyBendingForce::addGradEToTotal( const VectorXs& x, const VectorXs
 
     compGradAtan2(Eij, Ejk, GradEPar);
 
-    // GradEi = GradEj = GradEk = A * GradEPar;
-    // scalar Xix, Xiy, Xjx, Xjy, Xkx, Xky;
-    /*
-    Xix = (Ejk.x() + Ejk.y());
-    Xiy = (-Ejk.x() + Ejk.y());
-    GradEi[0] *= Xix; GradEi[1] *= Xiy;
-
-    Xjx = Eik.x() + Eik.y() - 2 * (Xj.x() + Xj.y());
-    Xjy = Eik.x() - Eik.y();
-    GradEj[0] *= Xjx; GradEj[1] *= Xjy;
-
-    Xkx = -(Eij.x() + Eij.y());
-    Xky = (-Eij.x() + Eij.y());
-    GradEk[0] *= Xkx; GradEk[1] *= Xky;
-    */
-
     /*
     GradEiPar = GradEPar.x() * Ejk + GradEPar.y() * R90 * Ejk;
     GradEi = A * GradEiPar;
@@ -173,6 +185,7 @@ void ElasticBodyBendingForce::addGradEToTotal( const VectorXs& x, const VectorXs
     GradEk = A * GradEkPar;
     */
 
+    /*
     GradEiPar = GradEPar.x() * Ejk + GradEPar.y() * R270 * Ejk;
     GradEi = A * GradEiPar;
 
@@ -181,36 +194,25 @@ void ElasticBodyBendingForce::addGradEToTotal( const VectorXs& x, const VectorXs
 
     GradEkPar = GradEPar.x() * (-Eij) + GradEPar.y() * R270 * (Eij);
     GradEk = A * GradEkPar;
+    */
 
+    MatrixXs GradE(3,2), GradQX(3,2), GradQY(3,2), GradQ(3,2);
 
-    gradE.segment<2>(Ii) += GradEi;
-    gradE.segment<2>(Ij) += GradEj;
-    gradE.segment<2>(Ik) += GradEk;
+    compGradX(Eij, Ejk, R270, GradQX);
+    compGradY(Eij, Ejk, R270, GradQY);
+    GradQ = GradEPar.x() * GradQX + GradEPar.y() * GradQY;
+    GradE = A * GradQ;
+
+    gradE.segment<2>(Ii) += GradE.row(0);
+    gradE.segment<2>(Ij) += GradE.row(1);
+    gradE.segment<2>(Ik) += GradE.row(2);
 
 #if MY_DEBUG > 0
-    /*
     D1(" Par=" << A
             << "\n ** Eij=" << Eij.transpose() << ", Ejk=" << Ejk.transpose() << ", Eik=" << Eik.transpose()
-            << "\n ** Xix=" << Xix << ", Xiy=" << Xiy
-            << " ** Xjx=" << Xjx << ", Xjy=" << Xjy
-            << " ** Xkx=" << Xkx << ", Xky=" << Xky
-            << "\n ** GradPar= " << GradEPar.transpose()
-            << "\n ** GradEi = " << GradEi.transpose()
-            << " ** GradEj = " << GradEj.transpose()
-            << " ** GradEk = " << GradEk.transpose()
-            << "\n ** GradEiT= " << gradE.segment<2>(Ii).transpose()
-            << " ** GradEjT= " << gradE.segment<2>(Ij).transpose()
-            << " ** GradEkT= " << gradE.segment<2>(Ik).transpose());
-            */
-    D1(" Par=" << A
-            << "\n ** Eij=" << Eij.transpose() << ", Ejk=" << Ejk.transpose() << ", Eik=" << Eik.transpose()
-            << "\n ** GradPar= " << GradEPar.transpose()
-            << "\n ** GradEiPar = " << GradEiPar.transpose()
-            << " ** GradEjPar = " << GradEjPar.transpose()
-            << " ** GradEkPar = " << GradEkPar.transpose()
-            << "\n ** GradEi = " << GradEi.transpose()
-            << " ** GradEj = " << GradEj.transpose()
-            << " ** GradEk = " << GradEk.transpose()
+            << "\n ** GradEPar = " << GradEiPar.transpose()
+            << "\n ** GradQ:\n" << GradQ
+            << "\n ** GradE:\n" << GradE
             << "\n ** GradEiT= " << gradE.segment<2>(Ii).transpose()
             << " ** GradEjT= " << gradE.segment<2>(Ij).transpose()
             << " ** GradEkT= " << gradE.segment<2>(Ik).transpose());
