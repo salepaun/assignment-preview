@@ -25,6 +25,15 @@ static inline scalar compTheta(
 }
 
 
+static inline scalar compA(
+        scalar const &_Alpha,
+        scalar const &_Eij0,
+        scalar const &_Ejk0)
+{
+    return _Alpha / (_Eij0 + _Ejk0);
+}
+
+
 static inline scalar compGradEPar(
         scalar const &_Alpha,
         scalar const &_Theta0,
@@ -34,7 +43,7 @@ static inline scalar compGradEPar(
         Vector2s const &_Ejk)
 {
     scalar Theta = compTheta(_Eij, _Ejk);
-    scalar A = _Alpha / (_Eij0 + _Ejk0) * (Theta - _Theta0);
+    scalar A = compA(_Alpha, _Eij0, _Ejk0) * (Theta - _Theta0);
 
 #if MY_DEBUG > 1
     D1("A=" << A
@@ -50,14 +59,18 @@ static inline scalar compGradEPar(
 static inline void compGradAtan2(
         Vector2s const &_Eij,
         Vector2s const &_Ejk,
-        Vector2s &_GradThetaPar)
+        Vector2s &_GradThetaPar,
+        scalar &_X,
+        scalar &_Y,
+        scalar &_B)
 {
     scalar X, Y, B;
     Y = cross2s(_Eij, _Ejk);
     X = _Eij.dot(_Ejk);
     B = X*X + Y*Y;
+
     _GradThetaPar << (-Y / B), (X / B);
-    //_GradThetaPar << (X / B), (-Y / B);
+    _X = X; _Y = Y; _B = B;
 
 #if MY_DEBUG > 1
     D1("Eij=" << _Eij.transpose()
@@ -70,7 +83,7 @@ static inline void compGradAtan2(
 
 
 
-static inline void compGradX(
+static inline void compGradQX(
         Vector2s const &_Eij,
         Vector2s const &_Ejk,
         Matrix2s const &_R,
@@ -84,7 +97,7 @@ static inline void compGradX(
 
 
 
-static inline void compGradY(
+static inline void compGradQY(
         Vector2s const &_Eij,
         Vector2s const &_Ejk,
         Matrix2s const &_R,
@@ -94,6 +107,28 @@ static inline void compGradY(
     _GradY.row(0) = _R * _Ejk;
     _GradY.row(1) = _R * (-_Eij - _Ejk);
     _GradY.row(2) = _R * _Eij;
+}
+
+
+
+static inline void compGradQ(
+        Vector2s const &_Eij,
+        Vector2s const &_Ejk,
+        Matrix2s const &_R,
+        MatrixXs &_GradQ,
+        MatrixXs &_GradQX,
+        MatrixXs &_GradQY,
+        scalar &_X,
+        scalar &_Y,
+        scalar &_B)
+{
+    Vector2s GradQPar;
+
+    compGradAtan2(_Eij, _Ejk, GradQPar, _X, _Y, _B);
+    compGradQX(_Eij, _Ejk, _R, _GradQX);
+    compGradQY(_Eij, _Ejk, _R, _GradQY);
+
+    _GradQ = GradQPar.x() * _GradQX + GradQPar.y() * _GradQY;
 }
 
 
@@ -143,7 +178,7 @@ void ElasticBodyBendingForce::addGradEToTotal( const VectorXs& x, const VectorXs
     Matrix2s R90; R90 << 0,-1,1,0;
     Matrix2s R270; R270 << 0,1,-1,0;
     Matrix2s Id = Matrix2s::Identity();
-    Vector2s GradEPar, GradEiPar, GradEjPar, GradEkPar, GradEi, GradEj, GradEk;
+    // Vector2s GradEPar, GradEiPar, GradEjPar, GradEkPar, GradEi, GradEj, GradEk;
 
     Ii = m_idx1 << 1; Ij = m_idx2 << 1; Ik = m_idx3 << 1;
     Xi = x.segment<2>(Ii);
@@ -152,6 +187,7 @@ void ElasticBodyBendingForce::addGradEToTotal( const VectorXs& x, const VectorXs
     Eij = Xi - Xj;
     Ejk = Xj - Xk;
     Eik = Xi - Xk;
+    /*
     Nij = Eij;
     Njk = Ejk;
     Nik = Eik;
@@ -159,9 +195,10 @@ void ElasticBodyBendingForce::addGradEToTotal( const VectorXs& x, const VectorXs
     Njk.normalize();
     Nik.normalize();
 
-    scalar A = compGradEPar(m_alpha, m_theta0, m_eb1n, m_eb2n, Eij, Ejk);
-
     compGradAtan2(Eij, Ejk, GradEPar);
+    */
+
+    scalar A = compGradEPar(m_alpha, m_theta0, m_eb1n, m_eb2n, Eij, Ejk);
 
     /*
     GradEiPar = GradEPar.x() * Ejk + GradEPar.y() * R90 * Ejk;
@@ -196,11 +233,10 @@ void ElasticBodyBendingForce::addGradEToTotal( const VectorXs& x, const VectorXs
     GradEk = A * GradEkPar;
     */
 
-    MatrixXs GradE(3,2), GradQX(3,2), GradQY(3,2), GradQ(3,2);
+    MatrixXs GradE(3,2), GradQ(3,2), GradQX(3,2), GradQY(3,2);
+    scalar X, Y, B;
 
-    compGradX(Eij, Ejk, R270, GradQX);
-    compGradY(Eij, Ejk, R270, GradQY);
-    GradQ = GradEPar.x() * GradQX + GradEPar.y() * GradQY;
+    compGradQ(Eij, Ejk, R270, GradQ, GradQX, GradQY, X, Y, B);
     GradE = A * GradQ;
 
     gradE.segment<2>(Ii) += GradE.row(0);
@@ -210,7 +246,6 @@ void ElasticBodyBendingForce::addGradEToTotal( const VectorXs& x, const VectorXs
 #if MY_DEBUG > 0
     D1(" Par=" << A
             << "\n ** Eij=" << Eij.transpose() << ", Ejk=" << Ejk.transpose() << ", Eik=" << Eik.transpose()
-            << "\n ** GradEPar = " << GradEiPar.transpose()
             << "\n ** GradQ:\n" << GradQ
             << "\n ** GradE:\n" << GradE
             << "\n ** GradEiT= " << gradE.segment<2>(Ii).transpose()
@@ -245,6 +280,27 @@ void ElasticBodyBendingForce::addHessXToTotal( const VectorXs& x, const VectorXs
     Eij = Xi - Xj;
     Ejk = Xj - Xk;
 
+    Matrix2s R90; R90 << 0,-1,1,0;
+    Matrix2s R270; R270 << 0,1,-1,0;
+    Matrix2s Id = Matrix2s::Identity();
+    MatrixXs GradE(3,2), GradQ(3,2), GradQX(3,2), GradQY(3,2);
+    scalar X, Y, B;
+    MatrixXs XdY(3,2), YdX(3,2), dXdY(3,2);
+
+    scalar A = compA(m_alpha, m_eb1n, m_eb2n);
+    scalar Q = compTheta(Eij, Ejk) - m_theta0;
+    
+    compGradQ(Eij, Ejk, R270, GradQ, GradQX, GradQY, X, Y, B);
+
+    A /= B;
+    XdY = X*GradQY;
+    YdX = Y*GradQX;
+    dXdY.rows() = << 
+        GradQX.row(0) * GradQY.row(0),
+        GradQX.row(1) * GradQY.row(1),
+        GradQX.row(2) * GradQY.row(2);
+
+    GradE = A * (XdY-YdX + Q * (XdY + 2*(XdY+YdX)^2 - YdX + 2*dXdY);
 }
 
 void ElasticBodyBendingForce::addHessVToTotal( const VectorXs& x, const VectorXs& v, const VectorXs& m, MatrixXs& hessE )

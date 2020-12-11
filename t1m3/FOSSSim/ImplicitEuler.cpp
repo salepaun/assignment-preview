@@ -106,39 +106,46 @@ static void calculateImplicitEulerStep(
     VectorXs &_Vi, \
     VectorXs &_X, \
     VectorXs &_V, \
-    MatrixXs const &_M)
+    MatrixXs const &_M,
+    VectorXs &_dX,
+    VectorXs &_dV,
+    VectorXs &_GradU, \
+    MatrixXs &_Hx, \
+    MatrixXs &_Hv)
 {
-  VectorXs dX = _dt * _V; // !!!!! evaluation at (qn+h*vn+1_i, vn+1_i)
-  VectorXs dV = VectorXs::Zero(_NDof);
-  MatrixXs Hx = MatrixXs::Zero(_NDof, _NDof);
-  MatrixXs Hv = MatrixXs::Zero(_NDof, _NDof);
-  VectorXs GradU = VectorXs::Zero(_NDof);
+  //_dV.setZero(_NDof);
+  _Hx.setZero(_NDof, _NDof);
+  _Hv.setZero(_NDof, _NDof);
+  _GradU.setZero(_NDof);
+
+  _dX = _dt * _V; // !!!!! evaluation at (qn+h*vn+1_i, vn+1_i)
+  _dV = _V - _Vi;
 
   _Vi = _V;
 
-  _Scene.accumulateGradU(GradU, dX, dV);
-  _Scene.accumulateddUdxdx(Hx, dX, dV);
-  _Scene.accumulateddUdxdv(Hv, dX, dV);
+  _Scene.accumulateGradU(_GradU, _dX, _dV);
+  _Scene.accumulateddUdxdx(_Hx, _dX, _dV);
+  _Scene.accumulateddUdxdv(_Hv, _dX, _dV);
 
-  handleFixedParticles(_Scene, _NDof, _NP, _X, _V, GradU, Hx, Hv);
+  handleFixedParticles(_Scene, _NDof, _NP, _X, _V, _GradU, _Hx, _Hv);
 
 
 #ifndef NDEBUG
 #ifdef MY_DEBUG
-  cout << "dX:" << dX << endl;
-  cout << "dV:" << dV << endl;
-  cout << "GradU:" << GradU << endl;
-  cout << "Hx:" << Hx << endl;
-  cout << "Hv:" << Hv << endl;
+  cout << "dX:" << _dX << endl;
+  cout << "dV:" << _dV << endl;
+  cout << "GradU:" << _GradU << endl;
+  cout << "Hx:" << _Hx << endl;
+  cout << "Hv:" << _Hv << endl;
 #endif
 #endif
 
 
   // Calculating Vn+1
-  dVAll(_NDof, _NP, _Xn, _Vn, _X, _V, _M, GradU, Hx, Hv, _dt);
+  dVAll(_NDof, _NP, _Xn, _Vn, _X, _V, _M, _GradU, _Hx, _Hv, _dt);
 
   // Calculating Xn+1
-  dXAll(_NDof, _NP, _Xn, _Vn, _X, _V, _M, GradU, Hx, Hv, _dt);
+  dXAll(_NDof, _NP, _Xn, _Vn, _X, _V, _M, _GradU, _Hx, _Hv, _dt);
 }
 
 
@@ -163,7 +170,7 @@ static bool keepNewton( \
   }
   */
 
-  scalar Err = (_Vi - _Vi1).norm();
+  scalar Err = (_Vi1 - _Vi).norm();
 #ifndef NDEBUG
   cout << (_Iter ? "  " : "**") \
     << (Err >= g_sNewtonError ? " keep " : " last ") \
@@ -196,6 +203,16 @@ bool ImplicitEuler::stepScene( TwoDScene& scene, scalar dt )
   VectorXs Vn1 = V;
   VectorXs Vi = V;
 
+  VectorXs dX = dt * V;
+  VectorXs dV = VectorXs::Zero(NDof);
+  MatrixXs Hx = MatrixXs::Zero(NDof, NDof);
+  MatrixXs Hv = MatrixXs::Zero(NDof, NDof);
+  VectorXs GradU = VectorXs::Zero(NDof);
+
+  //scene.accumulateGradU(GradU, dX, dV);
+  //scene.accumulateddUdxdx(Hx, dX, dV);
+  //scene.accumulateddUdxdv(Hv, dX, dV);
+
   // Mass matrix
   MatrixXs Mm = M.asDiagonal();
 
@@ -207,7 +224,9 @@ bool ImplicitEuler::stepScene( TwoDScene& scene, scalar dt )
         scene, dt, \
         NDof, NP, \
         X, V, Vi, \
-        Xn1, Vn1, Mm);
+        Xn1, Vn1, Mm,
+        dX, dV,
+        GradU, Hx, Hv);
     
   } while (keepNewton(NDof, NP, Iter, Vi, Vn1));
 
