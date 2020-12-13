@@ -654,6 +654,7 @@ struct OrderedAxisElm
     aKey = _B.getKey();
     aFixed = _B.isFixed();
     aVal = getRawVal(*this, _B);
+    aMaxVal = getRawMaxVal(*this, _B);
   };
 
 
@@ -686,8 +687,15 @@ struct OrderedAxisElm
   inline double const & getVal() const {
     return aVal;
   };
+  inline double const & getMaxVal() const {
+    return aMaxVal;
+  };
   inline double const & getRawVal(OrderedAxisElm const &_E, Box &_B) const {
     int i = (_E.aYAxisSearch << 1) + _E.aMaxSearch;
+    return _B.aBorder[i];
+  };
+  inline double const & getRawMaxVal(OrderedAxisElm const &_E, Box &_B) const {
+    int i = (_E.aYAxisSearch << 1) + 1;
     return _B.aBorder[i];
   };
 
@@ -726,6 +734,7 @@ struct OrderedAxisElm
   bool aMaxSearch : 1;
   bool aFixed : 1;
   double aVal;
+  double aMaxVal;
   Box *apBox;
 
 
@@ -1041,27 +1050,27 @@ class BoxedRegion : public Box
     inline void addToOrderedAxis(Box &_O) {
       // for 'add' both axis are maintained - needed for split
       aXAxis.insert(T_AxisOrderedElm(OrderedAxisElm(false, false, _O),true));
-      aXAxis.insert(T_AxisOrderedElm(OrderedAxisElm(false, true, _O),true));
-      aYAxis.insert(T_AxisOrderedElm(OrderedAxisElm(true, false, _O),true));
-      aYAxis.insert(T_AxisOrderedElm(OrderedAxisElm(true, true, _O),true));
+      //aXAxis.insert(T_AxisOrderedElm(OrderedAxisElm(false, true, _O),true));
+      //aYAxis.insert(T_AxisOrderedElm(OrderedAxisElm(true, false, _O),true));
+      //aYAxis.insert(T_AxisOrderedElm(OrderedAxisElm(true, true, _O),true));
     };
 
     inline void eraseFromOrderedAxis(Box &_O) {
       aXAxis.erase(OrderedAxisElm(false, false, _O));
-      aXAxis.erase(OrderedAxisElm(false, true, _O));
-      aYAxis.erase(OrderedAxisElm(true, false, _O));
-      aYAxis.erase(OrderedAxisElm(true, true, _O));
+      //aXAxis.erase(OrderedAxisElm(false, true, _O));
+      //aYAxis.erase(OrderedAxisElm(true, false, _O));
+      //aYAxis.erase(OrderedAxisElm(true, true, _O));
     };
 
     inline void updateOrderedAxis(Box &_O) {
       // for update only one axis is maintained - no need for both
       aXAxis.insert(T_AxisOrderedElm(OrderedAxisElm(false, false, _O),true));
-      aXAxis.insert(T_AxisOrderedElm(OrderedAxisElm(false, true, _O),true));
+      // aXAxis.insert(T_AxisOrderedElm(OrderedAxisElm(false, true, _O),true));
     };
 
     inline void removeOnUpdateFromOrderedAxis(Box &_O) {
       aXAxis.erase(OrderedAxisElm(false, false, _O));
-      aXAxis.erase(OrderedAxisElm(false, true, _O));
+      // aXAxis.erase(OrderedAxisElm(false, true, _O));
     };
 
     inline void finalizeUpdateLoc() {
@@ -1158,7 +1167,9 @@ class BoxedRegion : public Box
 
 
 
-int BoxedRegion::cObjPerRegLimitPow2 = 30;
+// 
+// No splits in this version - ordered axises not compatible with split !!
+int BoxedRegion::cObjPerRegLimitPow2 = 100;
 
 
 ostream & BoxedRegion::toStr(ostream &_s) const
@@ -1478,112 +1489,117 @@ bool BoxedRegion::splitAxis(int _ASize, double &_Devider,
   SplitAxis.shrink_to_fit();
 
   // (SplitMark > 0) - checked earlier
-  OrderedAxisElm const &I = SplitAxis[SplitMark-1];
-  OrderedAxisElm const &J = SplitAxis[SplitMark];
-  _Devider = (J.getVal() + I.getVal())/2.0;
-  //_Devider = ((*SplitAxis.begin()).getVal() + (*SplitAxis.rbegin()).getVal())/2.0;
-
-  vector<OrderedAxisElm>::iterator Iter = SplitAxis.begin();
-  copy_n(Iter, SplitMark, back_inserter(ASplitAxis));
-  Iter = SplitAxis.begin();
-  advance(Iter, SplitMark);
-  copy(Iter, SplitAxis.end(), back_inserter(BSplitAxis));
-
-  Active.clear();
-  Iter = SplitAxis.begin();
-  advance(Iter, SplitMark);
-  for_each(SplitAxis.begin(), Iter, [&](OrderedAxisElm &_E) { 
-      if (_E.isMaxSearch())
-      Active.erase(_E);
-      else
-      Active.insert(_E);
-      });
-  // add all openeded
-  move(Active.begin(), Active.end(), back_inserter(BSplitAxis));
-
-  Active.clear();
-  vector<OrderedAxisElm>::reverse_iterator RIterFrom = SplitAxis.rbegin();
-  vector<OrderedAxisElm>::reverse_iterator RIterTo = SplitAxis.rbegin();
-  advance(RIterTo, SplitAxis.size() - SplitMark);
-  for(;RIterFrom != RIterTo; ++RIterFrom) {
-    if ((*RIterFrom).isMaxSearch())
-      Active.insert((*RIterFrom));
-    else
-      Active.erase((*RIterFrom));
-  };
-  // add all openeded
-  move(Active.begin(), Active.end(), back_inserter(ASplitAxis));
-
-  ASplitAxis.shrink_to_fit();
-  BSplitAxis.shrink_to_fit();
-
-  if (ASplitAxis.size() < SplitAxis.size() && BSplitAxis.size() < SplitAxis.size())
+  vector<OrderedAxisElm>::iterator I, J, Iter = SplitAxis.begin();
+  advance(Iter, SplitMark-1);
+  J = find_if(Iter, SplitAxis.end(), [](OrderedAxisElm const &_E) { return _E.isMaxSearch(); });
+  if (J != SplitAxis.end())
   {
-    sort(ASplitAxis.begin(), ASplitAxis.end());
-    transform(ASplitAxis.begin(), ASplitAxis.end(), inserter(_ASplitAxis, _ASplitAxis.begin()),
-        [](OrderedAxisElm const &_E) { return T_AxisOrderedElm(_E, false);});
-    sort(BSplitAxis.begin(), BSplitAxis.end());
-    transform(BSplitAxis.begin(), BSplitAxis.end(), inserter(_BSplitAxis, _BSplitAxis.begin()),
-        [](OrderedAxisElm const &_E) { return T_AxisOrderedElm(_E, false);});
+    I = J;
+    for (Iter=J; Iter != SplitAxis.end(); ++Iter) {
+      if (Iter->getVal() > I->getVal()) {
+        J = Iter; break;
+      };
+      I = Iter;
+    };
 
-    unordered_set<Box::T_Key, Box::KeyHash> AKeys, BKeys;
-    transform(ASplitAxis.begin(), ASplitAxis.end(),
-        inserter(AKeys, AKeys.begin()),
-        [](OrderedAxisElm const &_E) { return _E.getKey(); });
-    transform(BSplitAxis.begin(), BSplitAxis.end(),
-        inserter(BKeys, BKeys.begin()),
-        [](OrderedAxisElm const &_E) { return _E.getKey(); });
+    if (I != SplitAxis.end() && J != SplitAxis.end())
+    {
+      // OrderedAxisElm const &I = SplitAxis[SplitMark-1];
+      // OrderedAxisElm const &J = SplitAxis[SplitMark];
+      _Devider = (J->getVal() + I->getVal())/2.0;
+      // _Devider = ((*SplitAxis.begin()).getVal() + (*SplitAxis.rbegin()).getVal())/2.0;
 
-    copy_if(_KeepSrcAxis.begin(), _KeepSrcAxis.end(),
-        inserter(_AKeepAxis, _AKeepAxis.begin()),
-        [&](T_AxisOrderedElm const &_E) { return AKeys.find(_E.first.getKey())!=AKeys.end(); });
-    copy_if(_KeepSrcAxis.begin(), _KeepSrcAxis.end(),
-        inserter(_BKeepAxis, _BKeepAxis.begin()),
-        [&](T_AxisOrderedElm const &_E) { return BKeys.find(_E.first.getKey())!=BKeys.end(); });
+      Iter = SplitAxis.begin();
+      copy(Iter, J, back_inserter(ASplitAxis));
+      // Iter = SplitAxis.begin();
+      // advance(Iter, SplitMark);
+      copy(J, SplitAxis.end(), back_inserter(BSplitAxis));
 
-    //for_each(ASplitAxis.begin(), ASplitAxis.end(), [&](OrderedAxisElm &_E) { if(_E.isMaxSearch()) _E.registerParent(_A); });
-    //for_each(BSplitAxis.begin(), BSplitAxis.end(), [&](OrderedAxisElm &_E) { if(_E.isMaxSearch()) _E.registerParent(_B); });
-    //for_each(SplitAxis.begin(), SplitAxis.end(), [&](OrderedAxisElm &_E) {_E.deregisterParent(*this); });
+      Active.clear();
+      for_each(SplitAxis.begin(), J, [&](OrderedAxisElm &_E) { 
+          if (_E.isMaxSearch()) Active.erase(_E);
+          else Active.insert(_E); });
+      // add all openeded
+      move(Active.begin(), Active.end(), back_inserter(BSplitAxis));
+
+      Active.clear();
+      vector<OrderedAxisElm>::reverse_iterator RIterTo = SplitAxis.rbegin();
+      advance(RIterTo, SplitAxis.end() - I);
+      for_each(SplitAxis.rbegin(), RIterTo, [&](OrderedAxisElm &_E) {
+          if (_E.isMaxSearch()) Active.insert(_E);
+          else Active.erase(_E); });
+      // add all openeded
+      move(Active.begin(), Active.end(), back_inserter(ASplitAxis));
+
+      ASplitAxis.shrink_to_fit();
+      BSplitAxis.shrink_to_fit();
+
+      if (ASplitAxis.size() < SplitAxis.size() && BSplitAxis.size() < SplitAxis.size())
+      {
+        sort(ASplitAxis.begin(), ASplitAxis.end());
+        transform(ASplitAxis.begin(), ASplitAxis.end(), inserter(_ASplitAxis, _ASplitAxis.begin()),
+            [](OrderedAxisElm const &_E) { return T_AxisOrderedElm(_E, false);});
+        sort(BSplitAxis.begin(), BSplitAxis.end());
+        transform(BSplitAxis.begin(), BSplitAxis.end(), inserter(_BSplitAxis, _BSplitAxis.begin()),
+            [](OrderedAxisElm const &_E) { return T_AxisOrderedElm(_E, false);});
+
+        unordered_set<Box::T_Key, Box::KeyHash> AKeys, BKeys;
+        transform(ASplitAxis.begin(), ASplitAxis.end(),
+            inserter(AKeys, AKeys.begin()),
+            [](OrderedAxisElm const &_E) { return _E.getKey(); });
+        transform(BSplitAxis.begin(), BSplitAxis.end(),
+            inserter(BKeys, BKeys.begin()),
+            [](OrderedAxisElm const &_E) { return _E.getKey(); });
+
+        copy_if(_KeepSrcAxis.begin(), _KeepSrcAxis.end(),
+            inserter(_AKeepAxis, _AKeepAxis.begin()),
+            [&](T_AxisOrderedElm const &_E) { return AKeys.find(_E.first.getKey())!=AKeys.end(); });
+        copy_if(_KeepSrcAxis.begin(), _KeepSrcAxis.end(),
+            inserter(_BKeepAxis, _BKeepAxis.begin()),
+            [&](T_AxisOrderedElm const &_E) { return BKeys.find(_E.first.getKey())!=BKeys.end(); });
+
+        //for_each(ASplitAxis.begin(), ASplitAxis.end(), [&](OrderedAxisElm &_E) { if(_E.isMaxSearch()) _E.registerParent(_A); });
+        //for_each(BSplitAxis.begin(), BSplitAxis.end(), [&](OrderedAxisElm &_E) { if(_E.isMaxSearch()) _E.registerParent(_B); });
+        //for_each(SplitAxis.begin(), SplitAxis.end(), [&](OrderedAxisElm &_E) {_E.deregisterParent(*this); });
 
 #ifndef NDEBUG
 #if MY_DEBUG > 2
-    cout << __FUNCTION__
-      << " SplitSize=" << _ASize
-      << " SplitMark=" << SplitMark
-      << " Devider=" << _Devider << endl;
-    dumpContainer<>(g_MaxCoutNum, cout, __FUNCTION__, " **** Orig   SplitAxis:",
-        _SplitSrcAxis.size(), _SplitSrcAxis.begin(), _SplitSrcAxis.end()) << endl;
-    dumpContainer<>(g_MaxCoutNum, cout, __FUNCTION__, " **** Tmp    SplitAxis:",
-        SplitAxis.size(), SplitAxis.begin(), SplitAxis.end()) << endl;
-    dumpContainer<>(g_MaxCoutNum, cout, __FUNCTION__, " **** Child ASplitAxis:",
-        _ASplitAxis.size(), _ASplitAxis.begin(), _ASplitAxis.end()) << endl;
-    dumpContainer<>(g_MaxCoutNum, cout, __FUNCTION__, " **** Child BSplitAxis:",
-        _BSplitAxis.size(), _BSplitAxis.begin(), _BSplitAxis.end()) << endl;
-    dumpContainer<>(g_MaxCoutNum, cout, __FUNCTION__, " **** Orig   KeepAxis:",
-        _KeepSrcAxis.size(), _KeepSrcAxis.begin(), _KeepSrcAxis.end()) << endl;
-    dumpContainer<>(g_MaxCoutNum, cout, __FUNCTION__, " **** Child AKeepAxis:",
-        _AKeepAxis.size(), _AKeepAxis.begin(), _AKeepAxis.end()) << endl;
-    dumpContainer<>(g_MaxCoutNum, cout, __FUNCTION__, " **** Child BKeepAxis:",
-        _BKeepAxis.size(), _BKeepAxis.begin(), _BKeepAxis.end()) << endl;
+        cout << __FUNCTION__
+          << " SplitSize=" << _ASize
+          << " SplitMarkTmp=" << SplitMark
+          << " Devider=" << _Devider << endl;
+        dumpContainer<>(g_MaxCoutNum, cout, __FUNCTION__, " **** Orig   SplitAxis:",
+            _SplitSrcAxis.size(), _SplitSrcAxis.begin(), _SplitSrcAxis.end()) << endl;
+        dumpContainer<>(g_MaxCoutNum, cout, __FUNCTION__, " **** Tmp    SplitAxis:",
+            SplitAxis.size(), SplitAxis.begin(), SplitAxis.end()) << endl;
+        dumpContainer<>(g_MaxCoutNum, cout, __FUNCTION__, " **** Child ASplitAxis:",
+            _ASplitAxis.size(), _ASplitAxis.begin(), _ASplitAxis.end()) << endl;
+        dumpContainer<>(g_MaxCoutNum, cout, __FUNCTION__, " **** Child BSplitAxis:",
+            _BSplitAxis.size(), _BSplitAxis.begin(), _BSplitAxis.end()) << endl;
+        dumpContainer<>(g_MaxCoutNum, cout, __FUNCTION__, " **** Orig   KeepAxis:",
+            _KeepSrcAxis.size(), _KeepSrcAxis.begin(), _KeepSrcAxis.end()) << endl;
+        dumpContainer<>(g_MaxCoutNum, cout, __FUNCTION__, " **** Child AKeepAxis:",
+            _AKeepAxis.size(), _AKeepAxis.begin(), _AKeepAxis.end()) << endl;
+        dumpContainer<>(g_MaxCoutNum, cout, __FUNCTION__, " **** Child BKeepAxis:",
+            _BKeepAxis.size(), _BKeepAxis.begin(), _BKeepAxis.end()) << endl;
 #endif
 #endif
-    Ret = true;
+        return true;
+      }
+    }
   }
-  else
-  {
-    aChildren.clear();
+
+  aChildren.clear();
 
 #ifndef NDEBUG
 #if MY_DEBUG > 1
-    cout << __FUNCTION__
-      << " Ineffective split for:" << (*this)
-      << endl;
+  cout << __FUNCTION__
+    << " Ineffective split for:" << (*this)
+    << endl;
 #endif
 #endif
-    Ret = false;
-  };
 
-  return Ret;
+  return false;
 }
 
 
@@ -1629,7 +1645,7 @@ bool BoxedRegion::findAxisIntersectLoc(
 
     void operator ()(OrderedAxisElm const &_Elm)
     {
-      if (_Elm.isMaxSearch()) return;
+      //if (_Elm.isMaxSearch()) return;
       if (!(apElm->getBox()->intersectsY(*_Elm.getBox()))) return;
       if ((*apElm).isFixed() && _Elm.isFixed()) return;
 
@@ -1702,10 +1718,17 @@ bool BoxedRegion::findAxisIntersectLoc(
   // 
   // Looping over axis to find intersections
   // T_AxisOrdered::iterator I;
-  vector<OrderedAxisElm>::iterator I;
+  vector<OrderedAxisElm>::iterator I,J,K;
   OrderedAxisElm AxisKey;
   IntersectsInserter Inserter(WeededAxis.end(), _PP, _PE, _PH, apBoxedVrtxs, apBoxedEdges, apBoxedHalfP);
   for (I=WeededAxis.begin(); I != WeededAxis.end(); ++I) {
+    J = I;
+    K = find_if(++J, WeededAxis.end(), [&](OrderedAxisElm const &_E) { return _E.getVal() > I->getMaxVal();});
+    if (J != K) {
+      Inserter.apElm = I;
+      for_each(J, K, Inserter);
+    };
+    /*
     if (!(*I).isMaxSearch()) {
       if (Inserter.apElm != WeededAxis.end()) {
         for_each(I, find(I, WeededAxis.end(), AxisKey.initAxisPair(*(Inserter.apElm))), Inserter);
@@ -1714,6 +1737,7 @@ bool BoxedRegion::findAxisIntersectLoc(
     } else if (Inserter.apElm != WeededAxis.end() && (*Inserter.apElm).getKey() == (*I).getKey()) {
       Inserter.apElm = WeededAxis.end();
     };
+    */
   };
 
   /*
