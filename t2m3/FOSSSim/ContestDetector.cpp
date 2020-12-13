@@ -1007,7 +1007,8 @@ class BoxedRegion : public Box
     int preSplit(int _Num, Box const &_Scene);
 
     inline bool split(int _RegionsGen) {
-      if (!_RegionsGen)
+      // no split - performance floors
+      if (true || !_RegionsGen)
         return false;
 
       _RegionsGen--;
