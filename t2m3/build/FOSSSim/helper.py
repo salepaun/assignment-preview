@@ -17,7 +17,7 @@ def random_selection(*args):
 
 
 
-def generate_particles(num, base, x, y, size, psize, mass, cmin, cmax):
+def generate_particles(num, base, x, y, size, psize, mass, cmin, cmax, vrange):
     """
     """
     gap = 1 * psize
@@ -31,6 +31,7 @@ def generate_particles(num, base, x, y, size, psize, mass, cmin, cmax):
     Xmin = np.asarray((xmin, ymin))
     Xmax = np.asarray((xmax, ymax))
     dmax = np.linalg.norm(Xmax - Xmin) / 2
+    vxy_range = tuple((vrange, vrange))
 
     xc = xmin
     i = 0
@@ -40,9 +41,10 @@ def generate_particles(num, base, x, y, size, psize, mass, cmin, cmax):
             d = np.linalg.norm(X - np.asarray((xc,yc)))
             colors= tuple([cmin[i] + d*(cmax[i]-cmin[i])/dmax for i in range(len(cmin))])
             r,g,b = tuple([i if i<=1.0 else 1 for i in colors])
+            vx,vy = random_selection(*vxy_range)
 
-            print('  <particle m="%5.3f" px="%5.3f" py="%5.3f" vx="0.0" vy="0.0" fixed="0" radius="%5.3f"/>' \
-                    % (mass, xc, yc, psize))
+            print('  <particle m="%5.3f" px="%5.3f" py="%5.3f" vx="%5.3f" vy="%5.3f" fixed="0" radius="%5.3f"/>' \
+                    % (mass, xc, yc, vx, vy, psize))
             print('  <particlecolor i="%i" r="%5.3f" g="%5.3f" b="%5.3f"/>' \
                     % (i+base, r, g, b))
 
@@ -63,7 +65,7 @@ def help():
 This program is a helper for creative assignment for t2m2.
 It generates objects at certain location, with "num" particles of "size".
 
-Usage: {0} num base x,y size psize mass
+Usage: {0} num base x,y size psize mass vrange
 """.format(argv[0]))
 
 
@@ -79,6 +81,7 @@ def main(name, args):
     mass = 1
     cmin = ((0.1,0.1,0.1))
     cmax = ((0.1,0.1,0.9))
+    vrange = ((-10,10))
 
 
     if args:
@@ -103,10 +106,12 @@ def main(name, args):
                 cmin = tuple([float(i) for i in arg.split(',')])
             elif i==7:
                 cmax = tuple([float(i) for i in arg.split(',')])
+            elif i==8:
+                vrange = tuple([float(i) for i in arg.split(',')])
             else:
                 break
 
-    generate_particles(num, base, x, y, size, psize, mass, cmin, cmax)
+    generate_particles(num, base, x, y, size, psize, mass, cmin, cmax, vrange)
 
 
 
